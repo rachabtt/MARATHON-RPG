@@ -5,7 +5,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { CinemagraphConfig } from '../types';
-import { SCENE_MODES } from '../utils/presets';
+import { LOCATIONS } from '../utils/locations';
 import tauCetiBase from '../assets/images/tau_ceti_base_1779960769896.png';
 import delta6Dust from '../assets/images/delta6_dust_1779965726252.png';
 
@@ -36,14 +36,15 @@ export default function Cinemagraph({ config, imageUrl, onFlickerSound, onScanne
   
   const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
 
-  const getSceneBgSrc = (modeId: string, originalPath: string) => {
-    if (modeId === 'dust') {
-      return delta6Dust;
-    }
-    if (modeId === 'normal') {
-      return imageUrl || tauCetiBase;
-    }
-    if (failedImages[modeId]) {
+  const activeLocId = config.activeLocation || 'delta6';
+  const activeLoc = LOCATIONS.find(l => l.id === activeLocId) || LOCATIONS[3];
+  const activeLocPath = activeLoc.image;
+
+  const getSceneBgSrc = (locId: string, originalPath: string) => {
+    if (failedImages[locId]) {
+      if (locId === 'delta6' || config.environmentFilter === 'dust' || config.environmentFilter === 'storm' || config.environmentFilter === 'extraction') {
+        return delta6Dust;
+      }
       return imageUrl || tauCetiBase;
     }
     return originalPath;
@@ -385,34 +386,46 @@ export default function Cinemagraph({ config, imageUrl, onFlickerSound, onScanne
 
   const headlightAlphaActual = Math.max(0.0, Math.min(1.5, headlightAlpha * modeLightsFactor));
 
-  // Color mapping CSS filter for color grading our 8 detailed narrative scene modes
+  // Color mapping CSS filter for color grading our 8 detailed narrative scene modes and locations
   const getFilterStyle = () => {
     let baseFilter = '';
+    
+    // 1. Layer Location Filters for beautiful mood distinctions
+    const activeLocId = config.activeLocation || 'delta6';
+    if (activeLocId === 'new_carthage') {
+      baseFilter = 'brightness(1.05) contrast(1.02) saturate(0.85) hue-rotate(-15deg)';
+    } else if (activeLocId === 'red_plains') {
+      baseFilter = 'saturate(1.8) contrast(1.1) hue-rotate(-5deg) brightness(0.92)';
+    } else if (activeLocId === 'black_arches') {
+      baseFilter = 'brightness(0.68) contrast(1.35) saturate(0.75) hue-rotate(5deg)';
+    } else { // delta6
+      baseFilter = 'contrast(1.02) saturate(1.05)';
+    }
+
+    // 2. Layer Ambient Ambiance Filters
     switch (config.environmentFilter) {
       case 'dust':
-        baseFilter = 'sepia(0.35) saturate(1.7) hue-rotate(-12deg) contrast(0.8) brightness(0.9)';
+        baseFilter += ' sepia(0.2) saturate(1.4) hue-rotate(-10deg) contrast(0.9) brightness(0.9)';
         break;
       case 'scanner':
-        baseFilter = 'saturate(1.2) contrast(1.12) hue-rotate(8deg) brightness(0.95)';
+        baseFilter += ' saturate(1.25) contrast(1.15) hue-rotate(8deg) brightness(0.95)';
         break;
       case 'signal':
-        baseFilter = 'saturate(1.35) contrast(1.4) hue-rotate(22deg) brightness(1.05)';
+        baseFilter += ' saturate(1.4) contrast(1.35) hue-rotate(20deg) brightness(1.05)';
         break;
       case 'hounds':
-        baseFilter = 'brightness(0.72) contrast(1.35) saturate(0.78) sepia(0.08) hue-rotate(-5deg)';
+        baseFilter += ' brightness(0.75) contrast(1.3) saturate(0.85) sepia(0.1)';
         break;
       case 'storm':
-        baseFilter = 'brightness(0.65) saturate(1.5) hue-rotate(185deg) contrast(1.25)';
+        baseFilter += ' brightness(0.7) saturate(1.4) hue-rotate(180deg) contrast(1.2)';
         break;
       case 'extraction':
-        baseFilter = 'contrast(1.45) saturate(2.0) brightness(0.68) sepia(0.4) hue-rotate(-28deg)';
+        baseFilter += ' contrast(1.4) saturate(1.8) brightness(0.7) sepia(0.3) hue-rotate(-20deg)';
         break;
       case 'silence':
-        baseFilter = 'saturate(0.35) brightness(0.65) contrast(1.15) hue-rotate(165deg)';
+        baseFilter += ' saturate(0.4) brightness(0.7) contrast(1.1) hue-rotate(160deg)';
         break;
-      case 'normal':
       default:
-        baseFilter = 'contrast(1.02) saturate(1.05)';
         break;
     }
 
@@ -452,19 +465,19 @@ export default function Cinemagraph({ config, imageUrl, onFlickerSound, onScanne
         </div>
       )}
 
-      {/* 1. Base Wallpaper Image (generated to look exactly like the Tau Ceti site) */}
+      {/* 1. Base Landscape Image for active location with fallback */}
       <div className="absolute inset-0 select-none pointer-events-none w-full h-full z-0">
-        {SCENE_MODES.map((mode) => {
-          const isActive = config.environmentFilter === mode.id;
-          const bgSrc = getSceneBgSrc(mode.id, mode.background);
+        {LOCATIONS.map((loc) => {
+          const isActive = (config.activeLocation || 'delta6') === loc.id;
+          const bgSrc = getSceneBgSrc(loc.id, loc.image);
           return (
             <img
-              key={mode.id}
+              key={loc.id}
               src={bgSrc}
-              alt={`Tau Ceti IV Survey Site Delta-6 - ${mode.label}`}
+              alt={`Tau Ceti IV - ${loc.label}`}
               referrerPolicy="no-referrer"
               onError={() => {
-                setFailedImages(prev => ({ ...prev, [mode.id]: true }));
+                setFailedImages(prev => ({ ...prev, [loc.id]: true }));
               }}
               className="absolute inset-0 w-full h-full object-cover select-none pointer-events-none transition-opacity duration-1000 ease-in-out"
               style={{
@@ -505,9 +518,9 @@ export default function Cinemagraph({ config, imageUrl, onFlickerSound, onScanne
         <>
           {/* Cyan channel shift layer */}
           <img
-            src={getSceneBgSrc('signal', '/assets/delta6/delta6_signal.png')}
+            src={getSceneBgSrc(activeLocId, activeLocPath)}
             onError={() => {
-              setFailedImages(prev => ({ ...prev, signal: true }));
+              setFailedImages(prev => ({ ...prev, [activeLocId]: true }));
             }}
             alt="Cyan offset channel"
             referrerPolicy="no-referrer"
@@ -519,9 +532,9 @@ export default function Cinemagraph({ config, imageUrl, onFlickerSound, onScanne
           />
           {/* Red channel shift layer */}
           <img
-            src={getSceneBgSrc('signal', '/assets/delta6/delta6_signal.png')}
+            src={getSceneBgSrc(activeLocId, activeLocPath)}
             onError={() => {
-              setFailedImages(prev => ({ ...prev, signal: true }));
+              setFailedImages(prev => ({ ...prev, [activeLocId]: true }));
             }}
             alt="Red offset channel"
             referrerPolicy="no-referrer"
@@ -640,17 +653,17 @@ export default function Cinemagraph({ config, imageUrl, onFlickerSound, onScanne
           filter: `url(#fabric-wind-filter)`
         }}
       >
-        {SCENE_MODES.map((mode) => {
-          const isActive = config.environmentFilter === mode.id;
-          const bgSrc = getSceneBgSrc(mode.id, mode.background);
+        {LOCATIONS.map((loc) => {
+          const isActive = (config.activeLocation || 'delta6') === loc.id;
+          const bgSrc = getSceneBgSrc(loc.id, loc.image);
           return (
             <img
-              key={`tarp-${mode.id}`}
+              key={`tarp-${loc.id}`}
               src={bgSrc}
-              alt={`Tarp Mask - ${mode.label}`}
+              alt={`Tarp Mask - ${loc.label}`}
               referrerPolicy="no-referrer"
               onError={() => {
-                setFailedImages(prev => ({ ...prev, [mode.id]: true }));
+                setFailedImages(prev => ({ ...prev, [loc.id]: true }));
               }}
               className="absolute inset-0 w-full h-full object-cover select-none pointer-events-none transition-opacity duration-1000 ease-in-out"
               style={{

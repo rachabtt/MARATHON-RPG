@@ -153,6 +153,7 @@ export default function App() {
     const payload: MissionControlState = { 
       ...state, 
       activeSceneMode: newConfig.environmentFilter,
+      activeLocation: newConfig.activeLocation || state.activeLocation || 'delta6',
       audio: {
         enabled: newConfig.audioEnabled,
         windVolume: newConfig.audioWindVolume,
@@ -186,6 +187,13 @@ export default function App() {
     broadcastStateChange(payload);
   };
 
+  const handleUpdateLocation = (location: 'new_carthage' | 'red_plains' | 'black_arches' | 'delta6') => {
+    const payload = { ...state, activeLocation: location };
+    setState(payload);
+    saveStoredState(payload);
+    broadcastStateChange(payload);
+  };
+
   const handleResetLoopEpoch = () => {
     setLoopEpochKey(prev => prev + 1);
   };
@@ -214,6 +222,30 @@ export default function App() {
     if (currentConfig.visualEmFlashes) return 'CRITIQUE (TEMPÊTE)';
     if (currentConfig.visualRadioGlitch > 0.6) return 'SATURE INTERFÉRENCES';
     return 'NOMINALE';
+  };
+
+  const getDisplayLocationLabel = (loc: string) => {
+    switch (loc) {
+      case 'new_carthage': return 'SITE : NEW CARTHAGE (COLONIE PRINCIPALE)';
+      case 'red_plains': return 'ZONE : PLAINES ROUGES (SECTEUR TRANSIT)';
+      case 'black_arches': return 'ANOMALIE : ARCHES NOIRES';
+      case 'delta6': return 'SITE : SITE GÉOLOGIQUE DELTA-6';
+      default: return `SITE : ${String(loc).toUpperCase()}`;
+    }
+  };
+
+  const getDisplayModeLabel = (filter: string) => {
+    switch (filter) {
+      case 'normal': return 'CALME';
+      case 'dust': return 'SITE DELTA-6';
+      case 'scanner': return 'SCANNER ACTIF';
+      case 'signal': return 'SIGNAL INSTABLE';
+      case 'hounds': return 'HOUNDS PROCHES';
+      case 'storm': return 'TEMPÊTE EM';
+      case 'extraction': return 'EXTRACTION';
+      case 'silence': return 'SILENCE RADIO';
+      default: return String(filter).toUpperCase();
+    }
   };
 
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
@@ -339,7 +371,8 @@ export default function App() {
               <span className="w-1.5 h-3 bg-orange-500 rounded-sm inline-block" />
               MISSION 01 // SOL ROUGE
             </div>
-            <span>SITE SURVEY : DELTA-6</span>
+            <span>{getDisplayLocationLabel(state.activeLocation || 'delta6')}</span>
+            <span>MODE : <strong className="text-orange-400 font-bold">{getDisplayModeLabel(currentConfig.environmentFilter)}</strong></span>
             <div className="flex items-center gap-1 text-emerald-400 font-medium">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse" />
               CONNEXION TERRAIN ACTIVE
@@ -493,6 +526,8 @@ export default function App() {
               onChangeResources={handleUpdateResources}
               activePresetId={state.displayOptions.activePresetId}
               onChangePresetId={handleUpdatePresetId}
+              activeLocation={state.activeLocation || 'delta6'}
+              onChangeLocation={handleUpdateLocation}
             />
           </section>
 

@@ -12,6 +12,7 @@ export interface CinemagraphConfig {
   scannerPulseSpeed: number; // 0.2 to 4.0 (default 1.0)
   hazeBreathingSpeed: number;// 0.1 to 2.5 (default 1.0)
   environmentFilter: 'normal' | 'dust' | 'scanner' | 'signal' | 'hounds' | 'storm' | 'extraction' | 'silence';
+  activeLocation?: 'new_carthage' | 'red_plains' | 'black_arches' | 'delta6';
   audioEnabled: boolean;
   audioWindVolume: number;   // 0.0 to 1.0
   audioHumVolume: number;    // 0.0 to 1.0

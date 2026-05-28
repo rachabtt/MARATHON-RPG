@@ -112,7 +112,7 @@ export const PRESETS: Preset[] = [
     }
   },
   {
-    id: 'signal_instable',
+    id: 'signal',
     name: "Signal instable",
     description: "Perturbations magnétiques importantes. Les caméras s'affolent, la radio gresille intensément.",
     config: {
@@ -280,117 +280,5 @@ export const PRESETS: Preset[] = [
       survivor: 4, // Perdu
       calm: 3 // Perdu
     }
-  }
-];
-
-export interface SceneMode {
-  id: 'normal' | 'dust' | 'scanner' | 'signal' | 'hounds' | 'storm' | 'extraction' | 'silence';
-  label: string;
-  background: string;
-  dust: number;
-  wind: number;
-  glitch: number;
-  scannerPulse: number;
-  roverLights: number;
-  emFlashes: number;
-  houndShadows: number;
-}
-
-export const SCENE_MODES: SceneMode[] = [
-  {
-    id: "normal",
-    label: "Vue normale",
-    background: "/assets/delta6/delta6_base.png",
-    dust: 0.15,
-    wind: 0.6,
-    glitch: 0.0,
-    scannerPulse: 0.5,
-    roverLights: 0.4,
-    emFlashes: 0.0,
-    houndShadows: 0.0
-  },
-  {
-    id: "dust",
-    label: "Poussière rouge",
-    background: "/assets/delta6/delta6_dust.png",
-    dust: 0.65,
-    wind: 1.0,
-    glitch: 0.1,
-    scannerPulse: 1.0,
-    roverLights: 0.8,
-    emFlashes: 0.0,
-    houndShadows: 0.0
-  },
-  {
-    id: "scanner",
-    label: "Scanner actif",
-    background: "/assets/delta6/delta6_scanner.png",
-    dust: 0.75,
-    wind: 1.2,
-    glitch: 0.2,
-    scannerPulse: 1.0,
-    roverLights: 0.7,
-    emFlashes: 0.0,
-    houndShadows: 0.0
-  },
-  {
-    id: "signal",
-    label: "Signal instable",
-    background: "/assets/delta6/delta6_signal.png",
-    dust: 0.8,
-    wind: 1.4,
-    glitch: 0.65,
-    scannerPulse: 0.7,
-    roverLights: 0.5,
-    emFlashes: 0.0,
-    houndShadows: 0.0
-  },
-  {
-    id: "hounds",
-    label: "Hounds proches",
-    background: "/assets/delta6/delta6_hounds.png",
-    dust: 0.7,
-    wind: 0.8,
-    glitch: 0.35,
-    scannerPulse: 0.2,
-    roverLights: 0.9,
-    emFlashes: 0.0,
-    houndShadows: 0.9
-  },
-  {
-    id: "storm",
-    label: "Tempête EM",
-    background: "/assets/delta6/delta6_storm.png",
-    dust: 0.95,
-    wind: 0.9,
-    glitch: 0.75,
-    scannerPulse: 0.4,
-    roverLights: 0.5,
-    emFlashes: 0.9,
-    houndShadows: 0.3
-  },
-  {
-    id: "extraction",
-    label: "Extraction",
-    background: "/assets/delta6/delta6_extraction.png",
-    dust: 1.0,
-    wind: 1.0,
-    glitch: 0.5,
-    scannerPulse: 0.8,
-    roverLights: 1.0,
-    emFlashes: 0.6,
-    houndShadows: 0.7
-  },
-  {
-    id: "silence",
-    label: "Silence radio",
-    background: "/assets/delta6/delta6_base.png",
-    dust: 0.25,
-    wind: 0.3,
-    glitch: 0.0,
-    scannerPulse: 0.0,
-    roverLights: 0.0,
-    emFlashes: 0.0,
-    houndShadows: 0.0
   }
 ];

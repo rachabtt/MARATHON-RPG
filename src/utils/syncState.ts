@@ -15,6 +15,7 @@ export interface ResourceState {
 
 export interface MissionControlState {
   activeSceneMode: 'normal' | 'dust' | 'scanner' | 'signal' | 'hounds' | 'storm' | 'extraction' | 'silence';
+  activeLocation: 'new_carthage' | 'red_plains' | 'black_arches' | 'delta6';
   resources: ResourceState[];
   effects: {
     dust: number;      // 0, 1, 2, 3
@@ -101,6 +102,7 @@ export const INITIAL_RESOURCES: ResourceState[] = [
 
 export const INITIAL_MISSION_STATE: MissionControlState = {
   activeSceneMode: 'normal',
+  activeLocation: 'delta6',
   resources: INITIAL_RESOURCES,
   effects: {
     dust: 1,
@@ -136,6 +138,9 @@ export function getStoredState(): MissionControlState {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (parsed && parsed.resources && parsed.effects && parsed.audio) {
+        if (!parsed.activeLocation) {
+          parsed.activeLocation = 'delta6';
+        }
         return parsed as MissionControlState;
       }
     }
@@ -239,6 +244,7 @@ export function deriveConfigFromState(state: MissionControlState): CinemagraphCo
     scannerPulseSpeed: scannerVal,
     hazeBreathingSpeed: breathingVal,
     environmentFilter: state.activeSceneMode,
+    activeLocation: state.activeLocation || 'delta6',
     audioEnabled: state.audio.enabled,
     audioWindVolume: state.audio.windVolume,
     audioHumVolume: state.audio.humVolume,
@@ -357,6 +363,7 @@ export function applyPreset(state: MissionControlState, presetId: string): Missi
       humVol = 0.85;
       stormVol = 0.15;
       break;
+    case 'signal':
     case 'signal_instable':
       mode = 'signal';
       dustLvl = 2;
@@ -446,6 +453,7 @@ export function applyPreset(state: MissionControlState, presetId: string): Missi
         if (res.id === 'energy') return { ...res, index: 1 };
         if (res.id === 'signal' || res.id === 'visibility' || res.id === 'tempest') return { ...res, index: 1 };
         return { ...res, index: 0 };
+      case 'signal':
       case 'signal_instable':
         if (res.id === 'signal') return { ...res, index: 2 };
         if (res.id === 'data' || res.id === 'calm') return { ...res, index: 1 };
