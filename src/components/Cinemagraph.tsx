@@ -5,9 +5,9 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { CinemagraphConfig } from '../types';
-import { LOCATIONS } from '../utils/locations';
-import tauCetiBase from '../assets/images/tau_ceti_base_1779960769896.png';
-import delta6Dust from '../assets/images/delta6_dust_1779965726252.png';
+import { getLocationEffectProfile } from '../utils/locationEffects';
+import { getLocationAnchors } from '../utils/locationAnchors';
+import { getHoundVisualProfile } from '../utils/houndProfile';
 
 interface CinemagraphProps {
   key?: any;
@@ -34,21 +34,11 @@ export default function Cinemagraph({ config, imageUrl, onFlickerSound, onScanne
   const animationFrameRef = useRef<number | null>(null);
   const [dimensions, setDimensions] = useState({ width: 1000, height: 562.5 });
   
-  const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
+  const [imageLoadFailed, setImageLoadFailed] = useState(false);
 
-  const activeLocId = config.activeLocation || 'delta6';
-  const activeLoc = LOCATIONS.find(l => l.id === activeLocId) || LOCATIONS[3];
-  const activeLocPath = activeLoc.image;
-
-  const getSceneBgSrc = (locId: string, originalPath: string) => {
-    if (failedImages[locId]) {
-      if (locId === 'delta6' || config.environmentFilter === 'dust' || config.environmentFilter === 'storm' || config.environmentFilter === 'extraction') {
-        return delta6Dust;
-      }
-      return imageUrl || tauCetiBase;
-    }
-    return originalPath;
-  };
+  useEffect(() => {
+    setImageLoadFailed(false);
+  }, [imageUrl]);
   
   // High-fidelity particle array
   const particlesRef = useRef<Particle[]>([]);
@@ -140,29 +130,32 @@ export default function Cinemagraph({ config, imageUrl, onFlickerSound, onScanne
       let particleColorTemplate = 'rgba(164, 69, 50, ALPHA_VAL)'; // default warm rust
       
       if (config.environmentFilter === 'dust') {
-        modeSpeedMultiplier = 1.4;
-        modeDensityMultiplier = 2.2;
+        modeSpeedMultiplier = 1.4 * locationEffect.particleSpeed;
+        modeDensityMultiplier = 2.2 * locationEffect.particleDensity;
         particleColorTemplate = 'rgba(185, 48, 28, ALPHA_VAL)';
       } else if (config.environmentFilter === 'storm') {
-        modeSpeedMultiplier = 2.8;
-        modeDensityMultiplier = 2.6;
+        modeSpeedMultiplier = 2.8 * locationEffect.particleSpeed;
+        modeDensityMultiplier = 2.6 * locationEffect.particleDensity;
         particleColorTemplate = 'rgba(145, 38, 22, ALPHA_VAL)';
       } else if (config.environmentFilter === 'extraction') {
-        modeSpeedMultiplier = 2.0;
-        modeDensityMultiplier = 3.0;
+        modeSpeedMultiplier = 2.0 * locationEffect.particleSpeed;
+        modeDensityMultiplier = 3.0 * locationEffect.particleDensity;
         particleColorTemplate = 'rgba(205, 55, 35, ALPHA_VAL)';
       } else if (config.environmentFilter === 'silence') {
         modeSpeedMultiplier = 0.4;
         modeDensityMultiplier = 0.3;
         particleColorTemplate = 'rgba(110, 110, 115, ALPHA_VAL)'; // quiet gray
       } else if (config.environmentFilter === 'scanner') {
-        modeSpeedMultiplier = 0.95;
-        modeDensityMultiplier = 0.9;
+        modeSpeedMultiplier = 0.95 * locationEffect.particleSpeed;
+        modeDensityMultiplier = 0.9 * locationEffect.particleDensity;
         particleColorTemplate = 'rgba(152, 60, 44, ALPHA_VAL)';
       } else if (config.environmentFilter === 'hounds') {
-        modeSpeedMultiplier = 0.8;
-        modeDensityMultiplier = 1.15;
+        modeSpeedMultiplier = 0.8 * locationEffect.particleSpeed;
+        modeDensityMultiplier = 1.15 * locationEffect.particleDensity;
         particleColorTemplate = 'rgba(130, 48, 35, ALPHA_VAL)';
+      } else {
+        modeSpeedMultiplier *= locationEffect.particleSpeed;
+        modeDensityMultiplier *= locationEffect.particleDensity;
       }
 
       particles.forEach((p) => {
@@ -173,7 +166,7 @@ export default function Cinemagraph({ config, imageUrl, onFlickerSound, onScanne
         
         // Progress downwind
         let currentX = p.startX + particleTime * speed;
-        let currentY = p.startY + particleTime * speed * Math.sin(p.driftAngle);
+        let currentY = p.startY + particleTime * speed * Math.sin(locationEffect.particleDrift + p.driftAngle * 0.25);
         
         // Wrap coordinates seamlessly
         if (currentX > 1100) {
@@ -306,6 +299,26 @@ export default function Cinemagraph({ config, imageUrl, onFlickerSound, onScanne
   const isTempete = config.environmentFilter === 'storm';
   const isExtraction = config.environmentFilter === 'extraction';
   const isSilenceMode = config.environmentFilter === 'silence';
+  const locationEffect = getLocationEffectProfile(config.activeLocation, config);
+  const quickEffect = config.quickEffect;
+  const quickEffectElapsed = quickEffect ? Date.now() - quickEffect.startedAt : Number.POSITIVE_INFINITY;
+  const isQuickEffectActive = Boolean(quickEffect && quickEffectElapsed < quickEffect.durationMs);
+  const isRadioBurst = isQuickEffectActive && quickEffect?.type === 'glitch_radio';
+  const isEmBurst = isQuickEffectActive && quickEffect?.type === 'flash_em';
+  const isHoundBurst = isQuickEffectActive && quickEffect?.type === 'ombre_hound';
+  const anchors = getLocationAnchors(config.activeLocation);
+  const houndProfile = getHoundVisualProfile(config.activeLocation);
+  const scannerX = anchors.scannerPulse.x * 1000;
+  const scannerY = anchors.scannerPulse.y * 562.5;
+  const radioX = anchors.radioZone.x * 1000;
+  const radioY = anchors.radioZone.y * 562.5;
+  const lightSources = anchors.lightSources.map((point) => ({
+    x: point.x * 1000,
+    y: point.y * 562.5,
+  }));
+  const houndProgress = Math.min(1, quickEffectElapsed / houndProfile.durationMs);
+  const houndX = (anchors.houndZones.entry.x + (anchors.houndZones.exit.x - anchors.houndZones.entry.x) * houndProgress) * 100;
+  const houndY = (anchors.houndZones.entry.y + (anchors.houndZones.exit.y - anchors.houndZones.entry.y) * houndProgress) * 100;
 
   // Lightning path generator helper
   const getLightningPath = (x1: number, y1: number, x2: number, y2: number) => {
@@ -346,14 +359,14 @@ export default function Cinemagraph({ config, imageUrl, onFlickerSound, onScanne
     ((ticker % 1400 < 80) && (Math.random() < glitchFactor)) ||
     ((ticker % 2800 < 130) && (Math.random() < glitchFactor * 0.8)) ||
     (Math.random() < glitchFactor * 0.03) // brief random spikes
-  )) || isScannerPeak;
+  )) || isScannerPeak || isRadioBurst;
 
-  const glitchX = isGlitchFrame ? (Math.random() - 0.5) * (isScannerPeak ? 5 : glitchFactor * 32) : 0;
-  const glitchY = isGlitchFrame ? (Math.random() - 0.5) * (isScannerPeak ? 3 : glitchFactor * 10) : 0;
+  const glitchX = isGlitchFrame ? (Math.random() - 0.5) * (isScannerPeak ? 5 : glitchFactor * 32 + locationEffect.cameraShake * 9) : 0;
+  const glitchY = isGlitchFrame ? (Math.random() - 0.5) * (isScannerPeak ? 3 : glitchFactor * 10 + locationEffect.cameraShake * 4) : 0;
   const glitchScale = isGlitchFrame ? 1.0 + (Math.random() * (isScannerPeak ? 0.005 : 0.025 * glitchFactor)) : 1.0;
 
   // Periodic EM flashes timing - heavily boosted during EM Storms
-  let flashActive = config.visualEmFlashes && (
+  let flashActive = (config.visualEmFlashes || isEmBurst) && (
     ((ticker % 4200 < 160) && (ticker % 4200 > 40)) || 
     ((ticker % 6500 < 220) && (ticker % 6500 > 100)) ||
     ((ticker % 11000 < 120) && (ticker % 11000 > 0))
@@ -388,56 +401,16 @@ export default function Cinemagraph({ config, imageUrl, onFlickerSound, onScanne
 
   // Color mapping CSS filter for color grading our 8 detailed narrative scene modes and locations
   const getFilterStyle = () => {
-    let baseFilter = '';
-    
-    // 1. Layer Location Filters for beautiful mood distinctions
-    const activeLocId = config.activeLocation || 'delta6';
-    if (activeLocId === 'new_carthage') {
-      baseFilter = 'brightness(1.05) contrast(1.02) saturate(0.85) hue-rotate(-15deg)';
-    } else if (activeLocId === 'red_plains') {
-      baseFilter = 'saturate(1.8) contrast(1.1) hue-rotate(-5deg) brightness(0.92)';
-    } else if (activeLocId === 'black_arches') {
-      baseFilter = 'brightness(0.68) contrast(1.35) saturate(0.75) hue-rotate(5deg)';
-    } else { // delta6
-      baseFilter = 'contrast(1.02) saturate(1.05)';
-    }
-
-    // 2. Layer Ambient Ambiance Filters
-    switch (config.environmentFilter) {
-      case 'dust':
-        baseFilter += ' sepia(0.2) saturate(1.4) hue-rotate(-10deg) contrast(0.9) brightness(0.9)';
-        break;
-      case 'scanner':
-        baseFilter += ' saturate(1.25) contrast(1.15) hue-rotate(8deg) brightness(0.95)';
-        break;
-      case 'signal':
-        baseFilter += ' saturate(1.4) contrast(1.35) hue-rotate(20deg) brightness(1.05)';
-        break;
-      case 'hounds':
-        baseFilter += ' brightness(0.75) contrast(1.3) saturate(0.85) sepia(0.1)';
-        break;
-      case 'storm':
-        baseFilter += ' brightness(0.7) saturate(1.4) hue-rotate(180deg) contrast(1.2)';
-        break;
-      case 'extraction':
-        baseFilter += ' contrast(1.4) saturate(1.8) brightness(0.7) sepia(0.3) hue-rotate(-20deg)';
-        break;
-      case 'silence':
-        baseFilter += ' saturate(0.4) brightness(0.7) contrast(1.1) hue-rotate(160deg)';
-        break;
-      default:
-        break;
-    }
+    let baseFilter = locationEffect.filter;
 
     if (isGlitchFrame && !isSilenceMode) {
       baseFilter += ` hue-rotate(${Math.random() * 80 * glitchFactor}deg) contrast(${1.15 + Math.random() * 0.35})`;
     }
+    if (isEmBurst) {
+      baseFilter += ' brightness(1.22) contrast(1.35) saturate(0.92)';
+    }
     return baseFilter;
   };
-
-  // Poly clip coordinates or bounding areas for localized tarp wind warping.
-  const windTarpWarpScale = (isTempete ? 40 : isExtraction ? 30 : isSilenceMode ? 5 : 15) + 
-                            (isTempete ? 18 : 8) * Math.sin(timeSec * Math.PI * 0.55 * config.windSpeed);
 
   // Transition style should be instantaneous (abrupt) for signal glitch or dead silence
   const useAbruptTransitions = isSignalMode || isSilenceMode;
@@ -452,7 +425,7 @@ export default function Cinemagraph({ config, imageUrl, onFlickerSound, onScanne
       className="relative w-full overflow-hidden bg-stone-950 rounded-xl border border-stone-800 shadow-2xl select-none aspect-video"
       style={{ 
         filter: getFilterStyle(), 
-        transform: `translate(${glitchX}px, ${glitchY}px) scale(${glitchScale})`,
+        transform: `translate(${glitchX + Math.sin(timeSec * 18) * locationEffect.cameraShake}px, ${glitchY}px) scale(${glitchScale})`,
         transition: transitionRules,
         transitionProperty: isGlitchFrame ? 'none' : 'filter 0.8s ease-in-out, transform 0.15s ease-out'
       }}
@@ -465,33 +438,31 @@ export default function Cinemagraph({ config, imageUrl, onFlickerSound, onScanne
         </div>
       )}
 
-      {/* 1. Base Landscape Image for active location with fallback */}
+      {/* 1. Base Landscape Image for active location */}
       <div className="absolute inset-0 select-none pointer-events-none w-full h-full z-0">
-        {LOCATIONS.map((loc) => {
-          const isActive = (config.activeLocation || 'delta6') === loc.id;
-          const bgSrc = getSceneBgSrc(loc.id, loc.image);
-          return (
-            <img
-              key={loc.id}
-              src={bgSrc}
-              alt={`Tau Ceti IV - ${loc.label}`}
-              referrerPolicy="no-referrer"
-              onError={() => {
-                setFailedImages(prev => ({ ...prev, [loc.id]: true }));
-              }}
-              className="absolute inset-0 w-full h-full object-cover select-none pointer-events-none transition-opacity duration-1000 ease-in-out"
-              style={{
-                opacity: isActive ? 1 : 0,
-                zIndex: isActive ? 1 : 0
-              }}
-            />
-          );
-        })}
+        {imageLoadFailed ? (
+          <div className="absolute inset-0 bg-black flex items-center justify-center text-[10px] font-mono tracking-widest text-stone-700 uppercase">
+            // UESC VISUEL INDISPONIBLE
+          </div>
+        ) : (
+          <img
+            key={imageUrl}
+            src={imageUrl}
+            alt="Tau Ceti IV - Lieu actif"
+            referrerPolicy="no-referrer"
+            onError={() => setImageLoadFailed(true)}
+            className="absolute inset-0 w-full h-full object-cover select-none pointer-events-none transition-opacity duration-1000 ease-in-out"
+          />
+        )}
       </div>
 
       {/* Real-time EM lightning flashes overlay */}
       {flashActive && (
-        <div className="absolute inset-0 bg-sky-100/45 mix-blend-color-dodge pointer-events-none z-10 animate-pulse" />
+        <div className={`absolute inset-0 ${isEmBurst ? 'bg-orange-100/70' : 'bg-sky-100/45'} mix-blend-color-dodge pointer-events-none z-10 animate-pulse`} />
+      )}
+
+      {isEmBurst && (
+        <div className="absolute inset-0 bg-black/65 pointer-events-none z-25 animate-pulse" />
       )}
 
       {/* Poussiere rouge background blend overlays */}
@@ -499,6 +470,24 @@ export default function Cinemagraph({ config, imageUrl, onFlickerSound, onScanne
         <>
           <div className="absolute inset-0 bg-[#9c2f1e]/15 mix-blend-multiply pointer-events-none z-10" />
           <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-[#8c3523]/45 via-[#8c3523]/22 to-transparent pointer-events-none z-10" />
+        </>
+      )}
+
+      {config.activeLocation === 'red_plains' && (
+        <div className="absolute inset-0 pointer-events-none z-10 opacity-45 mix-blend-screen">
+          <div className="absolute left-0 right-0 h-[3px] bg-orange-200/20 blur-[1px]" style={{ top: `${anchors.mirageBand.y * 100}%`, transform: `translateY(${Math.sin(timeSec * 5) * 6}px) scaleX(${1 + Math.sin(timeSec * 2) * 0.018})` }} />
+          <div className="absolute left-0 right-0 h-[1px] bg-red-200/16 blur-[1px]" style={{ top: `${(anchors.mirageBand.y + anchors.mirageBand.height * 0.55) * 100}%`, transform: `translateY(${Math.cos(timeSec * 4) * 5}px)` }} />
+        </div>
+      )}
+
+      {config.activeLocation === 'new_carthage' && (
+        <div className="absolute inset-x-0 top-0 h-1/2 pointer-events-none z-10 bg-[radial-gradient(circle_at_22%_12%,rgba(255,180,85,0.15),transparent_26%),radial-gradient(circle_at_78%_18%,rgba(255,160,70,0.09),transparent_30%)]" />
+      )}
+
+      {config.activeLocation === 'black_arches' && (
+        <>
+          <div className="absolute inset-0 pointer-events-none z-10 bg-[radial-gradient(circle_at_50%_16%,rgba(190,118,78,0.16),transparent_38%)] mix-blend-screen" />
+          <div className="absolute inset-0 pointer-events-none z-10 bg-[radial-gradient(circle_at_52%_52%,transparent_28%,rgba(0,0,0,0.24)_100%)] mix-blend-multiply" />
         </>
       )}
 
@@ -514,36 +503,36 @@ export default function Cinemagraph({ config, imageUrl, onFlickerSound, onScanne
       )}
 
       {/* Signal instable multi-channel RGB shifts */}
-      {isSignalMode && (
+      {(isSignalMode || isRadioBurst) && (
         <>
           {/* Cyan channel shift layer */}
-          <img
-            src={getSceneBgSrc(activeLocId, activeLocPath)}
-            onError={() => {
-              setFailedImages(prev => ({ ...prev, [activeLocId]: true }));
-            }}
-            alt="Cyan offset channel"
-            referrerPolicy="no-referrer"
-            className="absolute top-0 left-0 w-full h-full object-cover select-none pointer-events-none mix-blend-screen opacity-40 z-10"
-            style={{
-              transform: `translate(${isGlitchFrame ? (Math.random() - 0.5) * 16 : 4}px, ${isGlitchFrame ? (Math.random() - 0.5) * 8 : -2}px)`,
-              filter: 'hue-rotate(115deg) saturate(1.8) contrast(1.2)'
-            }}
-          />
+          {!imageLoadFailed && (
+            <img
+              src={imageUrl}
+              onError={() => setImageLoadFailed(true)}
+              alt="Cyan offset channel"
+              referrerPolicy="no-referrer"
+              className="absolute top-0 left-0 w-full h-full object-cover select-none pointer-events-none mix-blend-screen opacity-40 z-10"
+              style={{
+                transform: `translate(${isGlitchFrame ? (Math.random() - 0.5) * (isRadioBurst ? 34 : 16) : 4}px, ${isGlitchFrame ? (Math.random() - 0.5) * 8 : -2}px)`,
+                filter: 'hue-rotate(115deg) saturate(1.8) contrast(1.2)'
+              }}
+            />
+          )}
           {/* Red channel shift layer */}
-          <img
-            src={getSceneBgSrc(activeLocId, activeLocPath)}
-            onError={() => {
-              setFailedImages(prev => ({ ...prev, [activeLocId]: true }));
-            }}
-            alt="Red offset channel"
-            referrerPolicy="no-referrer"
-            className="absolute top-0 left-0 w-full h-full object-cover select-none pointer-events-none mix-blend-screen opacity-40 z-10"
-            style={{
-              transform: `translate(${isGlitchFrame ? (Math.random() - 0.5) * -16 : -4}px, ${isGlitchFrame ? (Math.random() - 0.5) * -8 : 2}px)`,
-              filter: 'hue-rotate(-45deg) saturate(2.0) contrast(1.2)'
-            }}
-          />
+          {!imageLoadFailed && (
+            <img
+              src={imageUrl}
+              onError={() => setImageLoadFailed(true)}
+              alt="Red offset channel"
+              referrerPolicy="no-referrer"
+              className="absolute top-0 left-0 w-full h-full object-cover select-none pointer-events-none mix-blend-screen opacity-40 z-10"
+              style={{
+                transform: `translate(${isGlitchFrame ? (Math.random() - 0.5) * (isRadioBurst ? -34 : -16) : -4}px, ${isGlitchFrame ? (Math.random() - 0.5) * -8 : 2}px)`,
+                filter: 'hue-rotate(-45deg) saturate(2.0) contrast(1.2)'
+              }}
+            />
+          )}
           {/* Jittery jumping scan parasite lines */}
           <div className="absolute inset-0 pointer-events-none z-20">
             <div className="absolute w-full h-[1px] bg-red-400/30 blur-[0.5px]" style={{ top: `${(timeSec * 35) % 100}%` }} />
@@ -553,23 +542,53 @@ export default function Cinemagraph({ config, imageUrl, onFlickerSound, onScanne
         </>
       )}
 
-      {/* Real-time organic creature (Hound of Arches) edge shadows & scary brief silhouettes */}
-      {config.visualHoundShadows && (
+      {/* Hound movement language: low, fast, partial silhouettes only. */}
+      {(config.visualHoundShadows || isHoundBurst) && !houndProfile.showOnlyOnBurst && (
         <>
-          {/* Shadow 1 - near rover bottom-left corner */}
           <div 
-            className="absolute left-[8%] bottom-[4%] w-[24%] h-[18%] bg-black/75 blur-[24px] rounded-full scale-y-50 pointer-events-none mix-blend-multiply" 
+            className="absolute w-[24%] h-[12%] bg-black/65 rounded-full scale-y-50 pointer-events-none mix-blend-multiply z-20" 
             style={{
-              transform: `scale(${1.0 + 0.12 * Math.sin(timeSec * 2.2)}) translate(${(Math.sin(timeSec * 1.8)) * 8}px, ${(Math.cos(timeSec * 1.2)) * 6}px)`,
-              transition: 'transform 0.5s ease-out-harmonic'
+              left: `${anchors.houndZones.cover.x * 100 - 12}%`,
+              top: `${anchors.houndZones.cover.y * 100}%`,
+              filter: `blur(${houndProfile.blurPx + 10}px)`,
+              opacity: houndProfile.opacity * (0.44 + 0.22 * Math.sin(timeSec * 2.2)),
+              transform: `scale(${houndProfile.scale + 0.08 * Math.sin(timeSec * 2.2)}) translate(${Math.sin(timeSec * 1.8) * 8}px, ${Math.cos(timeSec * 1.2) * 6}px) scaleY(0.42)`,
+              transition: 'transform 0.5s ease-out'
             }}
           />
-          {/* Shadow 2 - behind the black arches base on the right */}
-          <div 
-            className="absolute right-[32%] bottom-[22%] w-[16%] h-[28%] bg-stone-950/85 blur-[35px] rounded-full scale-x-75 pointer-events-none mix-blend-multiply" 
+        </>
+      )}
+
+      {isHoundBurst && (
+        <>
+          <div
+            className="absolute h-[44px] w-[190px] bg-black/82 rounded-full pointer-events-none mix-blend-multiply z-20"
             style={{
-              transform: `scale(${1.1 + 0.18 * Math.cos(timeSec * 1.4)}) translate(${(Math.cos(timeSec * 2.1)) * 14}px, ${(Math.sin(timeSec * 1.1)) * 10}px)`,
-              transition: 'transform 0.8s ease-in-out'
+              left: `${houndX}%`,
+              top: `${houndY}%`,
+              filter: `blur(${houndProfile.blurPx}px)`,
+              transform: `scale(${houndProfile.scale}) scaleY(0.34) rotate(-3deg)`,
+              opacity: Math.max(0, houndProfile.opacity + 0.26 - houndProgress * 0.72)
+            }}
+          />
+          <div
+            className="absolute h-[34px] w-[94px] bg-stone-950/75 pointer-events-none z-20"
+            style={{
+              left: `${houndX + 4}%`,
+              top: `${houndY - 2}%`,
+              clipPath: 'polygon(4% 82%, 19% 43%, 38% 28%, 55% 18%, 72% 36%, 92% 78%, 80% 86%, 62% 64%, 46% 82%, 25% 67%, 12% 92%)',
+              filter: `blur(${Math.max(2, houndProfile.blurPx - 7)}px)`,
+              transform: `scale(${houndProfile.scale})`,
+              opacity: Math.max(0, houndProfile.opacity + 0.20 - houndProgress * 0.85)
+            }}
+          />
+          <div
+            className="absolute w-[16%] h-[9%] border border-orange-400/18 bg-orange-400/5 pointer-events-none z-20"
+            style={{
+              left: `${Math.max(4, Math.min(86, anchors.radioZone.x * 100 - 8))}%`,
+              top: `${Math.max(10, Math.min(84, anchors.radioZone.y * 100 - 4))}%`,
+              opacity: 0.3 + 0.35 * Math.sin(timeSec * 28),
+              filter: 'blur(0.5px)'
             }}
           />
         </>
@@ -578,36 +597,35 @@ export default function Cinemagraph({ config, imageUrl, onFlickerSound, onScanne
       {/* Hounds proches - extra low slithering quadruped shadows and fuzzy silhouettes fleeing under arches */}
       {isHoundsMode && (
         <>
-          {/* Flat running quadruped shadow slide-by */}
           <div 
             className="absolute bg-stone-950/75 blur-[16px] rounded-full pointer-events-none mix-blend-multiply"
             style={{
-              bottom: '10%',
-              left: `${-15 + ((timeSec * 0.8) % 5.0) * 35}%`, // rushes past the desert dust
-              width: '160px',
-              height: '50px',
-              opacity: Math.sin(((timeSec * 0.8) % 5.0) * Math.PI / 5.0) * 0.85,
-              transform: 'scaleY(0.4) rotate(-4deg)',
+              top: `${anchors.houndZones.cover.y * 100}%`,
+              left: `${anchors.houndZones.entry.x * 100 + ((timeSec * 0.45) % 5.0) * (anchors.houndZones.exit.x - anchors.houndZones.entry.x) * 22}%`,
+              width: houndProfile.variant === 'distant_silhouette' ? '120px' : '165px',
+              height: houndProfile.variant === 'equipment_reflection' ? '42px' : '50px',
+              opacity: Math.sin(((timeSec * 0.8) % 5.0) * Math.PI / 5.0) * houndProfile.opacity,
+              transform: `scale(${houndProfile.scale}) scaleY(0.38) rotate(-4deg)`,
               transition: 'left 0.1s linear'
             }}
           />
-          {/* Another shadow rustling behind the crates */}
           <div 
             className="absolute bg-black/80 blur-[20px] rounded-full pointer-events-none mix-blend-multiply"
             style={{
-              bottom: '18%',
-              left: '49%',
+              top: `${anchors.houndZones.cover.y * 100 - 6}%`,
+              left: `${anchors.houndZones.cover.x * 100}%`,
               width: '100px',
               height: '40px',
               transform: `scale(${1.0 + 0.25 * Math.sin(timeSec * 4.8)}) translate(${(Math.sin(timeSec * 4.2)) * 14}px, ${(Math.cos(timeSec * 3.1)) * 5}px)`,
               opacity: 0.75
             }}
           />
-          {/* Fleeting spooky silhouette behindcrates occasionally */}
           {((ticker % 6000 < 1500) && (ticker % 6000 > 300)) && (
             <div 
-              className="absolute left-[54%] bottom-[23%] w-12 h-8 bg-stone-950/65 blur-[3px] pointer-events-none z-10 animate-pulse"
+              className="absolute w-14 h-8 bg-stone-950/65 blur-[3px] pointer-events-none z-10 animate-pulse"
               style={{
+                left: `${anchors.houndZones.cover.x * 100 + 2}%`,
+                top: `${anchors.houndZones.cover.y * 100 - 5}%`,
                 clipPath: 'polygon(15% 85%, 32% 45%, 52% 12%, 68% 34%, 88% 72%, 100% 90%)',
                 transform: `scaleX(${ticker % 12000 < 6000 ? 1 : -1}) translate(${Math.sin(timeSec * 14) * 5}px, 0px)`
               }}
@@ -621,19 +639,19 @@ export default function Cinemagraph({ config, imageUrl, onFlickerSound, onScanne
         <div className="absolute top-[10%] left-[4%] bg-black/95 border border-red-500/80 text-red-500 font-mono text-[9px] p-2.5 rounded tracking-widest animate-pulse max-w-[240px] z-20 shadow-lg shadow-red-950/40">
           <div className="font-bold flex items-center gap-1.5 text-red-400 text-[10px]">
             <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-ping" />
-            [ALETHEIA WARNING]
+            [ALETHEIA NOTICE]
           </div>
           <div className="mt-1 text-stone-300 leading-relaxed">
-            - INTERFÉRENCE SPECTRE S-4 RELEVÉE<br />
-            - MOUVEMENT BIOLOGIQUE LOCALISÉ<br />
-            - FORCE EM : {150 + Math.floor(Math.sin(timeSec) * 40)} µT (CRITIQUE)
+            - INTERFÉRENCE LOCALE DÉTECTÉE<br />
+            - ACTIVITÉ PÉRIPHÉRIQUE NON CONFIRMÉE<br />
+            - FORCE EM : {90 + Math.floor(Math.sin(timeSec) * 24)} µT
           </div>
         </div>
       )}
 
       {/* Double-layered scanlines for CTR and Scanner filters */}
-      {(isScannerMode || isSignalMode || isTempete) && (
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.18)_50%)] bg-[size:100%_4px] pointer-events-none z-20 opacity-80" />
+      {(isScannerMode || isSignalMode || isTempete || locationEffect.scanlineOpacity > 0.2) && (
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.18)_50%)] bg-[size:100%_4px] pointer-events-none z-20" style={{ opacity: Math.min(0.86, locationEffect.scanlineOpacity + (isRadioBurst ? 0.28 : 0)) }} />
       )}
 
       {/* Retro Horizontal scanline jitter overlay for intense glitch fields */}
@@ -643,57 +661,6 @@ export default function Cinemagraph({ config, imageUrl, onFlickerSound, onScanne
           <div className="absolute top-1/4 left-0 w-full h-[5px] bg-white/10 blur-[2px]" style={{ top: `${Math.random() * 100}%` }} />
         </div>
       )}
-
-      {/* 2. Seamless Wind-Tarp Distortion Filter via SVG */}
-      <div 
-        id="tarp-wind-overlay"
-        className="absolute top-0 left-0 w-full h-full pointer-events-none origin-right"
-        style={{
-          clipPath: 'polygon(65% 35%, 100% 35%, 100% 90%, 65% 90%)',
-          filter: `url(#fabric-wind-filter)`
-        }}
-      >
-        {LOCATIONS.map((loc) => {
-          const isActive = (config.activeLocation || 'delta6') === loc.id;
-          const bgSrc = getSceneBgSrc(loc.id, loc.image);
-          return (
-            <img
-              key={`tarp-${loc.id}`}
-              src={bgSrc}
-              alt={`Tarp Mask - ${loc.label}`}
-              referrerPolicy="no-referrer"
-              onError={() => {
-                setFailedImages(prev => ({ ...prev, [loc.id]: true }));
-              }}
-              className="absolute inset-0 w-full h-full object-cover select-none pointer-events-none transition-opacity duration-1000 ease-in-out"
-              style={{
-                opacity: isActive ? 1 : 0
-              }}
-            />
-          );
-        })}
-      </div>
-
-      {/* SVG filter definitions containing the wind displacement */}
-      <svg style={{ position: 'absolute', width: 0, height: 0 }}>
-        <defs>
-          <filter id="fabric-wind-filter">
-            <feTurbulence
-              type="fractalNoise"
-              baseFrequency={`${0.012 + 0.003 * Math.sin(timeSec * Math.PI * 0.4)} ${0.035 + 0.005 * Math.cos(timeSec * Math.PI * 0.4)}`}
-              numOctaves="3"
-              result="noise"
-            />
-            <feDisplacementMap
-              in="SourceGraphic"
-              in2="noise"
-              scale={windTarpWarpScale}
-              xChannelSelector="R"
-              yChannelSelector="G"
-            />
-          </filter>
-        </defs>
-      </svg>
 
       {/* 3. HTML5 SVG Layer for Cables, Vector flares and lights overlay */}
       <svg 
@@ -741,25 +708,20 @@ export default function Cinemagraph({ config, imageUrl, onFlickerSound, onScanne
           </radialGradient>
         </defs>
 
-        {/* Rover spotlight cone overlays */}
+        {/* Anchored environmental light sources */}
         {headlightAlphaActual > 0.05 && (
           <g style={{ opacity: headlightAlphaActual, transition: 'opacity 0.03s linear' }}>
-            {/* Left headlight projector beam cone */}
-            <polygon 
-              points="190,325 320,490 10,480"
-              fill="url(#headlight-cone-1)" 
-              className="mix-blend-screen"
-            />
-            {/* Right headlight projector beam cone */}
-            <polygon 
-              points="225,335 380,510 60,540"
-              fill="url(#headlight-cone-1)" 
-              className="mix-blend-screen"
-            />
-            
-            {/* Expanded fuzzy bulbglows if in dense red dust, otherwise standard */}
-            <circle cx="190" cy="326" r={isPoussiereMode ? 35 : 14} fill="url(#headlight-glow-1)" />
-            <circle cx="225" cy="336" r={isPoussiereMode ? 35 : 14} fill="url(#headlight-glow-2)" />
+            {lightSources.map((source, index) => (
+              <g key={`light-${index}`}>
+                <polygon
+                  points={`${source.x},${source.y} ${source.x + (index % 2 === 0 ? 120 : -115)},${source.y + 165} ${source.x + (index % 2 === 0 ? -185 : 170)},${source.y + 178}`}
+                  fill="url(#headlight-cone-1)"
+                  className="mix-blend-screen"
+                  opacity={config.activeLocation === 'black_arches' ? 0.20 : 0.36}
+                />
+                <circle cx={source.x} cy={source.y} r={isPoussiereMode || isTempete ? 34 : 18} fill={index % 2 === 0 ? 'url(#headlight-glow-1)' : 'url(#headlight-glow-2)'} />
+              </g>
+            ))}
           </g>
         )}
 
@@ -767,55 +729,55 @@ export default function Cinemagraph({ config, imageUrl, onFlickerSound, onScanne
         <g>
           {/* Main scanning dome glow - pulses red/cyan/amber */}
           <circle 
-            cx="627" 
-            cy="271" 
+            cx={scannerX}
+            cy={scannerY}
             r={12 + 10 * domePulse} 
             fill="url(#scanner-glow-amber)" 
             style={{ opacity: isSilenceMode ? 0 : 0.3 + 0.7 * domePulse }} 
           />
           <circle 
-            cx="627" 
-            cy="271" 
+            cx={scannerX}
+            cy={scannerY}
             r="4" 
             fill={isSilenceMode ? '#444' : '#ffbc3c'} 
           />
 
           {/* Green indicator LED near power assembly base */}
           <circle
-            cx="605"
-            cy="392"
+            cx={scannerX - 22}
+            cy={scannerY + 121}
             r={6 + 4 * greenLedPulse}
             fill="url(#scanner-glow-green)"
             style={{ opacity: isSilenceMode ? 0 : 0.4 + 0.6 * greenLedPulse }}
           />
-          <circle cx="605" cy="392" r="1.8" fill={isSilenceMode ? '#333' : '#a4ffb6'} />
+          <circle cx={scannerX - 22} cy={scannerY + 121} r="1.8" fill={isSilenceMode ? '#333' : '#a4ffb6'} />
 
           {/* Amber warning sensor LED blinking */}
           <circle
-            cx="580"
-            cy="406"
+            cx={scannerX - 47}
+            cy={scannerY + 135}
             r={5 + 3 * amberLedPulse}
             fill="url(#scanner-glow-red)"
             style={{ opacity: isSilenceMode ? 0 : 0.2 + 0.8 * amberLedPulse }}
           />
-          <circle cx="580" cy="406" r="1.5" fill={isSilenceMode ? '#333' : '#ffa0a0'} />
+          <circle cx={scannerX - 47} cy={scannerY + 135} r="1.5" fill={isSilenceMode ? '#333' : '#ffa0a0'} />
         </g>
 
         {/* Geological active scanner green waves and cargo sweeping target */}
         {isScannerMode && (
           <g stroke="rgba(16, 185, 129, 0.55)" fill="none" strokeWidth="1.2">
             {/* Sweeping concentric concentric lines radiating down from scanner tower */}
-            <circle cx="627" cy="271" r={`${(timeSec * 115) % 180}`} style={{ opacity: 1.0 - ((timeSec * 115) % 180) / 180 }} />
-            <circle cx="627" cy="271" r={`${((timeSec + 0.45) * 115) % 180}`} style={{ opacity: 1.0 - (((timeSec + 0.45) * 115) % 180) / 180 }} />
+            <circle cx={scannerX} cy={scannerY} r={`${(timeSec * 115) % 180}`} style={{ opacity: 1.0 - ((timeSec * 115) % 180) / 180 }} />
+            <circle cx={scannerX} cy={scannerY} r={`${((timeSec + 0.45) * 115) % 180}`} style={{ opacity: 1.0 - (((timeSec + 0.45) * 115) % 180) / 180 }} />
             {/* Laser sector analyzer spot pointing back at the crates */}
             <polygon 
-              points={`627,271 525,${345 + 50 * domePulse} 485,${405 - 50 * domePulse}`} 
+              points={`${scannerX},${scannerY} ${scannerX - 105},${scannerY + 74 + 50 * domePulse} ${scannerX - 145},${scannerY + 134 - 50 * domePulse}`} 
               fill="rgba(16, 185, 129, 0.11)" 
               className="mix-blend-screen"
             />
             {/* Circle boundary around boxes */}
-            <circle cx="510" cy="380" r="45" stroke="rgba(16, 185, 129, 0.35)" strokeDasharray="3, 3" />
-            <text x="510" y="340" fill="rgba(16, 185, 129, 0.85)" fontFamily="monospace" fontSize="8" textAnchor="middle" letterSpacing="1">
+            <circle cx={scannerX - 118} cy={scannerY + 112} r="45" stroke="rgba(16, 185, 129, 0.35)" strokeDasharray="3, 3" />
+            <text x={scannerX - 118} y={scannerY + 72} fill="rgba(16, 185, 129, 0.85)" fontFamily="monospace" fontSize="8" textAnchor="middle" letterSpacing="1">
               SCAN ACTIVE // ANALYZING LITHOLOGY
             </text>
           </g>
@@ -825,11 +787,11 @@ export default function Cinemagraph({ config, imageUrl, onFlickerSound, onScanne
         {isTempete && (ticker % 1100 < 150) && (Math.random() < 0.72) && (
           <g stroke="#67e8f9" strokeWidth="1.5" fill="none" filter="drop-shadow(0 0 4px #06b6d4) drop-shadow(0 0 1px #a5f3fc)">
             {/* Static spark connecting far right antenna 952,80 to 840,280 */}
-            <path d={getLightningPath(952, 80, 840, 280)} opacity={0.88} />
+            <path d={getLightningPath(radioX, radioY, scannerX + 110, scannerY + 30)} opacity={0.88} />
             {/* Static spark on rover antenna */}
             <path d={getLightningPath(285, 210, 268, 300)} opacity={0.7} />
             {/* Spark around geological beacon tower */}
-            <path d={getLightningPath(627, 271, 580, 406)} opacity={0.65} />
+            <path d={getLightningPath(scannerX, scannerY, scannerX - 45, scannerY + 135)} opacity={0.65} />
           </g>
         )}
 
@@ -865,8 +827,28 @@ export default function Cinemagraph({ config, imageUrl, onFlickerSound, onScanne
         id="dust-haze-fade"
         className="absolute top-0 left-0 w-full h-full pointer-events-none transition-opacity duration-300 pointer-events-none mix-blend-multiply z-15"
         style={{
-          background: 'radial-gradient(circle, rgba(148, 51, 34, 0.18) 0%, rgba(110, 31, 18, 0.28) 100%)',
-          opacity: atmosphereHazeAlpha
+          background: locationEffect.haze,
+          opacity: Math.min(0.72, atmosphereHazeAlpha + locationEffect.hazeOpacity)
+        }}
+      />
+
+      {locationEffect.ghostingOpacity > 0 && !imageLoadFailed && (
+        <img
+          src={imageUrl}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover select-none pointer-events-none mix-blend-screen z-15"
+          style={{
+            opacity: locationEffect.ghostingOpacity + (isRadioBurst ? 0.18 : 0),
+            transform: `translate(${config.activeLocation === 'black_arches' ? -10 : 8}px, 0)`,
+            filter: 'blur(1px) saturate(0.7)'
+          }}
+        />
+      )}
+
+      <div
+        className="absolute inset-0 pointer-events-none z-20"
+        style={{
+          background: `radial-gradient(circle, transparent 42%, rgba(0,0,0,${locationEffect.vignetteOpacity}) 100%)`
         }}
       />
 

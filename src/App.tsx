@@ -6,7 +6,8 @@
 import { useState, useRef, useEffect } from 'react';
 import Cinemagraph from './components/Cinemagraph';
 import HUD from './components/HUD';
-import { CinemagraphConfig } from './types';
+import TransmissionOverlay from './components/TransmissionOverlay';
+import type { CinemagraphConfig, QuickEffectType, TransmissionType } from './types';
 import { SciFiAudioEngine } from './utils/audioEngine';
 import { 
   getStoredState, 
@@ -19,6 +20,14 @@ import {
   broadcastStateChange,
   applyPreset
 } from './utils/syncState';
+import { getLocationById, LOCATIONS, type LocationId } from './utils/locations';
+import {
+  connectNetworkSync,
+  networkClientId,
+  sendNetworkState,
+  type NetworkSyncStatus
+} from './utils/networkSync';
+import { createMissionTransmission } from './utils/transmissions';
 import { 
   Shield, 
   Volume2, 
@@ -35,8 +44,6 @@ import {
   VolumeX,
   AlertTriangle
 } from 'lucide-react';
-
-import tauCetiBase from './assets/images/tau_ceti_base_1779960769896.png';
 
 // Simple custom router hook supporting path and hash navigation
 function useRoute() {
@@ -86,12 +93,19 @@ export default function App() {
   const [displayBooted, setDisplayBooted] = useState(false);
   const [controlBooted, setControlBooted] = useState(false);
   const [loopEpochKey, setLoopEpochKey] = useState(0);
+  const [networkSyncStatus, setNetworkSyncStatus] = useState<NetworkSyncStatus>('disconnected');
   
   const audioEngineRef = useRef<SciFiAudioEngine | null>(null);
+  const lastQuickEffectIdRef = useRef<string>('');
+  const lastTransmissionIdRef = useRef<string>('');
 
   // Initialize Web Audio Engine
   useEffect(() => {
     audioEngineRef.current = new SciFiAudioEngine();
+    LOCATIONS.forEach((location) => {
+      const image = new Image();
+      image.src = location.image;
+    });
     return () => {
       if (audioEngineRef.current) {
         audioEngineRef.current.destroy();
@@ -117,8 +131,19 @@ export default function App() {
     };
   }, []);
 
+  // Network synchronization for phone/tablet control to remote display over local Wi-Fi.
+  useEffect(() => {
+    return connectNetworkSync((remoteState, source) => {
+      if (source === networkClientId) return;
+
+      setState(remoteState);
+      saveStoredState(remoteState);
+    }, setNetworkSyncStatus);
+  }, []);
+
   // Sync Audio Engine values dynamically matching active route configuration
   const currentConfig = deriveConfigFromState(state);
+  const activeLocation = getLocationById(state.activeLocation);
   const isAudioBooted = (route === 'display' && displayBooted) || (route === 'control' && controlBooted);
 
   useEffect(() => {
@@ -133,7 +158,10 @@ export default function App() {
         currentConfig.audioWindVolume, 
         currentConfig.audioHumVolume, 
         currentConfig.audioRadioVolume, 
-        currentConfig.audioStormVolume
+        currentConfig.audioStormVolume,
+        currentConfig.audioHoundsVolume,
+        currentConfig.activeLocation,
+        currentConfig.environmentFilter
       );
     } else {
       audioEngineRef.current.setMute(true);
@@ -145,8 +173,46 @@ export default function App() {
     currentConfig.audioWindVolume, 
     currentConfig.audioHumVolume,
     currentConfig.audioRadioVolume,
-    currentConfig.audioStormVolume
+    currentConfig.audioStormVolume,
+    currentConfig.audioHoundsVolume,
+    currentConfig.activeLocation,
+    currentConfig.environmentFilter
   ]);
+
+  useEffect(() => {
+    const quickEffect = currentConfig.quickEffect;
+    if (!quickEffect || !audioEngineRef.current || !currentConfig.audioEnabled || currentConfig.audioRadioSilence) return;
+
+    const effectId = `${quickEffect.type}-${quickEffect.startedAt}`;
+    if (lastQuickEffectIdRef.current === effectId) return;
+    lastQuickEffectIdRef.current = effectId;
+
+    if (quickEffect.type === 'glitch_radio') {
+      audioEngineRef.current.triggerRadioGlitchBurst();
+    } else if (quickEffect.type === 'flash_em') {
+      audioEngineRef.current.triggerEmFlash();
+    } else if (quickEffect.type === 'ombre_hound') {
+      audioEngineRef.current.triggerHoundShadow();
+    }
+  }, [currentConfig.quickEffect, currentConfig.audioEnabled, currentConfig.audioRadioSilence]);
+
+  useEffect(() => {
+    const transmission = state.displayOptions.activeTransmission;
+    if (!transmission || !audioEngineRef.current || !currentConfig.audioEnabled || currentConfig.audioRadioSilence) return;
+    if (lastTransmissionIdRef.current === transmission.id) return;
+    lastTransmissionIdRef.current = transmission.id;
+    audioEngineRef.current.triggerTransmissionOpen();
+  }, [state.displayOptions.activeTransmission, currentConfig.audioEnabled, currentConfig.audioRadioSilence]);
+
+  const commitLocalState = (payload: MissionControlState) => {
+    setState(payload);
+    saveStoredState(payload);
+
+    const sentOverNetwork = sendNetworkState(payload);
+    if (!sentOverNetwork) {
+      broadcastStateChange(payload);
+    }
+  };
 
   // Handle local state modifiers using the serializable state patterns
   const handleUpdateConfig = (newConfig: CinemagraphConfig) => {
@@ -161,6 +227,7 @@ export default function App() {
         scannerVolume: newConfig.audioScannerVolume,
         humVolume: newConfig.audioHumVolume,
         stormVolume: newConfig.audioStormVolume,
+        houndsVolume: newConfig.audioHoundsVolume,
         radioSilence: newConfig.audioRadioSilence
       },
       displayOptions: {
@@ -168,30 +235,165 @@ export default function App() {
         screenBlack: newConfig.screenBlack
       }
     };
-    setState(payload);
-    saveStoredState(payload);
-    broadcastStateChange(payload);
+    commitLocalState(payload);
   };
 
   const handleUpdateResources = (newResources: ResourceState[]) => {
     const payload = { ...state, resources: newResources };
-    setState(payload);
-    saveStoredState(payload);
-    broadcastStateChange(payload);
+    commitLocalState(payload);
   };
 
   const handleUpdatePresetId = (id: string) => {
     const payload = applyPreset(state, id);
-    setState(payload);
-    saveStoredState(payload);
-    broadcastStateChange(payload);
+    commitLocalState(payload);
   };
 
-  const handleUpdateLocation = (location: 'new_carthage' | 'red_plains' | 'black_arches' | 'delta6') => {
+  const handleUpdateLocation = (location: LocationId) => {
     const payload = { ...state, activeLocation: location };
-    setState(payload);
-    saveStoredState(payload);
-    broadcastStateChange(payload);
+    commitLocalState(payload);
+  };
+
+  const triggerQuickEffect = (type: QuickEffectType, baseState: MissionControlState = state): MissionControlState => ({
+    ...baseState,
+    quickEffect: {
+      type,
+      startedAt: Date.now(),
+      durationMs: type === 'flash_em' ? 900 : type === 'glitch_radio' ? 1800 : 2200
+    }
+  });
+
+  const handleQuickAction = (actionId: string) => {
+    if (actionId === 'reset_calme') {
+      const payload: MissionControlState = {
+        ...state,
+        activeSceneMode: 'normal',
+        effects: {
+          ...state.effects,
+          dust: 0,
+          glitch: 0,
+          scanner: 0,
+          headlight: 1,
+          hounds: 0,
+          em: 0
+        },
+        audio: {
+          ...state.audio,
+          windVolume: 0.15,
+          radioVolume: 0.08,
+          scannerVolume: 0.05,
+          humVolume: 0.12,
+          stormVolume: 0,
+          houndsVolume: 0
+        },
+        displayOptions: {
+          ...state.displayOptions,
+          activePresetId: 'calme',
+          activeTransmission: null
+        },
+        quickEffect: null
+      };
+      commitLocalState(payload);
+      return;
+    }
+
+    if (actionId === 'intervention') {
+      const payload: MissionControlState = {
+        ...state,
+        displayOptions: {
+          ...state.displayOptions,
+          activeTransmission: createMissionTransmission('rowe')
+        }
+      };
+      commitLocalState(payload);
+      return;
+    }
+
+    const quickEffectType = actionId as QuickEffectType;
+    let payload = triggerQuickEffect(quickEffectType);
+    if (quickEffectType === 'glitch_radio') {
+      payload = {
+        ...payload,
+        activeSceneMode: 'signal',
+        effects: { ...payload.effects, glitch: 3 },
+        audio: { ...payload.audio, radioVolume: Math.max(payload.audio.radioVolume, 0.85) },
+        displayOptions: { ...payload.displayOptions, activePresetId: 'signal' }
+      };
+    } else if (quickEffectType === 'flash_em') {
+      payload = {
+        ...payload,
+        effects: { ...payload.effects, em: 3, glitch: Math.max(payload.effects.glitch, 2) },
+        audio: { ...payload.audio, stormVolume: Math.max(payload.audio.stormVolume, 0.85), radioVolume: Math.max(payload.audio.radioVolume, 0.55) }
+      };
+    } else if (quickEffectType === 'ombre_hound') {
+      payload = {
+        ...payload,
+        activeSceneMode: 'hounds',
+        effects: { ...payload.effects, hounds: 3, headlight: Math.max(payload.effects.headlight, 2) },
+        audio: { ...payload.audio, houndsVolume: Math.max(payload.audio.houndsVolume, 0.85) },
+        displayOptions: { ...payload.displayOptions, activePresetId: 'hounds' }
+      };
+    }
+    commitLocalState(payload);
+  };
+
+  const handleTransmission = (type: TransmissionType) => {
+    const payload: MissionControlState = {
+      ...state,
+      displayOptions: {
+        ...state.displayOptions,
+        activeTransmission: createMissionTransmission(type)
+      }
+    };
+    commitLocalState(payload);
+  };
+
+  const handleSceneShortcut = (sceneId: string) => {
+    let payload: MissionControlState = state;
+
+    const setLocationAndPreset = (location: LocationId, presetId: string) => {
+      payload = applyPreset({ ...payload, activeLocation: location }, presetId);
+    };
+
+    switch (sceneId) {
+      case 'depart_new_carthage':
+        setLocationAndPreset('new_carthage', 'calme');
+        break;
+      case 'briefing_rowe':
+        setLocationAndPreset('new_carthage', 'delta6');
+        payload.displayOptions.activeTransmission = createMissionTransmission('rowe');
+        break;
+      case 'traversee':
+        setLocationAndPreset('red_plains', 'delta6');
+        payload.audio.radioVolume = Math.max(payload.audio.radioVolume, 0.22);
+        break;
+      case 'anomalie_radio':
+        setLocationAndPreset('red_plains', 'signal');
+        payload = triggerQuickEffect('glitch_radio', payload);
+        break;
+      case 'arches_noires':
+        setLocationAndPreset('black_arches', 'signal');
+        break;
+      case 'site_delta6':
+        setLocationAndPreset('delta6', 'delta6');
+        break;
+      case 'hounds_proches':
+        setLocationAndPreset(state.activeLocation === 'black_arches' ? 'black_arches' : 'delta6', 'hounds');
+        payload = triggerQuickEffect('ombre_hound', payload);
+        break;
+      case 'tempete_em':
+        setLocationAndPreset(state.activeLocation === 'red_plains' ? 'red_plains' : 'delta6', 'tempete');
+        payload = triggerQuickEffect('flash_em', payload);
+        break;
+      case 'extraction':
+        setLocationAndPreset(state.activeLocation === 'red_plains' ? 'red_plains' : 'delta6', 'extraction');
+        break;
+      case 'retour_new_carthage':
+        setLocationAndPreset('new_carthage', 'delta6');
+        payload.displayOptions.activeTransmission = createMissionTransmission('aletheia');
+        break;
+    }
+
+    commitLocalState(payload);
   };
 
   const handleResetLoopEpoch = () => {
@@ -222,16 +424,6 @@ export default function App() {
     if (currentConfig.visualEmFlashes) return 'CRITIQUE (TEMPÊTE)';
     if (currentConfig.visualRadioGlitch > 0.6) return 'SATURE INTERFÉRENCES';
     return 'NOMINALE';
-  };
-
-  const getDisplayLocationLabel = (loc: string) => {
-    switch (loc) {
-      case 'new_carthage': return 'SITE : NEW CARTHAGE (COLONIE PRINCIPALE)';
-      case 'red_plains': return 'ZONE : PLAINES ROUGES (SECTEUR TRANSIT)';
-      case 'black_arches': return 'ANOMALIE : ARCHES NOIRES';
-      case 'delta6': return 'SITE : SITE GÉOLOGIQUE DELTA-6';
-      default: return `SITE : ${String(loc).toUpperCase()}`;
-    }
   };
 
   const getDisplayModeLabel = (filter: string) => {
@@ -360,10 +552,11 @@ export default function App() {
           <Cinemagraph 
             key={loopEpochKey}
             config={currentConfig}
-            imageUrl={tauCetiBase}
+            imageUrl={activeLocation.image}
             onFlickerSound={handleRoverFlickerSound}
             onScannerSound={handleScannerPulseSound}
           />
+          <TransmissionOverlay transmission={state.displayOptions.activeTransmission} />
           
           {/* Subtle Overlay HUD layout featuring discrete terrain logs and stats */}
           <div className="absolute top-[8%] left-[4%] pointer-events-none flex flex-col gap-1 text-[10px] text-stone-400 font-mono tracking-widest uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] z-30 opacity-90">
@@ -371,7 +564,8 @@ export default function App() {
               <span className="w-1.5 h-3 bg-orange-500 rounded-sm inline-block" />
               MISSION 01 // SOL ROUGE
             </div>
-            <span>{getDisplayLocationLabel(state.activeLocation || 'delta6')}</span>
+            <span>SITE : {activeLocation.label}</span>
+            <span>SECTEUR : {activeLocation.subtitle}</span>
             <span>MODE : <strong className="text-orange-400 font-bold">{getDisplayModeLabel(currentConfig.environmentFilter)}</strong></span>
             <div className="flex items-center gap-1 text-emerald-400 font-medium">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse" />
@@ -407,16 +601,6 @@ export default function App() {
                 {getEmLabel()}
               </span>
             </div>
-          </div>
-
-          {/* Quick exit shortcut overlay (visible briefly on hover/movement only, for desktop window controls) */}
-          <div className="absolute bottom-5 left-[50%] -translate-x-[50%] opacity-0 hover:opacity-85 transition-all duration-200 z-55">
-            <button 
-              onClick={() => navigate('home')}
-              className="py-1.5 px-3 rounded bg-stone-900/90 border border-stone-700/60 font-mono text-[10px] text-stone-400 hover:text-white uppercase tracking-widest cursor-pointer"
-            >
-              [ RETOUR AU SÉLECTEUR DE ROUTE ]
-            </button>
           </div>
 
         </div>
@@ -497,7 +681,7 @@ export default function App() {
               <Cinemagraph 
                 key={loopEpochKey}
                 config={currentConfig}
-                imageUrl={tauCetiBase}
+                imageUrl={activeLocation.image}
               />
               <div className="mt-2.5 p-2 bg-stone-950/65 border border-stone-850 rounded text-[10px] font-mono text-stone-500 leading-normal">
                 Cette vignette montre une copie miniature de ce que voient vos joueurs. Toutes vos modifications ci-contre se propagent instantanément sur leur écran.
@@ -528,6 +712,10 @@ export default function App() {
               onChangePresetId={handleUpdatePresetId}
               activeLocation={state.activeLocation || 'delta6'}
               onChangeLocation={handleUpdateLocation}
+              networkSyncStatus={networkSyncStatus}
+              onQuickAction={handleQuickAction}
+              onTransmission={handleTransmission}
+              onSceneShortcut={handleSceneShortcut}
             />
           </section>
 

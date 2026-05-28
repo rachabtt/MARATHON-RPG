@@ -3,7 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { CinemagraphConfig, TelemetryLog } from '../types';
+import type { ActiveTransmission, CinemagraphConfig, QuickEffect, TelemetryLog } from '../types';
+import type { LocationId } from './locations';
+import { getLocationEffectProfile } from './locationEffects';
 
 export interface ResourceState {
   id: string;
@@ -15,7 +17,7 @@ export interface ResourceState {
 
 export interface MissionControlState {
   activeSceneMode: 'normal' | 'dust' | 'scanner' | 'signal' | 'hounds' | 'storm' | 'extraction' | 'silence';
-  activeLocation: 'new_carthage' | 'red_plains' | 'black_arches' | 'delta6';
+  activeLocation: LocationId;
   resources: ResourceState[];
   effects: {
     dust: number;      // 0, 1, 2, 3
@@ -32,12 +34,15 @@ export interface MissionControlState {
     scannerVolume: number;
     humVolume: number;
     stormVolume: number;
+    houndsVolume: number;
     radioSilence: boolean;
   };
   displayOptions: {
     screenBlack: boolean;
     activePresetId: string;
+    activeTransmission: ActiveTransmission | null;
   };
+  quickEffect: QuickEffect | null;
   logs: TelemetryLog[];
 }
 
@@ -117,18 +122,21 @@ export const INITIAL_MISSION_STATE: MissionControlState = {
     windVolume: 0.45,
     radioVolume: 0.15,
     scannerVolume: 0.35,
-    humVolume: 0.40,
+    humVolume: 0.26,
     stormVolume: 0.10,
+    houndsVolume: 0.0,
     radioSilence: false
   },
   displayOptions: {
     screenBlack: false,
-    activePresetId: 'delta6'
+    activePresetId: 'delta6',
+    activeTransmission: null
   },
+  quickEffect: null,
   logs: []
 };
 
-const STORAGE_KEY = 'm01_jdr_sol_rouge_mission_v3';
+const STORAGE_KEY = 'm01_jdr_sol_rouge_mission_v7';
 const SYNC_CHANNEL_NAME = 'uesc_sol_rouge_sync_channel';
 
 // ─── LOCAL STORAGE FALLBACK AND LOADER ───
@@ -140,6 +148,18 @@ export function getStoredState(): MissionControlState {
       if (parsed && parsed.resources && parsed.effects && parsed.audio) {
         if (!parsed.activeLocation) {
           parsed.activeLocation = 'delta6';
+        }
+        if (!('houndsVolume' in parsed.audio)) {
+          parsed.audio.houndsVolume = 0;
+        }
+        if (!parsed.displayOptions.activeTransmission) {
+          parsed.displayOptions.activeTransmission = null;
+        } else {
+          parsed.displayOptions.activeTransmission.sourceRole ??= 'TRANSMISSION UESC';
+          parsed.displayOptions.activeTransmission.sourceType ??= 'field';
+        }
+        if (!('quickEffect' in parsed)) {
+          parsed.quickEffect = null;
         }
         return parsed as MissionControlState;
       }
@@ -198,21 +218,35 @@ export function subscribeToStateBroadcast(callback: (state: MissionControlState)
 
 // ─── DERIVE VISUAL CONFIG ON-THE-FLY ───
 export function deriveConfigFromState(state: MissionControlState): CinemagraphConfig {
-  const dustVal = state.effects.dust === 0 ? 10 
+  const resourceIndex = (id: string) => state.resources.find(resource => resource.id === id)?.index ?? 0;
+  const signalStress = Math.max(0, resourceIndex('signal') - 1);
+  const visibilityStress = Math.max(0, resourceIndex('visibility') - 1);
+  const tempestStress = Math.max(0, resourceIndex('tempest') - 1);
+  const energyStress = Math.max(0, resourceIndex('energy') - 1);
+  const roverStress = Math.max(0, resourceIndex('integrity') - 1);
+  const groupStress = Math.max(0, resourceIndex('calm') - 1);
+
+  let dustVal = state.effects.dust === 0 ? 10 
     : state.effects.dust === 1 ? 90 
     : state.effects.dust === 2 ? 180 : 300;
 
-  const glitchVal = state.effects.glitch === 0 ? 0.0 
+  dustVal = Math.min(340, dustVal + visibilityStress * 35 + tempestStress * 22);
+
+  let glitchVal = state.effects.glitch === 0 ? 0.0 
     : state.effects.glitch === 1 ? 0.25 
     : state.effects.glitch === 2 ? 0.60 : 0.95;
+
+  glitchVal = Math.min(0.98, glitchVal + signalStress * 0.12 + tempestStress * 0.08);
 
   const scannerVal = state.effects.scanner === 0 ? 0.2 
     : state.effects.scanner === 1 ? 1.0 
     : state.effects.scanner === 2 ? 2.5 : 4.0;
 
-  const headlightVal = state.effects.headlight === 0 ? 0.0 
+  let headlightVal = state.effects.headlight === 0 ? 0.0 
     : state.effects.headlight === 1 ? 0.40 
     : state.effects.headlight === 2 ? 0.80 : 1.40;
+
+  headlightVal = Math.max(0, headlightVal - energyStress * 0.16 + roverStress * 0.05);
 
   const houndsVal = state.effects.hounds > 0;
   const flickerVal = state.effects.hounds === 0 ? 1.0 
@@ -235,29 +269,44 @@ export function deriveConfigFromState(state: MissionControlState): CinemagraphCo
     windSpd = 1.5;
   }
 
-  return {
+  const baseConfig: CinemagraphConfig = {
     windSpeed: windSpd,
     dustDensity: dustVal,
     dustColor: '#9c3f2d',
-    flickerRate: flickerVal,
+    flickerRate: Math.min(3.4, flickerVal + energyStress * 0.22 + groupStress * 0.12),
     headlightIntensity: headlightVal,
     scannerPulseSpeed: scannerVal,
     hazeBreathingSpeed: breathingVal,
     environmentFilter: state.activeSceneMode,
     activeLocation: state.activeLocation || 'delta6',
+    quickEffect: state.quickEffect,
     audioEnabled: state.audio.enabled,
     audioWindVolume: state.audio.windVolume,
     audioHumVolume: state.audio.humVolume,
     telemetryActive: true,
     visualRadioGlitch: glitchVal,
-    visualEmFlashes: emVal,
+    visualEmFlashes: emVal || tempestStress > 1,
     visualHoundShadows: houndsVal,
     visualAletheiaOverlay: state.effects.hounds > 1,
-    audioRadioVolume: state.audio.radioVolume,
+    audioRadioVolume: Math.min(1, state.audio.radioVolume + signalStress * 0.12),
     audioScannerVolume: state.audio.scannerVolume,
-    audioStormVolume: state.audio.stormVolume,
+    audioStormVolume: Math.min(1, state.audio.stormVolume + tempestStress * 0.12 + roverStress * 0.04),
+    audioHoundsVolume: Math.min(1, state.audio.houndsVolume + (houndsVal ? 0.22 : 0) + groupStress * 0.04),
     audioRadioSilence: state.audio.radioSilence,
     screenBlack: state.displayOptions.screenBlack
+  };
+
+  const locationProfile = getLocationEffectProfile(state.activeLocation, baseConfig);
+
+  return {
+    ...baseConfig,
+    dustDensity: Math.min(360, baseConfig.dustDensity * locationProfile.particleDensity),
+    windSpeed: Math.min(3.4, baseConfig.windSpeed * locationProfile.particleSpeed),
+    flickerRate: Math.min(3.6, baseConfig.flickerRate / Math.max(0.45, locationProfile.lightStability)),
+    scannerPulseSpeed: Math.min(4.2, baseConfig.scannerPulseSpeed * locationProfile.scannerBias),
+    visualRadioGlitch: Math.min(0.98, baseConfig.visualRadioGlitch * locationProfile.radioBias),
+    audioRadioVolume: Math.min(1, baseConfig.audioRadioVolume * locationProfile.radioBias),
+    audioStormVolume: Math.min(1, baseConfig.audioStormVolume * locationProfile.stormBias)
   };
 }
 
@@ -315,8 +364,9 @@ export function applyPreset(state: MissionControlState, presetId: string): Missi
   let windVol = 0.45;
   let radioVol = 0.15;
   let scannerVol = 0.35;
-  let humVol = 0.40;
+  let humVol = 0.26;
   let stormVol = 0.10;
+  let houndsVol = 0.0;
   let silence = false;
 
   switch (presetId) {
@@ -331,8 +381,9 @@ export function applyPreset(state: MissionControlState, presetId: string): Missi
       windVol = 0.15;
       radioVol = 0.05;
       scannerVol = 0.1;
-      humVol = 0.20;
+      humVol = 0.13;
       stormVol = 0.0;
+      houndsVol = 0.0;
       break;
     case 'delta6':
       mode = 'dust';
@@ -345,8 +396,9 @@ export function applyPreset(state: MissionControlState, presetId: string): Missi
       windVol = 0.45;
       radioVol = 0.15;
       scannerVol = 0.35;
-      humVol = 0.40;
+      humVol = 0.26;
       stormVol = 0.10;
+      houndsVol = 0.0;
       break;
     case 'scanner':
     case 'scanner_actif':
@@ -360,8 +412,9 @@ export function applyPreset(state: MissionControlState, presetId: string): Missi
       windVol = 0.45;
       radioVol = 0.20;
       scannerVol = 0.80;
-      humVol = 0.85;
+      humVol = 0.45;
       stormVol = 0.15;
+      houndsVol = 0.0;
       break;
     case 'signal':
     case 'signal_instable':
@@ -375,8 +428,9 @@ export function applyPreset(state: MissionControlState, presetId: string): Missi
       windVol = 0.50;
       radioVol = 0.75;
       scannerVol = 0.40;
-      humVol = 0.50;
+      humVol = 0.32;
       stormVol = 0.30;
+      houndsVol = 0.05;
       break;
     case 'hounds':
     case 'hounds_proches':
@@ -390,8 +444,9 @@ export function applyPreset(state: MissionControlState, presetId: string): Missi
       windVol = 0.35;
       radioVol = 0.45;
       scannerVol = 0.15;
-      humVol = 0.75;
+      humVol = 0.38;
       stormVol = 0.20;
+      houndsVol = 0.75;
       break;
     case 'tempete':
     case 'tempete_em':
@@ -405,8 +460,9 @@ export function applyPreset(state: MissionControlState, presetId: string): Missi
       windVol = 0.95;
       radioVol = 0.90;
       scannerVol = 0.05;
-      humVol = 0.60;
+      humVol = 0.36;
       stormVol = 0.95;
+      houndsVol = 0.08;
       break;
     case 'extraction':
       mode = 'extraction';
@@ -419,8 +475,9 @@ export function applyPreset(state: MissionControlState, presetId: string): Missi
       windVol = 0.80;
       radioVol = 0.60;
       scannerVol = 0.50;
-      humVol = 0.90;
+      humVol = 0.42;
       stormVol = 0.75;
+      houndsVol = 0.45;
       break;
     case 'silence':
       mode = 'silence';
@@ -435,6 +492,7 @@ export function applyPreset(state: MissionControlState, presetId: string): Missi
       scannerVol = 0.0;
       humVol = 0.0;
       stormVol = 0.0;
+      houndsVol = 0.0;
       silence = true;
       break;
   }
@@ -503,12 +561,14 @@ export function applyPreset(state: MissionControlState, presetId: string): Missi
       scannerVolume: scannerVol,
       humVolume: humVol,
       stormVolume: stormVol,
+      houndsVolume: houndsVol,
       radioSilence: silence
     },
     displayOptions: {
       ...state.displayOptions,
       activePresetId: presetId
-    }
+    },
+    quickEffect: presetId === 'calme' ? null : state.quickEffect
   };
 }
 

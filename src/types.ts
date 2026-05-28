@@ -13,6 +13,7 @@ export interface CinemagraphConfig {
   hazeBreathingSpeed: number;// 0.1 to 2.5 (default 1.0)
   environmentFilter: 'normal' | 'dust' | 'scanner' | 'signal' | 'hounds' | 'storm' | 'extraction' | 'silence';
   activeLocation?: 'new_carthage' | 'red_plains' | 'black_arches' | 'delta6';
+  quickEffect?: QuickEffect | null;
   audioEnabled: boolean;
   audioWindVolume: number;   // 0.0 to 1.0
   audioHumVolume: number;    // 0.0 to 1.0
@@ -26,8 +27,67 @@ export interface CinemagraphConfig {
   audioRadioVolume: number;        // 0.0 to 1.0 (grésillement)
   audioScannerVolume: number;      // 0.0 to 1.0 (bip scanner)
   audioStormVolume: number;        // 0.0 to 1.0 (grondements météo)
+  audioHoundsVolume: number;       // 0.0 to 1.0 (frottements/clics)
   audioRadioSilence: boolean;      // True = silence radio simulé (coupe tout)
   screenBlack: boolean;            // Black screen override
+}
+
+export type QuickEffectType = 'glitch_radio' | 'flash_em' | 'ombre_hound';
+
+export interface QuickEffect {
+  type: QuickEffectType;
+  startedAt: number;
+  durationMs: number;
+}
+
+export type TransmissionType = 'rowe' | 'aletheia' | 'velen' | 'delta6_log' | 'unknown_radio' | 'hound';
+
+export type HoundVariant = 'furtif' | 'proche' | 'equipement';
+
+export interface ActiveTransmission {
+  id: string;
+  beatId?: string;
+  type: TransmissionType;
+  speaker: string;
+  sourceRole: string;
+  sourceType: "command" | "ai" | "field" | "log" | "unknown" | "threat";
+  message: string;
+  audioSrc?: string;
+  signalQuality: 'clair' | 'dégradé' | 'critique';
+  startedAt: number;
+  durationMs: number;
+}
+
+export interface InterventionState {
+  activeBeatId?: string;
+  speakerId?: TransmissionType;
+  message?: string;
+  visible: boolean;
+  showPortrait: boolean;
+  showText: boolean;
+  playAudio: boolean;
+  autoHide: boolean;
+  durationMs: number;
+  startedAt?: number;
+}
+
+export interface TransientEffectsState {
+  hound?: {
+    active: boolean;
+    variant: HoundVariant;
+    startedAt: number;
+    durationMs: number;
+  };
+  glitchRadio?: {
+    active: boolean;
+    startedAt: number;
+    durationMs: number;
+  };
+  flashEm?: {
+    active: boolean;
+    startedAt: number;
+    durationMs: number;
+  };
 }
 
 export type TelemetrySource = 'ENVIRONNEMENT' | 'COMMS' | 'ROVER D-6' | 'SCANNER' | 'ANTENNE' | 'ANTENNE RELAIS' | 'SÉCURITÉ' | 'ALETHEIA' | 'MÉTÉO';

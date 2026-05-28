@@ -4,11 +4,12 @@
  */
 
 import { useState, useEffect } from 'react';
-import { CinemagraphConfig, TelemetryLog, AtmosphereReading } from '../types';
+import { CinemagraphConfig, TelemetryLog, AtmosphereReading, TransmissionType } from '../types';
 import { PRESETS, Preset } from '../utils/presets';
 import { ResourceState } from '../utils/syncState';
-import { LOCATIONS } from '../utils/locations';
-import tauCetiBase from '../assets/images/tau_ceti_base_1779960769896.png';
+import { LOCATIONS, type LocationId } from '../utils/locations';
+import type { NetworkSyncStatus } from '../utils/networkSync';
+import { TRANSMISSION_SPEAKERS } from '../utils/transmissions';
 import { generateProceduralLog, CREW_LOGS, ATMOSPHERE_BASE } from '../utils/telemetryLogs';
 import { 
   VolumeX, 
@@ -35,8 +36,12 @@ interface HUDProps {
   onChangeResources: (newResources: ResourceState[]) => void;
   activePresetId: string;
   onChangePresetId: (id: string) => void;
-  activeLocation: 'new_carthage' | 'red_plains' | 'black_arches' | 'delta6';
-  onChangeLocation: (location: 'new_carthage' | 'red_plains' | 'black_arches' | 'delta6') => void;
+  activeLocation: LocationId;
+  onChangeLocation: (location: LocationId) => void;
+  networkSyncStatus: NetworkSyncStatus;
+  onQuickAction: (actionId: string) => void;
+  onTransmission: (type: TransmissionType) => void;
+  onSceneShortcut: (sceneId: string) => void;
 }
 
 export default function HUD({ 
@@ -48,7 +53,11 @@ export default function HUD({
   activePresetId,
   onChangePresetId,
   activeLocation,
-  onChangeLocation
+  onChangeLocation,
+  networkSyncStatus,
+  onQuickAction,
+  onTransmission,
+  onSceneShortcut
 }: HUDProps) {
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const [activeAdvancedTab, setActiveAdvancedTab] = useState<'levels' | 'diagnostics' | 'crew_logs'>('levels');
@@ -143,15 +152,7 @@ export default function HUD({
     }
   };
 
-  const getLocationLabel = (loc: string) => {
-    switch (loc) {
-      case 'new_carthage': return 'NEW CARTHAGE';
-      case 'red_plains': return 'PLAINES ROUGES';
-      case 'black_arches': return 'ARCHES NOIRES';
-      case 'delta6': return 'SITE DELTA-6';
-      default: return String(loc).toUpperCase();
-    }
-  };
+  const activeLocationInfo = LOCATIONS.find((location) => location.id === activeLocation) ?? LOCATIONS[3];
 
   const getShortResourceName = (id: string) => {
     switch (id) {
@@ -164,45 +165,6 @@ export default function HUD({
       case 'survivor': return 'Survivant';
       case 'calm': return 'Groupe';
       default: return id;
-    }
-  };
-
-  // --- Quick Actions Trigger ---
-  const triggerQuickAction = (actionId: string) => {
-    if (actionId === 'flash_em') {
-      onChangeConfig({
-        ...config,
-        visualEmFlashes: true,
-        hazeBreathingSpeed: 2.8
-      });
-      setTimeout(() => {
-        onChangeConfig({
-          ...config,
-          visualEmFlashes: false,
-          hazeBreathingSpeed: 1.0
-        });
-      }, 1000);
-    } else if (actionId === 'glitch_radio') {
-      onChangeConfig({
-        ...config,
-        visualRadioGlitch: 0.90,
-        audioRadioVolume: 0.80
-      });
-      setTimeout(() => {
-        onChangeConfig({
-          ...config,
-          visualRadioGlitch: 0.1,
-          audioRadioVolume: 0.20
-        });
-      }, 1400);
-    } else if (actionId === 'ombre_hound') {
-      onChangeConfig({
-        ...config,
-        visualHoundShadows: !config.visualHoundShadows,
-        flickerRate: 2.5
-      });
-    } else if (actionId === 'reset_calme') {
-      onChangePresetId('calme');
     }
   };
 
@@ -293,6 +255,9 @@ export default function HUD({
   const isStormOn = config.audioStormVolume > 0.05;
   const toggleStorm = () => updateSetting('audioStormVolume', isStormOn ? 0.0 : 0.50);
 
+  const isHoundsOn = config.audioHoundsVolume > 0.05;
+  const toggleHounds = () => updateSetting('audioHoundsVolume', isHoundsOn ? 0.0 : 0.45);
+
   return (
     <div className="w-full bg-stone-950 border border-stone-900 rounded-lg p-3 sm:p-5 shadow-2xl font-mono text-stone-300 select-none">
       
@@ -303,10 +268,18 @@ export default function HUD({
             <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
             <span className="text-[12px] font-bold text-white tracking-[0.15em]">MISSION 01 // SOL ROUGE</span>
           </div>
-          <div className="text-[10px] text-stone-500 tracking-wider flex items-center gap-1.5 wrap">
-            <span>SITE ACTIF : <strong className="text-orange-400 font-bold uppercase">{getLocationLabel(activeLocation)}</strong></span>
+          <div className="text-[10px] text-stone-500 tracking-wider flex items-center gap-1.5 flex-wrap">
+            <span>SITE ACTIF : <strong className="text-orange-400 font-bold uppercase">{activeLocationInfo.label}</strong></span>
             <span className="text-stone-700">|</span>
             <span>AMBIANCE ACTIVE : <strong className="text-emerald-400 font-bold uppercase">{getAmbianceLabel(activePresetId)}</strong></span>
+            <span className="text-stone-700">|</span>
+            <span>
+              SYNC RÉSEAU : <strong className={`font-bold uppercase ${
+                networkSyncStatus === 'connected' ? 'text-emerald-400' : 'text-amber-500'
+              }`}>
+                {networkSyncStatus === 'connected' ? 'CONNECTÉ' : 'DÉCONNECTÉ'}
+              </strong>
+            </span>
           </div>
         </div>
 
@@ -364,18 +337,23 @@ export default function HUD({
               >
                 {/* Thumbnail Frame */}
                 <div className="h-14 sm:h-16 w-full relative overflow-hidden bg-stone-950 border-b border-stone-900/60 flex items-center justify-center">
-                  <img
-                    src={loc.image}
-                    alt={loc.label}
-                    onLoad={() => setLocationImageStatus(prev => ({ ...prev, [loc.id]: 'loaded' }))}
-                    onError={(e) => {
-                      setLocationImageStatus(prev => ({ ...prev, [loc.id]: 'error' }));
-                      e.currentTarget.src = tauCetiBase;
-                    }}
-                    className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${
-                      isActive ? 'opacity-90 saturate-[1.15]' : 'opacity-45 grayscale group-hover:opacity-75 group-hover:grayscale-0'
-                    }`}
-                  />
+                  {locationImageStatus[loc.id] === 'error' ? (
+                    <div className="w-full h-full flex items-center justify-center bg-black text-[8px] text-rose-500 font-mono tracking-widest uppercase text-center px-2">
+                      IMAGE MANQUANTE
+                    </div>
+                  ) : (
+                    <img
+                      src={loc.image}
+                      alt={loc.label}
+                      onLoad={() => setLocationImageStatus(prev => ({ ...prev, [loc.id]: 'loaded' }))}
+                      onError={() => {
+                        setLocationImageStatus(prev => ({ ...prev, [loc.id]: 'error' }));
+                      }}
+                      className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${
+                        isActive ? 'opacity-90 saturate-[1.15]' : 'opacity-45 grayscale group-hover:opacity-75 group-hover:grayscale-0'
+                      }`}
+                    />
+                  )}
                   {/* Blinking indicator LED */}
                   {isActive && (
                     <span className="absolute top-1.5 right-1.5 flex h-1.5 w-1.5">
@@ -514,25 +492,88 @@ export default function HUD({
         <div className="text-[10px] font-mono uppercase tracking-widest text-stone-500 border-b border-stone-850 pb-1">
           ACTIONS RAPIDES
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-1.5">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-1.5">
           {[
             { id: 'glitch_radio', label: 'GLITCH RADIO', color: 'hover:border-purple-500 hover:text-purple-400' },
             { id: 'flash_em', label: 'FLASH EM', color: 'hover:border-amber-500 hover:text-amber-400' },
             { id: 'ombre_hound', label: 'OMBRE HOUND', color: 'hover:border-red-500 hover:text-red-400' },
+            { id: 'intervention', label: 'INTERVENTION', color: 'hover:border-sky-500 hover:text-sky-400' },
             { id: 'reset_calme', label: 'RESET CALME', color: 'hover:border-emerald-500 hover:text-emerald-400' }
           ].map((action) => (
             <button
               key={action.id}
-              onClick={() => triggerQuickAction(action.id)}
+              onClick={() => onQuickAction(action.id)}
               className={`h-11 px-3 rounded border border-stone-900 bg-stone-900/30 text-stone-400 text-[10px] font-bold tracking-wider uppercase transition-all cursor-pointer flex items-center justify-center ${action.color}`}
             >
               {action.label}
             </button>
           ))}
         </div>
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
+          {[
+            { type: 'rowe', label: 'ROWE' },
+            { type: 'aletheia', label: 'ALETHEIA' },
+            { type: 'survivor', label: 'SURVIVANT' },
+            { type: 'log_delta6', label: 'LOG D-6' },
+            { type: 'unknown_radio', label: 'RADIO ?' }
+          ].map((item) => (
+            <button
+              key={item.type}
+              onClick={() => onTransmission(item.type as TransmissionType)}
+              className="h-8 px-2 rounded border border-stone-900 bg-stone-950/35 text-stone-500 hover:text-sky-400 hover:border-sky-900/70 text-[9px] font-bold tracking-wider uppercase transition-all cursor-pointer"
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+        <div className="grid grid-cols-[72px_1fr] gap-2 rounded border border-stone-900 bg-stone-950/30 p-2">
+          <div className="relative h-14 rounded border border-stone-800 bg-stone-950 overflow-hidden">
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.32)_50%)] bg-[size:100%_4px] opacity-60" />
+            <div className="absolute left-1/2 top-[42%] w-7 h-9 -translate-x-1/2 -translate-y-1/2 rounded-t-full bg-stone-600/35" />
+            <div className="absolute left-2 right-2 bottom-2 h-1 bg-orange-400/55" />
+          </div>
+          <div className="min-w-0 flex flex-col justify-center">
+            <div className="text-[9px] text-stone-500 uppercase tracking-widest">APERÇU INTERVENTION</div>
+            <div className="text-[10px] text-stone-300 uppercase tracking-wider truncate">
+              {TRANSMISSION_SPEAKERS.rowe.label} / {TRANSMISSION_SPEAKERS.rowe.role}
+            </div>
+            <div className="text-[9px] text-stone-600 mt-1">
+              Carte tactique UESC avec silhouette, waveform et qualité signal.
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* 6. BLOC AUDIO */}
+      {/* 6. SCÈNES M01 */}
+      <div className="space-y-1.5 mb-4">
+        <div className="text-[10px] font-mono uppercase tracking-widest text-stone-500 border-b border-stone-850 pb-1">
+          SCÈNES M01
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
+          {[
+            { id: 'depart_new_carthage', label: 'DÉPART NC' },
+            { id: 'briefing_rowe', label: 'BRIEFING ROWE' },
+            { id: 'traversee', label: 'TRAVERSÉE' },
+            { id: 'anomalie_radio', label: 'ANOMALIE RADIO' },
+            { id: 'arches_noires', label: 'ARCHES NOIRES' },
+            { id: 'site_delta6', label: 'SITE DELTA-6' },
+            { id: 'hounds_proches', label: 'HOUNDS PROCHES' },
+            { id: 'tempete_em', label: 'TEMPÊTE EM' },
+            { id: 'extraction', label: 'EXTRACTION' },
+            { id: 'retour_new_carthage', label: 'RETOUR NC' }
+          ].map((scene) => (
+            <button
+              key={scene.id}
+              onClick={() => onSceneShortcut(scene.id)}
+              className="h-9 px-2 rounded border border-stone-900 bg-stone-900/25 text-stone-500 hover:text-orange-400 hover:border-orange-900/60 text-[8.5px] font-bold tracking-wide uppercase transition-all cursor-pointer"
+            >
+              {scene.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* 7. BLOC AUDIO */}
       <div className="space-y-1.5 mb-4">
         <div className="text-[10px] font-mono uppercase tracking-widest text-stone-500 border-b border-stone-850 pb-1 flex justify-between items-center">
           <span>AUDIO MIXER</span>
@@ -547,13 +588,14 @@ export default function HUD({
             {isMasterOn ? 'AUDIO ON' : 'AUDIO OFF'}
           </button>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
+        <div className="grid grid-cols-2 sm:grid-cols-6 gap-1.5">
           {[
             { label: 'AUDIO ON/OFF', active: isMasterOn, toggle: toggleMaster },
             { label: 'VENT', active: isWindOn, toggle: toggleWind },
             { label: 'RADIO', active: isRadioOn, toggle: toggleRadio },
             { label: 'BASSE', active: isHumOn, toggle: toggleHum },
-            { label: 'TEMPÊTE', active: isStormOn, toggle: toggleStorm }
+            { label: 'TEMPÊTE', active: isStormOn, toggle: toggleStorm },
+            { label: 'HOUNDS', active: isHoundsOn, toggle: toggleHounds }
           ].map((ch, idx) => {
             // Master button acts special, other channels get disabled state if master is off
             const disabledState = !isMasterOn && idx !== 0;
@@ -576,7 +618,7 @@ export default function HUD({
         </div>
       </div>
 
-      {/* 7. BLOC AVANCÉ */}
+      {/* 8. BLOC AVANCÉ */}
       <div className="mt-6 border border-stone-900 bg-stone-900/20 rounded">
         <button
           onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
