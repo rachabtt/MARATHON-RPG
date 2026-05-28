@@ -1,0 +1,6 @@
+{
+  "name": "Delta-6 Survey Site Cinemagraph",
+  "description": "Console de contrôle d’ambiance et de télémétrie pour le Maître de Jeu (MJ) sur le site Delta-6, Tau Ceti IV (Mission 01 // Sol Rouge). Permet de piloter les filtres visuels, le vent ferrique, l'ambiance sonore synthétique et de consulter les logs de l'expédition UESC.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
