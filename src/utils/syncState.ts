@@ -3,9 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { ActiveTransmission, CinemagraphConfig, QuickEffect, TelemetryLog } from '../types';
+import type { ActiveTransmission, CinemagraphConfig, QuickEffect, SquadOverlayState, TelemetryLog } from '../types';
 import type { LocationId } from './locations';
 import { getLocationEffectProfile } from './locationEffects';
+import { DEFAULT_SQUAD_OVERLAY } from './playerCharacters';
 
 export interface ResourceState {
   id: string;
@@ -42,6 +43,17 @@ export interface MissionControlState {
     activePresetId: string;
     activeTransmission: ActiveTransmission | null;
   };
+  interventionOptions: {
+    showPortrait: boolean;
+    showText: boolean;
+    playAudio: boolean;
+  };
+  squadOverlay: SquadOverlayState;
+  squad: {
+    selectedIds: string[];
+    locked: boolean;
+  };
+  transientEffects: TransientEffectsState;
   quickEffect: QuickEffect | null;
   logs: TelemetryLog[];
 }
@@ -132,6 +144,17 @@ export const INITIAL_MISSION_STATE: MissionControlState = {
     activePresetId: 'delta6',
     activeTransmission: null
   },
+  interventionOptions: {
+    showPortrait: true,
+    showText: true,
+    playAudio: true
+  },
+  squadOverlay: DEFAULT_SQUAD_OVERLAY,
+  squad: {
+    selectedIds: [],
+    locked: false
+  },
+  transientEffects: {},
   quickEffect: null,
   logs: []
 };
@@ -157,6 +180,22 @@ export function getStoredState(): MissionControlState {
         } else {
           parsed.displayOptions.activeTransmission.sourceRole ??= 'TRANSMISSION UESC';
           parsed.displayOptions.activeTransmission.sourceType ??= 'field';
+        }
+        if (!('interventionOptions' in parsed)) {
+          parsed.interventionOptions = {
+            showPortrait: true,
+            showText: true,
+            playAudio: true
+          };
+        }
+        if (!('squadOverlay' in parsed)) {
+          parsed.squadOverlay = DEFAULT_SQUAD_OVERLAY;
+        }
+        if (!('squad' in parsed)) {
+          parsed.squad = { selectedIds: [], locked: false };
+        }
+        if (!('transientEffects' in parsed)) {
+          parsed.transientEffects = {};
         }
         if (!('quickEffect' in parsed)) {
           parsed.quickEffect = null;

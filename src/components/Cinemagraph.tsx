@@ -422,7 +422,7 @@ export default function Cinemagraph({ config, imageUrl, onFlickerSound, onScanne
     <div 
       id="cinemagraph-viewport"
       ref={containerRef}
-      className="relative w-full overflow-hidden bg-stone-950 rounded-xl border border-stone-800 shadow-2xl select-none aspect-video"
+      className="fixed inset-0 w-screen h-screen overflow-hidden bg-stone-950 select-none"
       style={{ 
         filter: getFilterStyle(), 
         transform: `translate(${glitchX + Math.sin(timeSec * 18) * locationEffect.cameraShake}px, ${glitchY}px) scale(${glitchScale})`,

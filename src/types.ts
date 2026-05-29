@@ -50,12 +50,18 @@ export interface ActiveTransmission {
   type: TransmissionType;
   speaker: string;
   sourceRole: string;
-  sourceType: "command" | "ai" | "field" | "log" | "unknown" | "threat";
+  sourceType: "command" | "ai" | "field" | "log" | "unknown";
   message: string;
   audioSrc?: string;
   signalQuality: 'clair' | 'dégradé' | 'critique';
   startedAt: number;
   durationMs: number;
+}
+
+export interface InterventionOptions {
+  showPortrait: boolean;
+  showText: boolean;
+  playAudio: boolean;
 }
 
 export interface InterventionState {
@@ -69,6 +75,31 @@ export interface InterventionState {
   autoHide: boolean;
   durationMs: number;
   startedAt?: number;
+}
+
+export type SquadOverlayMode = 'compact' | 'detail';
+
+export interface SquadMember {
+  id: string;
+  visible: boolean;
+  name: string;
+  role: string;
+  stats: Record<string, string | number>;
+  equipment: string[];
+  trackers?: {
+    stress: number;
+    bruit: number;
+    blessures: number;
+  };
+  status: string;
+  note?: string;
+  portrait?: string;
+}
+
+export interface SquadOverlayState {
+  visible: boolean;
+  mode: SquadOverlayMode;
+  members: SquadMember[];
 }
 
 export interface TransientEffectsState {

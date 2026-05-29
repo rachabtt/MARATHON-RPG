@@ -4,23 +4,19 @@
  */
 
 import { useState, useEffect } from 'react';
-import { CinemagraphConfig, TelemetryLog, AtmosphereReading, TransmissionType } from '../types';
+import { CinemagraphConfig, TelemetryLog, AtmosphereReading, TransmissionType, InterventionOptions, SquadOverlayState, SquadMember } from '../types';
 import { PRESETS, Preset } from '../utils/presets';
 import { ResourceState } from '../utils/syncState';
 import { LOCATIONS, type LocationId } from '../utils/locations';
 import type { NetworkSyncStatus } from '../utils/networkSync';
 import { TRANSMISSION_SPEAKERS } from '../utils/transmissions';
-import { generateProceduralLog, CREW_LOGS, ATMOSPHERE_BASE } from '../utils/telemetryLogs';
+import { STORY_BEATS } from '../utils/storyBeats';
+// telemetryLogs not required for HUD core UI after removing advanced panel
 import { 
-  VolumeX, 
+  VolumeX,
   RefreshCw,
   Power,
-  ChevronDown,
-  ChevronUp,
   Volume2,
-  Sliders,
-  Terminal,
-  FileText,
   Waves,
   Radio,
   Binary,
@@ -41,6 +37,16 @@ interface HUDProps {
   networkSyncStatus: NetworkSyncStatus;
   onQuickAction: (actionId: string) => void;
   onTransmission: (type: TransmissionType) => void;
+  interventionOptions: InterventionOptions;
+  onToggleInterventionOption: (key: keyof InterventionOptions) => void;
+  onClearTransmission: () => void;
+  squadOverlay: SquadOverlayState;
+  onToggleSquadOverlay: () => void;
+  onSetSquadOverlayMode: (mode: SquadOverlayState['mode']) => void;
+  onUpdateSquadMember: (memberId: string, changes: Partial<SquadMember>) => void;
+  onMoveSquadMember: (memberId: string, direction: -1 | 1) => void;
+  onResetTrackers?: () => void;
+  onResetMission?: () => void;
   onSceneShortcut: (sceneId: string) => void;
 }
 
@@ -57,45 +63,16 @@ export default function HUD({
   networkSyncStatus,
   onQuickAction,
   onTransmission,
+  interventionOptions,
+  onToggleInterventionOption,
+  onClearTransmission,
+  squadOverlay,
+  onToggleSquadOverlay,
+  onSetSquadOverlayMode,
+  onMoveSquadMember,
   onSceneShortcut
 }: HUDProps) {
-  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
-  const [activeAdvancedTab, setActiveAdvancedTab] = useState<'levels' | 'diagnostics' | 'crew_logs'>('levels');
-  const [logs, setLogs] = useState<TelemetryLog[]>([]);
-  const [atmosphere, setAtmosphere] = useState<AtmosphereReading>(ATMOSPHERE_BASE);
-  const [logCounter, setLogCounter] = useState(0);
   const [locationImageStatus, setLocationImageStatus] = useState<Record<string, 'loading' | 'loaded' | 'error'>>({});
-
-  // Synchronise dynamic sensor logs in background (cached under Advanced)
-  useEffect(() => {
-    const initialLogs: TelemetryLog[] = [];
-    for (let i = 0; i < 6; i++) {
-      initialLogs.unshift(generateProceduralLog(i));
-    }
-    setLogs(initialLogs);
-    setLogCounter(6);
-
-    const interval = setInterval(() => {
-      setLogCounter((prev) => {
-        const next = prev + 1;
-        const newLog = generateProceduralLog(next);
-        setLogs((current) => [newLog, ...current.slice(0, 49)]);
-        
-        setAtmosphere((currentAtm) => {
-          const change = (Math.random() - 0.5) * 0.15;
-          return {
-            ...currentAtm,
-            pressure: parseFloat((ATMOSPHERE_BASE.pressure + change * 0.5).toFixed(2)),
-            temp: parseFloat((ATMOSPHERE_BASE.temp + change * 2.0).toFixed(1))
-          };
-        });
-        
-        return next;
-      });
-    }, 4500);
-
-    return () => clearInterval(interval);
-  }, []);
 
   const updateSetting = <K extends keyof CinemagraphConfig>(key: K, value: CinemagraphConfig[K]) => {
     onChangeConfig({
@@ -233,6 +210,43 @@ export default function HUD({
     onChangeConfig({
       ...config,
       ...changes
+    });
+  };
+
+  const interventionOptionButtons: Array<{ key: keyof InterventionOptions; label: string; active: boolean }> = [
+    { key: 'showPortrait', label: 'PORTRAIT', active: interventionOptions.showPortrait },
+    { key: 'showText', label: 'TEXTE', active: interventionOptions.showText },
+    { key: 'playAudio', label: 'AUDIO', active: interventionOptions.playAudio }
+  ];
+
+  const SQUAD_STATUS_OPTIONS = ['OK', 'BLESSÉ', 'ÉPUISÉ', 'ISOLÉ', 'RADIO COUPÉE', 'INCONSCIENT', 'KO'];
+
+  const updateSquadMember = (memberId: string, changes: Partial<SquadMember>) => {
+    onUpdateSquadMember(memberId, changes);
+  };
+
+  const handleToggleMemberVisibility = (memberId: string, currentVisibility: boolean) => {
+    updateSquadMember(memberId, { visible: !currentVisibility });
+  };
+
+  const handleStatusChange = (memberId: string, status: string) => {
+    updateSquadMember(memberId, { status });
+  };
+
+  const handleEquipmentChange = (memberId: string, equipment: string) => {
+    updateSquadMember(memberId, { equipment: [equipment] });
+  };
+
+  const handleNoteChange = (memberId: string, note: string) => {
+    updateSquadMember(memberId, { note });
+  };
+
+  const handleStatValueChange = (member: SquadMember, statKey: string, value: string) => {
+    updateSquadMember(member.id, {
+      stats: {
+        ...member.stats,
+        [statKey]: value
+      }
     });
   };
 
@@ -509,23 +523,143 @@ export default function HUD({
             </button>
           ))}
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
-          {[
-            { type: 'rowe', label: 'ROWE' },
-            { type: 'aletheia', label: 'ALETHEIA' },
-            { type: 'survivor', label: 'SURVIVANT' },
-            { type: 'log_delta6', label: 'LOG D-6' },
-            { type: 'unknown_radio', label: 'RADIO ?' }
-          ].map((item) => (
+        
+
+        <div className="space-y-1.5 mb-4">
+          <div className="text-[10px] font-mono uppercase tracking-widest text-stone-500 border-b border-stone-850 pb-1 flex items-center justify-between">
+            <span>ESCOUADE PJ</span>
             <button
-              key={item.type}
-              onClick={() => onTransmission(item.type as TransmissionType)}
-              className="h-8 px-2 rounded border border-stone-900 bg-stone-950/35 text-stone-500 hover:text-sky-400 hover:border-sky-900/70 text-[9px] font-bold tracking-wider uppercase transition-all cursor-pointer"
+              onClick={onToggleSquadOverlay}
+              className={`h-10 text-[12px] font-bold uppercase tracking-wider px-3 rounded border transition-all ${
+                squadOverlay.visible
+                  ? 'border-emerald-500 bg-emerald-600/12 text-emerald-300'
+                  : 'border-stone-900 bg-stone-900/20 text-stone-200 hover:border-stone-800 hover:text-stone-300'
+              }`}
             >
-              {item.label}
+              {squadOverlay.visible ? 'MASQUER ESCOUADE' : 'AFFICHER ESCOUADE'}
             </button>
-          ))}
+          </div>
+
+          <div className="grid grid-cols-2 gap-1.5">
+            {([
+              { mode: 'compact' as const, label: 'COMPACT' },
+              { mode: 'detail' as const, label: 'DÉTAIL' }
+            ]).map((option) => (
+              <button
+                key={option.mode}
+                onClick={() => onSetSquadOverlayMode(option.mode)}
+                className={`h-10 rounded border text-[9px] font-bold tracking-wider uppercase transition-all ${
+                  squadOverlay.mode === option.mode
+                    ? 'border-emerald-500 bg-emerald-950/15 text-emerald-300'
+                    : 'border-stone-900 bg-stone-900/20 text-stone-500 hover:border-stone-800 hover:text-stone-300'
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="space-y-3">
+            {squadOverlay.members.map((member) => (
+              <div key={member.id} className="rounded-2xl border border-stone-900/80 bg-stone-950/85 p-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-white truncate">{member.name}</div>
+                    <div className="text-[8.5px] uppercase tracking-[0.2em] text-stone-500 truncate">{member.role}</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleToggleMemberVisibility(member.id, member.visible)}
+                      className={`h-10 px-3 rounded border text-[12px] font-semibold uppercase tracking-[0.2em] transition-all ${
+                        member.visible
+                          ? 'border-emerald-500 bg-emerald-600/12 text-emerald-300'
+                          : 'border-stone-700 bg-stone-900/20 text-stone-400 hover:border-stone-600 hover:text-stone-300'
+                      }`}
+                    >
+                      {member.visible ? 'VISIBLE' : 'MASQUÉ'}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                  <label className="block text-[9px] uppercase tracking-[0.24em] text-stone-400">
+                    STATUT
+                    <select
+                      value={member.status}
+                      onChange={(event) => handleStatusChange(member.id, event.target.value)}
+                      className="mt-1 w-full rounded border border-stone-800 bg-stone-900 px-2 py-1 text-[10px] text-white"
+                    >
+                      {SQUAD_STATUS_OPTIONS.map((status) => (
+                        <option key={status} value={status}>{status}</option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <div className="flex flex-col gap-2">
+                    <div className="text-[9px] uppercase tracking-[0.22em] text-stone-400">Trackers</div>
+                    <div className="flex gap-2">
+                      {['stress','bruit','blessures'].map((t) => (
+                        <div key={t} className="rounded-2xl border border-stone-800/80 bg-stone-950/70 p-2 text-center w-1/3">
+                          <div className="flex items-center justify-center gap-2">
+                            {t === 'stress' ? <Zap className="w-4 h-4 text-amber-400" /> : t === 'bruit' ? <Waves className="w-4 h-4 text-sky-400" /> : <div className="text-orange-400">✚</div>}
+                            <div className="text-[9px] text-stone-400 uppercase">{t.toUpperCase()}</div>
+                          </div>
+                          <div className="mt-1 flex items-center justify-center gap-2">
+                            <button
+                              onClick={() => {
+                                const trackers = { ...(member as any).trackers || { stress:0, bruit:0, blessures:0 } };
+                                trackers[t] = Math.max(0, (trackers as any)[t] - 1);
+                                updateSquadMember(member.id, { trackers });
+                              }}
+                              className="px-3 py-2 rounded border border-stone-800 text-sm"
+                            >-</button>
+                            <div className="w-8 text-white font-bold text-sm">{((member as any).trackers && (member as any).trackers[t]) ?? 0}</div>
+                            <button
+                              onClick={() => {
+                                const trackers = { ...(member as any).trackers || { stress:0, bruit:0, blessures:0 } };
+                                const max = t === 'blessures' ? 3 : 5;
+                                trackers[t] = Math.min(max, ((trackers as any)[t] || 0) + 1);
+                                updateSquadMember(member.id, { trackers });
+                              }}
+                              className="px-3 py-2 rounded border border-stone-800 text-sm"
+                            >+</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-3 flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      onSetSquadOverlayMode('detail');
+                    }}
+                    className="px-3 py-2 rounded bg-sky-700 text-white text-[12px]"
+                  >
+                    FOCUS PJ
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-3 flex gap-2">
+            <button
+              onClick={() => onResetTrackers && onResetTrackers()}
+              className="px-3 py-2 rounded bg-stone-800 text-stone-200 text-[12px]"
+            >
+              REMETTRE JAUGES PJ À ZÉRO
+            </button>
+            <button
+              onClick={() => onResetMission && onResetMission()}
+              className="px-3 py-2 rounded bg-red-700 text-white text-[12px] ml-auto"
+            >
+              RÉINITIALISER PARTIE
+            </button>
+          </div>
         </div>
+
         <div className="grid grid-cols-[72px_1fr] gap-2 rounded border border-stone-900 bg-stone-950/30 p-2">
           <div className="relative h-14 rounded border border-stone-800 bg-stone-950 overflow-hidden">
             <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.32)_50%)] bg-[size:100%_4px] opacity-60" />
@@ -550,24 +684,13 @@ export default function HUD({
           SCÈNES M01
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
-          {[
-            { id: 'depart_new_carthage', label: 'DÉPART NC' },
-            { id: 'briefing_rowe', label: 'BRIEFING ROWE' },
-            { id: 'traversee', label: 'TRAVERSÉE' },
-            { id: 'anomalie_radio', label: 'ANOMALIE RADIO' },
-            { id: 'arches_noires', label: 'ARCHES NOIRES' },
-            { id: 'site_delta6', label: 'SITE DELTA-6' },
-            { id: 'hounds_proches', label: 'HOUNDS PROCHES' },
-            { id: 'tempete_em', label: 'TEMPÊTE EM' },
-            { id: 'extraction', label: 'EXTRACTION' },
-            { id: 'retour_new_carthage', label: 'RETOUR NC' }
-          ].map((scene) => (
+          {STORY_BEATS.map((beat) => (
             <button
-              key={scene.id}
-              onClick={() => onSceneShortcut(scene.id)}
+              key={beat.id}
+              onClick={() => onSceneShortcut(beat.id)}
               className="h-9 px-2 rounded border border-stone-900 bg-stone-900/25 text-stone-500 hover:text-orange-400 hover:border-orange-900/60 text-[8.5px] font-bold tracking-wide uppercase transition-all cursor-pointer"
             >
-              {scene.label}
+              {beat.label}
             </button>
           ))}
         </div>
@@ -618,147 +741,7 @@ export default function HUD({
         </div>
       </div>
 
-      {/* 8. BLOC AVANCÉ */}
-      <div className="mt-6 border border-stone-900 bg-stone-900/20 rounded">
-        <button
-          onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
-          className="w-full flex items-center justify-between px-4 py-2.5 text-stone-500 hover:text-stone-300 transition-colors text-[10px] font-bold tracking-widest uppercase cursor-pointer"
-        >
-          <span>[07] PARAMÈTRES AVANCÉS</span>
-          {isAdvancedOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-        </button>
-
-        {isAdvancedOpen && (
-          <div className="border-t border-stone-900 p-4 space-y-4">
-            
-            {/* Advanced Navigation Tabs */}
-            <div className="flex gap-2 p-0.5 bg-stone-950 border border-stone-900 rounded">
-              {[
-                { type: 'levels', label: 'INTENSITÉS DISCRÈTES', icon: <Sliders className="w-3 h-3" /> },
-                { type: 'diagnostics', label: 'TÉLÉMÉTRIE SENSEURS', icon: <Terminal className="w-3 h-3" /> },
-                { type: 'crew_logs', label: 'TRANSCRIPTIONS SOL ROUGE', icon: <FileText className="w-3 h-3" /> }
-              ].map((tab) => (
-                <button
-                  key={tab.type}
-                  onClick={() => setActiveAdvancedTab(tab.type as any)}
-                  className={`flex-1 py-1 flex items-center justify-center gap-1.5 text-[9px] font-bold tracking-wide transition-all cursor-pointer rounded ${
-                    activeAdvancedTab === tab.type
-                      ? 'bg-stone-900 text-emerald-400 font-bold border border-stone-800'
-                      : 'text-stone-600 hover:text-stone-400'
-                  }`}
-                >
-                  {tab.icon}
-                  <span>{tab.label}</span>
-                </button>
-              ))}
-            </div>
-
-            {/* Advanced Sub-Tab Content: Discrete 0-3 sliders */}
-            {activeAdvancedTab === 'levels' && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                {[
-                  { type: 'dust', label: 'Intensité poussière', icon: <Waves className="w-3.5 h-3.5 text-blue-500" /> },
-                  { type: 'glitch', label: 'Intensité glitch', icon: <Radio className="w-3.5 h-3.5 text-purple-500" /> },
-                  { type: 'scanner', label: 'Intensité scanner', icon: <Binary className="w-3.5 h-3.5 text-orange-500" /> },
-                  { type: 'headlight', label: 'Intensité phares', icon: <Power className="w-3.5 h-3.5 text-yellow-500" /> },
-                  { type: 'volume', label: 'Volume global', icon: <Volume2 className="w-3.5 h-3.5 text-emerald-500" /> },
-                ].map((effect) => {
-                  const currentVal = getLevel(effect.type as any);
-                  return (
-                    <div key={effect.type} className="flex items-center justify-between p-2.5 bg-stone-950 border border-stone-900 rounded">
-                      <div className="flex items-center gap-2">
-                        {effect.icon}
-                        <span className="text-[9.5px] font-bold text-stone-400 uppercase tracking-wide">{effect.label}</span>
-                      </div>
-                      <div className="flex gap-1">
-                        {[0, 1, 2, 3].map((lvl) => (
-                          <button
-                            key={lvl}
-                            onClick={() => setLevel(effect.type as any, lvl)}
-                            className={`w-7 h-7 rounded text-[10px] font-bold flex items-center justify-center transition-all cursor-pointer ${
-                              currentVal === lvl
-                                ? 'bg-emerald-500 text-stone-950 shadow-[0_0_5px_rgba(16,185,129,0.3)]'
-                                : 'bg-stone-900 border border-stone-800 text-stone-600 hover:border-stone-700'
-                            }`}
-                          >
-                            {lvl}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Advanced Sub-Tab Content: diagnostics log stream */}
-            {activeAdvancedTab === 'diagnostics' && (
-              <div className="space-y-2">
-                <div className="flex justify-between items-center font-mono text-[9px] pb-1 border-b border-stone-900 text-stone-500">
-                  <span>FLUX DE CAPTEURS EN DIRECT // SATELLITE RELAIS-6</span>
-                  <span className="text-emerald-500 animate-pulse">● ÉCOUTE</span>
-                </div>
-                <div className="h-[180px] overflow-y-auto font-mono text-[9px] space-y-1 bg-stone-950 border border-stone-900 p-2.5 rounded">
-                  {logs.map((log, idx) => (
-                    <div key={idx} className="flex gap-2 hover:bg-stone-900/20 py-0.5 px-1 rounded">
-                      <span className="text-stone-600 select-none">[{log.timestamp}]</span>
-                      <span className={`w-20 font-bold truncate ${
-                        log.source === 'ENVIRONNEMENT' || log.source === 'MÉTÉO' ? 'text-sky-500' :
-                        log.source === 'ROVER D-6' ? 'text-amber-500' :
-                        log.source === 'SCANNER' ? 'text-orange-500' :
-                        log.source === 'ALETHEIA' || log.source === 'SÉCURITÉ' ? 'text-red-500' : 'text-purple-400'
-                      }`}>
-                        {log.source}:
-                      </span>
-                      <span className={`flex-1 ${
-                        log.status === 'warning' ? 'text-yellow-400' :
-                        log.status === 'alert' ? 'text-red-500 font-bold animate-pulse' : 'text-stone-400'
-                      }`}>
-                        {log.message}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Advanced Sub-Tab Content: crew transcripts */}
-            {activeAdvancedTab === 'crew_logs' && (
-              <div className="space-y-2">
-                <div className="font-mono text-[9px] pb-1 border-b border-stone-900 text-stone-500 uppercase">
-                  TRANSCRIPTIONS CACHÉES DE L'ÉQUIPAGE
-                </div>
-                <div className="h-[180px] overflow-y-auto space-y-2 bg-stone-950 border border-stone-900 p-2.5 rounded">
-                  {CREW_LOGS.map((rec, idx) => (
-                    <div key={idx} className="border-b border-stone-900 last:border-0 pb-2 mb-2 last:pb-0 last:mb-0 text-[9px]">
-                      <div className="flex justify-between items-center font-bold mb-1">
-                        <span className="text-orange-500">{rec.sender.toUpperCase()}</span>
-                        <span className="text-stone-600">{rec.timestamp}</span>
-                      </div>
-                      <p className="text-stone-400 leading-relaxed italic animate-pulse">
-                        "{rec.msg}"
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Synchronisation Loop Realignment Trigger */}
-            <div className="flex justify-between items-center border-t border-stone-900 pt-3">
-              <span className="text-[8px] text-stone-600">UESC EXPEDITION COORD. 0x40D6</span>
-              <button 
-                onClick={onRefreshLoop}
-                className="flex items-center gap-1 py-1 px-2.5 rounded border border-stone-900 hover:border-stone-800 text-stone-500 hover:text-stone-300 transition-colors cursor-pointer text-[9px] font-mono uppercase font-bold"
-              >
-                <RefreshCw className="w-3 h-3 text-orange-500" />
-                <span>RÉ-ALIGNER LA BOUCLE PJ</span>
-              </button>
-            </div>
-
-          </div>
-        )}
-      </div>
+      
 
     </div>
   );

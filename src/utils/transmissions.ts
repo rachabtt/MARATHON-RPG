@@ -1,4 +1,5 @@
 import type { ActiveTransmission, TransmissionType } from "../types";
+import { getCharacterProfile } from "./characters";
 
 export interface TransmissionSpeaker {
   id: TransmissionType;
@@ -19,11 +20,9 @@ export const TRANSMISSION_SPEAKERS: Record<TransmissionType, TransmissionSpeaker
     sourceType: "command",
     accentColor: "orange",
     signalQuality: "clair",
-    portraitPath: undefined,
+    portraitPath: getCharacterProfile("rowe").portrait,
     messages: [
-      "Vous avez vos ordres.",
-      "Récupérez l’équipe et revenez.",
-      "Pas de théorie bizarre sur les canaux publics.",
+      "Delta-6 ne répond plus depuis six heures. Vous récupérez l’équipe, les données et le rover.",
     ],
   },
   aletheia: {
@@ -33,39 +32,32 @@ export const TRANSMISSION_SPEAKERS: Record<TransmissionType, TransmissionSpeaker
     sourceType: "ai",
     accentColor: "emerald",
     signalQuality: "clair",
-    portraitPath: undefined,
+    portraitPath: getCharacterProfile("aletheia").portrait,
     messages: [
-      "Interférence locale détectée.",
-      "Aucune source hostile confirmée.",
-      "Votre sécurité est prioritaire.",
-      "Je recommande de ne pas extrapoler.",
+      "Interférence locale détectée. Aucune source hostile confirmée.",
     ],
   },
-  survivor: {
-    id: "survivor",
+  velen: {
+    id: "velen",
     label: "DR ISAAC VELEN",
     role: "SURVIVANT DELTA-6",
     sourceType: "field",
     accentColor: "amber",
     signalQuality: "critique",
-    portraitPath: undefined,
+    portraitPath: getCharacterProfile("velen").portrait,
     messages: [
-      "Coupez le scanner.",
-      "On a entendu quelque chose.",
-      "Je veux rentrer.",
+      "Je veux rentrer. Il faut couper le scanner.",
     ],
   },
-  log_delta6: {
-    id: "log_delta6",
+  delta6_log: {
+    id: "delta6_log",
     label: "LOG DELTA-6",
     role: "ENREGISTREMENT CORROMPU",
     sourceType: "log",
     accentColor: "cyan",
     signalQuality: "dégradé",
     messages: [
-      "Relevé actif. Données instables.",
-      "Transmission corrompue.",
-      "Retour géologique incohérent.",
+      "Vous entendez ça ? Coupez le scanner. Coupez—",
     ],
   },
   unknown_radio: {
@@ -76,6 +68,18 @@ export const TRANSMISSION_SPEAKERS: Record<TransmissionType, TransmissionSpeaker
     accentColor: "red",
     signalQuality: "critique",
     messages: ["Can you hear me?"],
+  },
+  hound: {
+    id: "hound",
+    label: "HOUND CONTACT",
+    role: "FAUNE HOSTILE / SIGNAL ÉLECTRONIQUE",
+    sourceType: "unknown",
+    accentColor: "red",
+    signalQuality: "critique",
+    portraitPath: getCharacterProfile("hound").portrait,
+    messages: [
+      "CONTACT FAUNE // ÉMISSION ACTIVE DÉTECTÉE",
+    ],
   },
 };
 

@@ -7,7 +7,7 @@ import { useState, useRef, useEffect } from 'react';
 import Cinemagraph from './components/Cinemagraph';
 import HUD from './components/HUD';
 import TransmissionOverlay from './components/TransmissionOverlay';
-import type { CinemagraphConfig, QuickEffectType, TransmissionType } from './types';
+import type { CinemagraphConfig, QuickEffectType, TransmissionType, SquadMember } from './types';
 import { SciFiAudioEngine } from './utils/audioEngine';
 import { 
   getStoredState, 
@@ -28,6 +28,12 @@ import {
   type NetworkSyncStatus
 } from './utils/networkSync';
 import { createMissionTransmission } from './utils/transmissions';
+import { getStoryBeat, createStoryBeatTransmission, type StoryAmbience } from './utils/storyBeats';
+import { getHoundVisualProfile } from './utils/houndProfile';
+import HoundOverlay from './components/HoundOverlay';
+import SquadOverlay from './components/SquadOverlay';
+import SquadSelector from './components/SquadSelector';
+import PLAYER_CHARACTERS from './utils/playerCharacters';
 import { 
   Shield, 
   Volume2, 
@@ -198,11 +204,33 @@ export default function App() {
 
   useEffect(() => {
     const transmission = state.displayOptions.activeTransmission;
-    if (!transmission || !audioEngineRef.current || !currentConfig.audioEnabled || currentConfig.audioRadioSilence) return;
+    if (
+      !transmission ||
+      !audioEngineRef.current ||
+      !currentConfig.audioEnabled ||
+      currentConfig.audioRadioSilence ||
+      !state.interventionOptions.playAudio
+    ) return;
     if (lastTransmissionIdRef.current === transmission.id) return;
     lastTransmissionIdRef.current = transmission.id;
     audioEngineRef.current.triggerTransmissionOpen();
-  }, [state.displayOptions.activeTransmission, currentConfig.audioEnabled, currentConfig.audioRadioSilence]);
+  }, [state.displayOptions.activeTransmission, currentConfig.audioEnabled, currentConfig.audioRadioSilence, state.interventionOptions.playAudio]);
+
+  useEffect(() => {
+    const houndState = state.transientEffects?.hound;
+    if (!houndState || !houndState.active) return;
+    const elapsed = Date.now() - houndState.startedAt;
+    if (elapsed <= houndState.durationMs) return;
+
+    const payload: MissionControlState = {
+      ...state,
+      transientEffects: {
+        ...state.transientEffects,
+        hound: undefined
+      }
+    };
+    commitLocalState(payload);
+  }, [state.transientEffects?.hound]);
 
   const commitLocalState = (payload: MissionControlState) => {
     setState(payload);
@@ -250,6 +278,155 @@ export default function App() {
 
   const handleUpdateLocation = (location: LocationId) => {
     const payload = { ...state, activeLocation: location };
+    commitLocalState(payload);
+  };
+
+  const handleToggleSquadOverlay = () => {
+    const payload: MissionControlState = {
+      ...state,
+      squadOverlay: {
+        ...state.squadOverlay,
+        visible: !state.squadOverlay.visible
+      }
+    };
+    commitLocalState(payload);
+  };
+
+  const handleSetSquadOverlayMode = (mode: 'compact' | 'detail') => {
+    const payload: MissionControlState = {
+      ...state,
+      squadOverlay: {
+        ...state.squadOverlay,
+        mode
+      }
+    };
+    commitLocalState(payload);
+  };
+
+  const handleUpdateSquadMember = (memberId: string, changes: Partial<SquadMember>) => {
+    const payload: MissionControlState = {
+      ...state,
+      squadOverlay: {
+        ...state.squadOverlay,
+        members: state.squadOverlay.members.map((member) =>
+          member.id === memberId
+            ? { ...member, ...changes }
+            : member
+        )
+      }
+    };
+    commitLocalState(payload);
+  };
+
+  const handleMoveSquadMember = (memberId: string, direction: -1 | 1) => {
+    const members = [...state.squadOverlay.members];
+    const currentIndex = members.findIndex((member) => member.id === memberId);
+    if (currentIndex === -1) return;
+
+    const targetIndex = currentIndex + direction;
+    if (targetIndex < 0 || targetIndex >= members.length) return;
+
+    [members[currentIndex], members[targetIndex]] = [members[targetIndex], members[currentIndex]];
+    const payload: MissionControlState = {
+      ...state,
+      squadOverlay: {
+        ...state.squadOverlay,
+        members
+      }
+    };
+    commitLocalState(payload);
+  };
+
+  // Squad selection handlers
+  const handleSelectSquadCharacter = (id: string) => {
+    if (state.squad.locked) return;
+    const selected = new Set(state.squad.selectedIds || []);
+    if (selected.size >= 3) return;
+    selected.add(id);
+    const payload: MissionControlState = { ...state, squad: { ...state.squad, selectedIds: Array.from(selected) } };
+    commitLocalState(payload);
+  };
+
+  const handleDeselectSquadCharacter = (id: string) => {
+    if (state.squad.locked) return;
+    const selected = (state.squad.selectedIds || []).filter((s) => s !== id);
+    const payload: MissionControlState = { ...state, squad: { ...state.squad, selectedIds: selected } };
+    commitLocalState(payload);
+  };
+
+  const handleValidateSquad = () => {
+    const ids = state.squad.selectedIds || [];
+    if (ids.length !== 3) return;
+    // Build squadOverlay members from PLAYER_CHARACTERS
+    const members = PLAYER_CHARACTERS.filter((pc) => ids.includes(pc.id)).map((pc) => ({
+      id: pc.id,
+      visible: true,
+      name: pc.name,
+      role: pc.role,
+      stats: {
+        physique: pc.stats.physique,
+        technique: pc.stats.technique,
+        mental: pc.stats.mental,
+        presence: pc.stats.presence
+      },
+      trackers: { stress: 0, bruit: 0, blessures: 0 },
+      equipment: pc.equipment.slice(0, 3),
+      status: pc.status,
+      note: pc.note,
+      portrait: pc.cardImage
+    }));
+
+    const payload: MissionControlState = {
+      ...state,
+      squad: { selectedIds: ids, locked: true },
+      squadOverlay: {
+        ...state.squadOverlay,
+        visible: true,
+        members
+      }
+    };
+    commitLocalState(payload);
+  };
+
+  const handleResetSquad = () => {
+    if (state.squad.locked) {
+      const confirmReset = window.confirm('L\'escouade est verrouillée. Confirmer la réinitialisation et rechoix de l\'escouade ?');
+      if (!confirmReset) return;
+    }
+    const payload: MissionControlState = { ...state, squad: { selectedIds: [], locked: false }, squadOverlay: { ...state.squadOverlay, visible: false } };
+    commitLocalState(payload);
+  };
+
+  const handleModifySquad = () => {
+    if (!state.squad.locked) return;
+    const confirmChange = window.confirm('Modifier l\'escouade peut perturber l\'affichage en cours. Continuer ?');
+    if (!confirmChange) return;
+    const payload: MissionControlState = { ...state, squad: { selectedIds: [], locked: false } };
+    commitLocalState(payload);
+  };
+
+  const handleResetTrackers = () => {
+    const confirmReset = window.confirm("Remettre Stress, Bruit et Blessures des PJ actifs à zéro ?");
+    if (!confirmReset) return;
+    const members = state.squadOverlay.members.map((m) => ({
+      ...m,
+      trackers: { stress: 0, bruit: 0, blessures: 0 },
+      status: 'OK'
+    }));
+    const payload: MissionControlState = {
+      ...state,
+      squadOverlay: {
+        ...state.squadOverlay,
+        members
+      }
+    };
+    commitLocalState(payload);
+  };
+
+  const handleResetMission = () => {
+    const confirmReset = window.confirm("Réinitialiser toute la partie ? Les trackers, l'escouade et l'état de mission seront remis à zéro.");
+    if (!confirmReset) return;
+    const payload = INITIAL_MISSION_STATE;
     commitLocalState(payload);
   };
 
@@ -336,66 +513,92 @@ export default function App() {
     commitLocalState(payload);
   };
 
+  const handleStopTransmission = () => {
+    const payload: MissionControlState = {
+      ...state,
+      displayOptions: {
+        ...state.displayOptions,
+        activeTransmission: null
+      },
+      transientEffects: {
+        ...state.transientEffects,
+        hound: undefined
+      }
+    };
+    commitLocalState(payload);
+  };
+
+  const handleToggleInterventionOption = (key: keyof MissionControlState['interventionOptions']) => {
+    const payload: MissionControlState = {
+      ...state,
+      interventionOptions: {
+        ...state.interventionOptions,
+        [key]: !state.interventionOptions[key]
+      }
+    };
+    commitLocalState(payload);
+  };
+
   const handleTransmission = (type: TransmissionType) => {
     const payload: MissionControlState = {
       ...state,
       displayOptions: {
         ...state.displayOptions,
         activeTransmission: createMissionTransmission(type)
-      }
+      },
+      transientEffects: type === 'hound'
+        ? {
+            ...state.transientEffects,
+            hound: {
+              active: true,
+              ...getHoundVisualProfile(state.activeLocation),
+              startedAt: Date.now(),
+              durationMs: getHoundVisualProfile(state.activeLocation).durationMs
+            }
+          }
+        : {
+            ...state.transientEffects,
+            hound: undefined
+          }
     };
+
     commitLocalState(payload);
+
+    if (type === 'hound' && audioEngineRef.current && currentConfig.audioEnabled && state.interventionOptions.playAudio && !currentConfig.audioRadioSilence) {
+      audioEngineRef.current.triggerHoundShadow();
+    }
   };
 
   const handleSceneShortcut = (sceneId: string) => {
-    let payload: MissionControlState = state;
+    const beat = getStoryBeat(sceneId);
+    if (!beat) return;
 
-    const setLocationAndPreset = (location: LocationId, presetId: string) => {
-      payload = applyPreset({ ...payload, activeLocation: location }, presetId);
-    };
-
-    switch (sceneId) {
-      case 'depart_new_carthage':
-        setLocationAndPreset('new_carthage', 'calme');
-        break;
-      case 'briefing_rowe':
-        setLocationAndPreset('new_carthage', 'delta6');
-        payload.displayOptions.activeTransmission = createMissionTransmission('rowe');
-        break;
-      case 'traversee':
-        setLocationAndPreset('red_plains', 'delta6');
-        payload.audio.radioVolume = Math.max(payload.audio.radioVolume, 0.22);
-        break;
-      case 'anomalie_radio':
-        setLocationAndPreset('red_plains', 'signal');
-        payload = triggerQuickEffect('glitch_radio', payload);
-        break;
-      case 'arches_noires':
-        setLocationAndPreset('black_arches', 'signal');
-        break;
-      case 'site_delta6':
-        setLocationAndPreset('delta6', 'delta6');
-        break;
-      case 'hounds_proches':
-        setLocationAndPreset(state.activeLocation === 'black_arches' ? 'black_arches' : 'delta6', 'hounds');
-        payload = triggerQuickEffect('ombre_hound', payload);
-        break;
-      case 'tempete_em':
-        setLocationAndPreset(state.activeLocation === 'red_plains' ? 'red_plains' : 'delta6', 'tempete');
-        payload = triggerQuickEffect('flash_em', payload);
-        break;
-      case 'extraction':
-        setLocationAndPreset(state.activeLocation === 'red_plains' ? 'red_plains' : 'delta6', 'extraction');
-        break;
-      case 'retour_new_carthage':
-        setLocationAndPreset('new_carthage', 'delta6');
-        payload.displayOptions.activeTransmission = createMissionTransmission('aletheia');
-        break;
+    if (beat.requiresConfirmation && !window.confirm('CONFIRMER LANCEMENT DE LA SCÈNE FINALE ?')) {
+      return;
     }
 
+    const ambiencePresetMap: Record<StoryAmbience, string> = {
+      calme: 'calme',
+      tension: 'delta6',
+      signal: 'signal',
+      tempete: 'tempete',
+      extraction: 'extraction'
+    };
+
+    let payload: MissionControlState = applyPreset(
+      { ...state, activeLocation: beat.location },
+      ambiencePresetMap[beat.ambience]
+    );
+
+    if (beat.quickAction === 'glitch_radio' || beat.quickAction === 'flash_em') {
+      payload = triggerQuickEffect(beat.quickAction, payload);
+    } else if (beat.quickAction === 'HOUND') {
+      payload = triggerQuickEffect('ombre_hound', payload);
+    }
+
+    payload.displayOptions.activeTransmission = createStoryBeatTransmission(beat);
     commitLocalState(payload);
   };
-
   const handleResetLoopEpoch = () => {
     setLoopEpochKey(prev => prev + 1);
   };
@@ -556,7 +759,15 @@ export default function App() {
             onFlickerSound={handleRoverFlickerSound}
             onScannerSound={handleScannerPulseSound}
           />
-          <TransmissionOverlay transmission={state.displayOptions.activeTransmission} />
+          <HoundOverlay effect={state.transientEffects?.hound} locationId={state.activeLocation} />
+          <TransmissionOverlay 
+            transmission={state.displayOptions.activeTransmission}
+            showPortrait={state.interventionOptions.showPortrait}
+            showText={state.interventionOptions.showText}
+            showAudio={state.interventionOptions.playAudio}
+            onStop={handleStopTransmission}
+          />
+          <SquadOverlay overlay={state.squadOverlay} />
           
           {/* Subtle Overlay HUD layout featuring discrete terrain logs and stats */}
           <div className="absolute top-[8%] left-[4%] pointer-events-none flex flex-col gap-1 text-[10px] text-stone-400 font-mono tracking-widest uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] z-30 opacity-90">
@@ -702,6 +913,17 @@ export default function App() {
 
           {/* Right panel: dynamic 4-block HUD controls */}
           <section className="lg:col-span-8 w-full">
+            {!state.squad.locked && (
+              <SquadSelector
+                squad={state.squad}
+                onSelect={handleSelectSquadCharacter}
+                onDeselect={handleDeselectSquadCharacter}
+                onValidate={handleValidateSquad}
+                onReset={handleResetSquad}
+                onModify={handleModifySquad}
+              />
+            )}
+
             <HUD 
               config={currentConfig} 
               onChangeConfig={handleUpdateConfig} 
@@ -715,6 +937,16 @@ export default function App() {
               networkSyncStatus={networkSyncStatus}
               onQuickAction={handleQuickAction}
               onTransmission={handleTransmission}
+              interventionOptions={state.interventionOptions}
+              onToggleInterventionOption={handleToggleInterventionOption}
+              onClearTransmission={handleStopTransmission}
+              squadOverlay={state.squadOverlay}
+              onToggleSquadOverlay={handleToggleSquadOverlay}
+              onSetSquadOverlayMode={handleSetSquadOverlayMode}
+              onUpdateSquadMember={handleUpdateSquadMember}
+              onMoveSquadMember={handleMoveSquadMember}
+              onResetTrackers={handleResetTrackers}
+              onResetMission={handleResetMission}
               onSceneShortcut={handleSceneShortcut}
             />
           </section>

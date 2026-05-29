@@ -1,5 +1,6 @@
-import type { HoundVariant, QuickEffectType, TransmissionType } from "../types";
+import type { ActiveTransmission, HoundVariant, QuickEffectType, TransmissionType } from "../types";
 import type { LocationId } from "./locations";
+import { createMissionTransmission } from "./transmissions";
 
 const audioModules = import.meta.glob("../assets/audio/interventions/*.mp3", {
   eager: true,
@@ -46,7 +47,7 @@ export const STORY_BEATS: StoryBeat[] = [
     audioFile: "rowe_briefing.mp3",
   },
   {
-    id: "red_plains_departure",
+    id: "traversee",
     label: "TRAVERSÉE — PLAINES ROUGES",
     group: "Route",
     location: "red_plains",
@@ -56,7 +57,7 @@ export const STORY_BEATS: StoryBeat[] = [
     audioFile: "rowe_keep_channel.mp3",
   },
   {
-    id: "radio_anomaly",
+    id: "anomalie_radio",
     label: "ANOMALIE RADIO",
     group: "Route",
     location: "red_plains",
@@ -67,7 +68,7 @@ export const STORY_BEATS: StoryBeat[] = [
     audioFile: "aletheia_interference.mp3",
   },
   {
-    id: "black_arches_approach",
+    id: "approche_arches_noires",
     label: "APPROCHE — ARCHES NOIRES",
     group: "Route",
     location: "black_arches",
@@ -77,7 +78,7 @@ export const STORY_BEATS: StoryBeat[] = [
     audioFile: "delta6_echoes.mp3",
   },
   {
-    id: "delta6_arrival",
+    id: "arrivee_delta6",
     label: "ARRIVÉE — DELTA-6",
     group: "Delta-6",
     location: "delta6",
@@ -87,7 +88,7 @@ export const STORY_BEATS: StoryBeat[] = [
     audioFile: "delta6_arrival_log.mp3",
   },
   {
-    id: "scanner_warning",
+    id: "scanner_actif",
     label: "SCANNER ACTIF",
     group: "Delta-6",
     location: "delta6",
@@ -98,7 +99,7 @@ export const STORY_BEATS: StoryBeat[] = [
     audioFile: "delta6_cut_scanner.mp3",
   },
   {
-    id: "hound_contact",
+    id: "contact_hound",
     label: "CONTACT HOUND",
     group: "Menace",
     location: "delta6",
@@ -110,18 +111,7 @@ export const STORY_BEATS: StoryBeat[] = [
     audioFile: "hound_contact.mp3",
   },
   {
-    id: "hound_analysis",
-    label: "ANALYSE HOUND",
-    group: "Menace",
-    location: "delta6",
-    ambience: "tension",
-    speaker: "hound",
-    message: "PROFIL FAUNE // CIBLE PRIORITAIRE : ÉMISSION ÉLECTRONIQUE",
-    houndVariant: "equipement",
-    audioFile: "hound_analysis.mp3",
-  },
-  {
-    id: "velen_found",
+    id: "survivant_velen",
     label: "SURVIVANT — VELEN",
     group: "Delta-6",
     location: "delta6",
@@ -131,7 +121,7 @@ export const STORY_BEATS: StoryBeat[] = [
     audioFile: "velen_cut_scanner.mp3",
   },
   {
-    id: "storm_warning",
+    id: "tempete_em",
     label: "TEMPÊTE EM",
     group: "Menace",
     location: "delta6",
@@ -152,7 +142,7 @@ export const STORY_BEATS: StoryBeat[] = [
     audioFile: "rowe_extract_now.mp3",
   },
   {
-    id: "return_debrief",
+    id: "retour_new_carthage",
     label: "RETOUR — NEW CARTHAGE",
     group: "Retour",
     location: "new_carthage",
@@ -176,6 +166,18 @@ export const STORY_BEATS: StoryBeat[] = [
 
 export function getStoryBeat(id: string): StoryBeat | undefined {
   return STORY_BEATS.find((beat) => beat.id === id);
+}
+
+export function createStoryBeatTransmission(beat: StoryBeat): ActiveTransmission {
+  const transmission = createMissionTransmission(beat.speaker);
+  return {
+    ...transmission,
+    beatId: beat.id,
+    message: beat.message,
+    type: beat.speaker,
+    startedAt: Date.now(),
+    durationMs: transmission.durationMs,
+  };
 }
 
 export function getStoryBeatAudioSrc(beat: StoryBeat): string | undefined {
