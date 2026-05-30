@@ -94,6 +94,7 @@ export interface SquadMember {
   status: string;
   note?: string;
   portrait?: string;
+  portraitCrop?: { x: number; y: number; width: number; height: number };
 }
 
 export interface SquadOverlayState {

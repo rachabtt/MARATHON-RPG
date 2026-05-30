@@ -37,3 +37,31 @@ body {
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
   background: rgba(120, 113, 108, 0.6);
 }
+
+/* Responsive base font sizing and small-screen tweaks */
+:root {
+  /* base font-size clamps between mobile and large screens */
+  font-size: clamp(13px, 1.9vw, 16px);
+}
+
+/* Squad overlay placement moved to CSS so it can respond to small viewports */
+.squad-overlay {
+  left: clamp(12px, 2.5vw, 24px);
+  top: 18vh;
+}
+
+/* HUD compacting for very small screens */
+.app-hud {
+  /* reduce padding slightly on very narrow screens */
+}
+
+@media (max-width: 420px) {
+  .squad-overlay {
+    left: 8px;
+    top: 12vh;
+  }
+  .app-hud {
+    padding: 0.5rem !important;
+  }
+  /* make player cards slightly denser - avoid targeting bracketed utility class names to prevent CSS parsing warnings */
+}

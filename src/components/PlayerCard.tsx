@@ -5,11 +5,9 @@ import { Zap, Waves } from 'lucide-react';
 const STATUS_BADGES: Record<string, string> = {
   OK: 'border-emerald-400/30 bg-emerald-500/10 text-emerald-300',
   BLESSÉ: 'border-amber-400/30 bg-amber-500/10 text-amber-200',
-  ISOLÉ: 'border-stone-500/30 bg-stone-700/10 text-stone-300',
-  ÉPUISÉ: 'border-amber-500/30 bg-amber-500/10 text-amber-200',
-  'RADIO COUPÉE': 'border-red-500/30 bg-red-500/10 text-red-300',
-  INCONSCIENT: 'border-red-600/30 bg-red-600/10 text-red-300',
-  KO: 'border-red-700/30 bg-red-700/10 text-red-300'
+  CRITIQUE: 'border-red-600/30 bg-red-600/10 text-red-300',
+  'STRESS MAX': 'border-amber-500/30 bg-amber-500/10 text-amber-200',
+  'BRUIT MAX': 'border-rose-500/30 bg-rose-500/10 text-rose-200'
 };
 
 interface PlayerCardProps {
@@ -19,11 +17,23 @@ interface PlayerCardProps {
 
 export default function PlayerCard({ member, mode }: PlayerCardProps) {
   const statsEntries = ['physique','technique','mental','presence'].map((k) => [k, (member.stats as any)[k]] as [string, any]);
+  const trackers = (member as any).trackers ?? { stress: 0, bruit: 0, blessures: 0 };
+  const computeAutoStatus = () => {
+    const s = trackers.stress ?? 0;
+    const b = trackers.bruit ?? 0;
+    const bl = trackers.blessures ?? 0;
+    if (bl >= 3) return 'CRITIQUE';
+    if (bl >= 1) return 'BLESSÉ';
+    if (s >= 5) return 'STRESS MAX';
+    if (b >= 5) return 'BRUIT MAX';
+    return 'OK';
+  };
+  const autoStatus = computeAutoStatus();
   return (
     <div className="w-full max-w-full overflow-hidden rounded-lg border border-stone-800/80 bg-black/60 p-2">
       <div className="flex items-start gap-2">
         <div className="relative h-14 w-14 min-w-[3.5rem] rounded-xl border border-stone-700 bg-stone-950 overflow-hidden flex items-center justify-center text-stone-500">
-          <CharacterPortraitCrop src={member.portrait} alt={member.name} size={56} />
+          <CharacterPortraitCrop src={member.portrait} alt={member.name} size={56} cropSettings={(member as any).portraitCrop} />
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
@@ -31,8 +41,8 @@ export default function PlayerCard({ member, mode }: PlayerCardProps) {
               <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-white truncate">{member.name}</div>
               <div className="text-[8.5px] uppercase tracking-[0.18em] text-stone-400 truncate">{member.role}</div>
             </div>
-            <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] ${STATUS_BADGES[member.status] ?? 'border-stone-700/30 bg-stone-800/20 text-stone-300'}`}>
-              {member.status}
+            <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.2em] ${STATUS_BADGES[autoStatus] ?? 'border-stone-700/30 bg-stone-800/20 text-stone-300'}`}>
+              {autoStatus}
             </span>
           </div>
           <div className="mt-2 grid grid-cols-4 gap-1 text-[9px] uppercase tracking-[0.12em] text-stone-300">

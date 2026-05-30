@@ -12,7 +12,7 @@ export default function SquadOverlay({ overlay }: SquadOverlayProps) {
   if (!visibleMembers.length) return null;
 
   return (
-    <div className="absolute z-30 pointer-events-none" style={{ left: 'clamp(12px, 2.5vw, 24px)', top: '18vh' }}>
+    <div className="squad-overlay absolute z-30 pointer-events-none">
       <div className="mb-2 text-[10px] uppercase tracking-[0.24em] text-stone-400 font-mono">ESCOUADE PJ</div>
       <div className="flex flex-col gap-2 w-[clamp(260px,22vw,360px)] max-h-[72vh] overflow-auto" style={{ paddingRight: 8 }}>
         {visibleMembers.map((member) => (

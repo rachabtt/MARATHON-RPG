@@ -6,12 +6,22 @@ import elaraCard from '../assets/player cards/nyx.png';
 import dorianCard from '../assets/player cards/vale.png';
 import juneCard from '../assets/player cards/arendt.png';
 import tomasCard from '../assets/player cards/rehn.png';
+import maraPortrait from '../assets/player cards/cropped/voss_cropped.png';
+import ilyanPortrait from '../assets/player cards/cropped/sato_cropped.png';
+import naimaPortrait from '../assets/player cards/cropped/keller_cropped.png';
+import kaelPortrait from '../assets/player cards/cropped/moreno_cropped.png';
+import elaraPortrait from '../assets/player cards/cropped/nyx_cropped.png';
+import dorianPortrait from '../assets/player cards/cropped/vale_cropped.png';
+import junePortrait from '../assets/player cards/cropped/arendt_cropped.png';
+import tomasPortrait from '../assets/player cards/cropped/rehn_cropped.png';
 
 export type PlayerCharacter = {
   id: string;
   name: string;
   role: string;
   cardImage?: string;
+  portrait?: string;
+  portraitCrop?: { x: number; y: number; width: number; height: number };
   stats: {
     physique: number;
     technique: number;
@@ -44,7 +54,8 @@ export const PLAYER_CHARACTERS: PlayerCharacter[] = [
     talent: { name: 'Interposition', summary: "prend +1 Stress pour donner avantage à un allié qu’elle protège" },
     trackers: { stress: 0, bruit: 0, blessures: 0 },
     status: 'OK',
-    visible: true
+    visible: true,
+    portrait: maraPortrait
   },
   {
     id: 'ilyan-sato',
@@ -56,7 +67,8 @@ export const PLAYER_CHARACTERS: PlayerCharacter[] = [
     talent: { name: 'Stabilisation d’urgence', summary: 'stabilise une ressource technique qui vient de passer Critique' },
     trackers: { stress: 0, bruit: 0, blessures: 0 },
     status: 'OK',
-    visible: true
+    visible: true,
+    portrait: ilyanPortrait
   },
   {
     id: 'naima-keller',
@@ -68,7 +80,8 @@ export const PLAYER_CHARACTERS: PlayerCharacter[] = [
     talent: { name: 'Stabiliser', summary: 'soigne ou stabilise quelqu’un et réduit aussi son Stress de 1' },
     trackers: { stress: 0, bruit: 0, blessures: 0 },
     status: 'OK',
-    visible: true
+    visible: true,
+    portrait: naimaPortrait
   },
   {
     id: 'kael-moreno',
@@ -80,7 +93,8 @@ export const PLAYER_CHARACTERS: PlayerCharacter[] = [
     talent: { name: 'Conduite impossible', summary: "ignore le premier désavantage lié à la visibilité ou au terrain en pilotage dangereux" },
     trackers: { stress: 0, bruit: 0, blessures: 0 },
     status: 'OK',
-    visible: true
+    visible: true,
+    portrait: kaelPortrait
   },
   {
     id: 'elara-nyx',
@@ -92,7 +106,8 @@ export const PLAYER_CHARACTERS: PlayerCharacter[] = [
     talent: { name: 'Hypothèse de terrain', summary: "pose une question précise au MJ sur une créature ou un phénomène naturel, même sur 7-9" },
     trackers: { stress: 0, bruit: 0, blessures: 0 },
     status: 'OK',
-    visible: true
+    visible: true,
+    portrait: elaraPortrait
   },
   {
     id: 'dorian-vale',
@@ -104,7 +119,8 @@ export const PLAYER_CHARACTERS: PlayerCharacter[] = [
     talent: { name: 'Ordre clair', summary: "donne avantage à un allié qui suit son ordre, mais prend +1 Stress" },
     trackers: { stress: 0, bruit: 0, blessures: 0 },
     status: 'OK',
-    visible: true
+    visible: true,
+    portrait: dorianPortrait
   },
   {
     id: 'june-arendt',
@@ -116,7 +132,8 @@ export const PLAYER_CHARACTERS: PlayerCharacter[] = [
     talent: { name: 'Œil distant', summary: "son drone reconnaît une zone sans l’exposer directement ; perdre le drone lui inflige +1 Stress" },
     trackers: { stress: 0, bruit: 0, blessures: 0 },
     status: 'OK',
-    visible: true
+    visible: true,
+    portrait: junePortrait
   },
   {
     id: 'tomas-rehn',
@@ -128,7 +145,8 @@ export const PLAYER_CHARACTERS: PlayerCharacter[] = [
     talent: { name: 'Prévu dans le manifeste', summary: "relance une vérification logistique ou d’approvisionnement ; doit utiliser le second résultat" },
     trackers: { stress: 0, bruit: 0, blessures: 0 },
     status: 'OK',
-    visible: true
+    visible: true,
+    portrait: tomasPortrait
   }
 ];
 
@@ -155,6 +173,7 @@ export const DEFAULT_SQUAD_OVERLAY: SquadOverlayState = {
     equipment: pc.equipment.slice(0, 3),
     status: pc.status,
     note: pc.note,
-    portrait: pc.cardImage
+    portrait: pc.portrait ?? pc.cardImage,
+    portraitCrop: pc.portrait ? { x: 0, y: 0, width: 100, height: 100 } : pc.portraitCrop
   }))
 };

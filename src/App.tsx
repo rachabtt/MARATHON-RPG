@@ -318,6 +318,52 @@ export default function App() {
     commitLocalState(payload);
   };
 
+  const handleUpdateSquadTracker = (memberId: string, trackerKey: 'stress'|'bruit'|'blessures', delta: number) => {
+    const members = [...state.squadOverlay.members];
+    const max = trackerKey === 'blessures' ? 3 : 5;
+    let found = false;
+    const updated = members.map((m) => {
+      if (m.id === memberId) {
+        found = true;
+        const trackers = { ...(m.trackers || { stress:0, bruit:0, blessures:0 }) } as any;
+        trackers[trackerKey] = Math.max(0, Math.min(max, (trackers[trackerKey] || 0) + delta));
+        return { ...m, trackers };
+      }
+      return m;
+    });
+
+    // If not found but character is selected, create minimal member entry
+    if (!found) {
+      const pc = PLAYER_CHARACTERS.find(p => p.id === memberId);
+        if (pc && (state.squad.selectedIds || []).includes(memberId)) {
+        const trackers: any = { stress:0, bruit:0, blessures:0 };
+        trackers[trackerKey] = Math.max(0, Math.min(max, (trackers[trackerKey] || 0) + delta));
+        updated.push({
+          id: pc.id,
+          visible: true,
+          name: pc.name,
+          role: pc.role,
+          stats: { physique: pc.stats.physique, technique: pc.stats.technique, mental: pc.stats.mental, presence: pc.stats.presence },
+          trackers,
+          equipment: pc.equipment.slice(0,3),
+          status: pc.status,
+          note: pc.note,
+            portrait: pc.portrait ?? pc.cardImage,
+            portraitCrop: pc.portrait ? { x: 0, y: 0, width: 100, height: 100 } : pc.portraitCrop
+        } as any);
+      }
+    }
+
+    const payload: MissionControlState = {
+      ...state,
+      squadOverlay: {
+        ...state.squadOverlay,
+        members: updated
+      }
+    };
+    commitLocalState(payload);
+  };
+
   const handleMoveSquadMember = (memberId: string, direction: -1 | 1) => {
     const members = [...state.squadOverlay.members];
     const currentIndex = members.findIndex((member) => member.id === memberId);
@@ -373,7 +419,8 @@ export default function App() {
       equipment: pc.equipment.slice(0, 3),
       status: pc.status,
       note: pc.note,
-      portrait: pc.cardImage
+      portrait: pc.portrait ?? pc.cardImage,
+      portraitCrop: pc.portrait ? undefined : pc.portraitCrop
     }));
 
     const payload: MissionControlState = {
@@ -399,32 +446,20 @@ export default function App() {
 
   const handleModifySquad = () => {
     if (!state.squad.locked) return;
-    const confirmChange = window.confirm('Modifier l\'escouade peut perturber l\'affichage en cours. Continuer ?');
+    const confirmChange = window.confirm('Rechoisir l\'escouade ? Les PJ affichés seront retirés de l\'écran.');
     if (!confirmChange) return;
-    const payload: MissionControlState = { ...state, squad: { selectedIds: [], locked: false } };
-    commitLocalState(payload);
-  };
-
-  const handleResetTrackers = () => {
-    const confirmReset = window.confirm("Remettre Stress, Bruit et Blessures des PJ actifs à zéro ?");
-    if (!confirmReset) return;
-    const members = state.squadOverlay.members.map((m) => ({
-      ...m,
-      trackers: { stress: 0, bruit: 0, blessures: 0 },
-      status: 'OK'
-    }));
     const payload: MissionControlState = {
       ...state,
-      squadOverlay: {
-        ...state.squadOverlay,
-        members
-      }
+      squad: { selectedIds: [], locked: false },
+      squadOverlay: { ...state.squadOverlay, visible: false, members: [] }
     };
     commitLocalState(payload);
   };
 
+  
+
   const handleResetMission = () => {
-    const confirmReset = window.confirm("Réinitialiser toute la partie ? Les trackers, l'escouade et l'état de mission seront remis à zéro.");
+    const confirmReset = window.confirm("Réinitialiser toute la partie ? L'escouade, les jauges PJ, les ressources et l'état de mission seront remis à zéro.");
     if (!confirmReset) return;
     const payload = INITIAL_MISSION_STATE;
     commitLocalState(payload);
@@ -944,9 +979,10 @@ export default function App() {
               onToggleSquadOverlay={handleToggleSquadOverlay}
               onSetSquadOverlayMode={handleSetSquadOverlayMode}
               onUpdateSquadMember={handleUpdateSquadMember}
+              onUpdateSquadTracker={handleUpdateSquadTracker}
               onMoveSquadMember={handleMoveSquadMember}
-              onResetTrackers={handleResetTrackers}
               onResetMission={handleResetMission}
+              onModifySquad={handleModifySquad}
               onSceneShortcut={handleSceneShortcut}
             />
           </section>
@@ -955,7 +991,7 @@ export default function App() {
 
         {/* Minimal Footer */}
         <footer className="max-w-7xl w-full mx-auto border-t border-stone-850 pt-3 mt-5 flex justify-between items-center text-[10px] font-mono text-stone-600 uppercase select-none relative z-10">
-          <span>UESC // CONNERIE DU SIGNAL ET DU ROVER // M01 CONTROLLER</span>
+          <span>UESC // NEW CARTHAGE FIELD CONTROL // M01 SOL ROUGE // ACCÈS MJ SÉCURISÉ</span>
           <span>SOL ROUGE // ACCÈS MJ SÉCURISÉ</span>
         </footer>
 
