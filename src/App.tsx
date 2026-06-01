@@ -20,7 +20,7 @@ import {
   broadcastStateChange,
   applyPreset
 } from './utils/syncState';
-import { getLocationById, LOCATIONS, type LocationId } from './utils/locations';
+import { getLocationById, LOCATIONS, resolveLocationVisual, type LocationId } from './utils/locations';
 import {
   connectNetworkSync,
   networkClientId,
@@ -108,9 +108,25 @@ export default function App() {
   // Initialize Web Audio Engine
   useEffect(() => {
     audioEngineRef.current = new SciFiAudioEngine();
+    // Preload images and videos where available (non-fatal if video absent)
     LOCATIONS.forEach((location) => {
-      const image = new Image();
-      image.src = location.image;
+      const img = new Image();
+      img.src = location.image;
+      if (location.povImage) {
+        const p = new Image(); p.src = location.povImage;
+      }
+      if (location.houndImage) {
+        const h = new Image(); h.src = location.houndImage;
+      }
+      if (location.loops) {
+        Object.values(location.loops).forEach((lp) => {
+          if (lp) {
+            const v = document.createElement('video');
+            v.preload = 'auto';
+            v.src = lp;
+          }
+        });
+      }
     });
     return () => {
       if (audioEngineRef.current) {
@@ -151,6 +167,7 @@ export default function App() {
   const currentConfig = deriveConfigFromState(state);
   const activeLocation = getLocationById(state.activeLocation);
   const isAudioBooted = (route === 'display' && displayBooted) || (route === 'control' && controlBooted);
+  const activeVisual = resolveLocationVisual(activeLocation, currentConfig, state.displayOptions);
 
   useEffect(() => {
     if (!audioEngineRef.current) return;
@@ -459,11 +476,166 @@ export default function App() {
   
 
   const handleResetMission = () => {
-    const confirmReset = window.confirm("Réinitialiser toute la partie ? L'escouade, les jauges PJ, les ressources et l'état de mission seront remis à zéro.");
+    const confirmReset = window.confirm("Réinitialiser la session M01 ?");
     if (!confirmReset) return;
-    const payload = INITIAL_MISSION_STATE;
+    const payload: MissionControlState = {
+      ...INITIAL_MISSION_STATE,
+      audio: { ...INITIAL_MISSION_STATE.audio, enabled: state.audio.enabled },
+      displayOptions: {
+        ...INITIAL_MISSION_STATE.displayOptions,
+        newCarthageLoopVariant: 'workers',
+        newCarthageLoopCounts: { ship_takeoff: 0, easter_egg: 0 },
+        redPlainsVisualVariant: 'wide',
+        redPlainsTransitionStartedAt: null,
+        screenBlack: false,
+        activeTransmission: null
+      },
+      quickEffect: null,
+      effects: { ...INITIAL_MISSION_STATE.effects, hounds: 0 },
+      transientEffects: {}
+    };
     commitLocalState(payload);
   };
+
+  // Handle one-shot video completion for New Carthage loops
+  const handleVisualOneShotComplete = () => {
+    const loc = state.activeLocation;
+    if (loc !== 'new_carthage') return;
+    const currentVariant = state.displayOptions?.newCarthageLoopVariant || 'workers';
+    if (currentVariant === 'ship_takeoff' || currentVariant === 'easter_egg' || currentVariant === 'rover_pass') {
+      const payload: MissionControlState = {
+        ...state,
+        displayOptions: {
+          ...state.displayOptions,
+          newCarthageLoopVariant: 'workers'
+        }
+      };
+      commitLocalState(payload);
+    }
+  };
+
+  const handleNewCarthageLoopVariant = (variant: 'base' | 'workers' | 'rover_pass' | 'ship_takeoff' | 'easter_egg') => {
+    const counts = state.displayOptions?.newCarthageLoopCounts || { ship_takeoff: 0, easter_egg: 0 };
+    const payload: MissionControlState = { ...state };
+
+    if (variant === 'ship_takeoff') {
+      if ((counts.ship_takeoff || 0) >= 2) return;
+      payload.displayOptions = {
+        ...state.displayOptions,
+        newCarthageLoopVariant: 'ship_takeoff',
+        newCarthageLoopCounts: { ...counts, ship_takeoff: (counts.ship_takeoff || 0) + 1 },
+        newCarthageLastManualLoopAt: Date.now()
+      };
+      commitLocalState(payload);
+      return;
+    }
+
+    if (variant === 'easter_egg') {
+      if ((counts.easter_egg || 0) >= 2) return;
+      payload.displayOptions = {
+        ...state.displayOptions,
+        newCarthageLoopVariant: 'easter_egg',
+        newCarthageLoopCounts: { ...counts, easter_egg: (counts.easter_egg || 0) + 1 },
+        newCarthageLastManualLoopAt: Date.now()
+      };
+      commitLocalState(payload);
+      return;
+    }
+
+    // base, workers, rover_pass always allowed; rover_pass is a one-shot but not counter-limited
+    payload.displayOptions = { ...state.displayOptions, newCarthageLoopVariant: variant, newCarthageLastManualLoopAt: Date.now() };
+    commitLocalState(payload);
+  };
+
+  // Auto-fallback: return to workers after 11s when a one-shot is active (control only)
+  useEffect(() => {
+    if (route !== 'control') return;
+    if (state.activeLocation !== 'new_carthage') return;
+    const variant = state.displayOptions?.newCarthageLoopVariant || 'workers';
+    if (variant === 'workers' || variant === 'base') return;
+
+    const timer = setTimeout(() => {
+      const payload: MissionControlState = {
+        ...state,
+        displayOptions: {
+          ...state.displayOptions,
+          newCarthageLoopVariant: 'workers'
+        }
+      };
+      commitLocalState(payload);
+    }, 11000);
+
+    return () => clearTimeout(timer);
+  }, [route, state.activeLocation, state.displayOptions?.newCarthageLoopVariant]);
+
+  // New Carthage automated timeline (control-only)
+  useEffect(() => {
+    if (route !== 'control') return;
+    if (state.activeLocation !== 'new_carthage') return;
+    if (state.displayOptions?.screenBlack) return;
+
+    // init phase start if missing
+    if (!state.displayOptions?.newCarthagePhaseStartedAt) {
+      const payload: MissionControlState = {
+        ...state,
+        displayOptions: {
+          ...state.displayOptions,
+          newCarthagePhaseStartedAt: Date.now(),
+          newCarthageAutoStep: 0
+        }
+      };
+      commitLocalState(payload);
+      return;
+    }
+
+    const startedAt = state.displayOptions.newCarthagePhaseStartedAt || Date.now();
+    const lastManual = state.displayOptions.newCarthageLastManualLoopAt || 0;
+    const now = Date.now();
+    if (now - lastManual < 25000) return; // pause auto for 25s after manual
+
+    const timeline = [
+      { t: 90_000, variant: 'rover_pass' },
+      { t: 180_000, variant: 'workers' },
+      { t: 270_000, variant: 'ship_takeoff' },
+      { t: 390_000, variant: 'workers' },
+      { t: 480_000, variant: 'rover_pass' },
+      { t: 560_000, variant: 'easter_egg' },
+      { t: 620_000, variant: 'workers' }
+    ];
+
+    const elapsed = now - startedAt;
+    const currentStep = state.displayOptions.newCarthageAutoStep || 0;
+
+    for (let i = currentStep; i < timeline.length; i++) {
+      const step = timeline[i];
+      if (elapsed >= step.t) {
+        // trigger now
+        const variant = step.variant as any;
+        const payload: MissionControlState = {
+          ...state,
+          displayOptions: {
+            ...state.displayOptions,
+            newCarthageLoopVariant: variant,
+            newCarthageLastAutoLoopAt: Date.now(),
+            newCarthageAutoStep: i + 1
+          }
+        };
+        // counters for ship/easter
+        if (variant === 'ship_takeoff') {
+          payload.displayOptions.newCarthageLoopCounts = { ...state.displayOptions.newCarthageLoopCounts, ship_takeoff: (state.displayOptions.newCarthageLoopCounts?.ship_takeoff || 0) + 1 };
+        }
+        if (variant === 'easter_egg') {
+          payload.displayOptions.newCarthageLoopCounts = { ...state.displayOptions.newCarthageLoopCounts, easter_egg: (state.displayOptions.newCarthageLoopCounts?.easter_egg || 0) + 1 };
+        }
+        commitLocalState(payload);
+      } else {
+        const remaining = step.t - elapsed;
+        const to = setTimeout(() => setLoopEpochKey(k => k + 1), remaining + 50);
+        return () => clearTimeout(to);
+      }
+    }
+
+  }, [route, state.activeLocation, state.displayOptions?.newCarthagePhaseStartedAt, state.displayOptions?.newCarthageAutoStep, state.displayOptions?.newCarthageLastManualLoopAt, state.displayOptions?.screenBlack, loopEpochKey]);
 
   const triggerQuickEffect = (type: QuickEffectType, baseState: MissionControlState = state): MissionControlState => ({
     ...baseState,
@@ -537,11 +709,12 @@ export default function App() {
         audio: { ...payload.audio, stormVolume: Math.max(payload.audio.stormVolume, 0.85), radioVolume: Math.max(payload.audio.radioVolume, 0.55) }
       };
     } else if (quickEffectType === 'ombre_hound') {
+      // Gentle hound contact mode: do not over-darken the scene
       payload = {
         ...payload,
         activeSceneMode: 'hounds',
-        effects: { ...payload.effects, hounds: 3, headlight: Math.max(payload.effects.headlight, 2) },
-        audio: { ...payload.audio, houndsVolume: Math.max(payload.audio.houndsVolume, 0.85) },
+        effects: { ...payload.effects, hounds: 1 },
+        audio: { ...payload.audio, houndsVolume: Math.max(payload.audio.houndsVolume, 0.6) },
         displayOptions: { ...payload.displayOptions, activePresetId: 'hounds' }
       };
     }
@@ -620,10 +793,36 @@ export default function App() {
       extraction: 'extraction'
     };
 
+    // Base payload with preset
     let payload: MissionControlState = applyPreset(
       { ...state, activeLocation: beat.location },
       ambiencePresetMap[beat.ambience]
     );
+
+    // Special handling for Red Plains scenes: control visual variant and transition timers
+    if (beat.id === 'traversee') {
+      payload = {
+        ...payload,
+        activeLocation: 'red_plains',
+        displayOptions: {
+          ...payload.displayOptions,
+          redPlainsVisualVariant: 'wide',
+          redPlainsTransitionStartedAt: Date.now()
+        }
+      };
+    }
+    // Scenes that should force POV on Red Plains
+    if (['anomalie_radio', 'tempete_em', 'extraction'].includes(beat.id)) {
+      payload = {
+        ...payload,
+        activeLocation: 'red_plains',
+        displayOptions: {
+          ...payload.displayOptions,
+          redPlainsVisualVariant: 'pov',
+          redPlainsTransitionStartedAt: Date.now()
+        }
+      };
+    }
 
     if (beat.quickAction === 'glitch_radio' || beat.quickAction === 'flash_em') {
       payload = triggerQuickEffect(beat.quickAction, payload);
@@ -634,6 +833,44 @@ export default function App() {
     payload.displayOptions.activeTransmission = createStoryBeatTransmission(beat);
     commitLocalState(payload);
   };
+
+  // Red Plains wide -> POV automatic transition (control-only)
+  useEffect(() => {
+    if (route !== 'control') return;
+    if (state.activeLocation !== 'red_plains') return;
+    const variant = state.displayOptions?.redPlainsVisualVariant;
+    const started = state.displayOptions?.redPlainsTransitionStartedAt;
+    if (variant !== 'wide' || !started) return;
+
+    const elapsed = Date.now() - started;
+    const timeoutMs = Math.max(0, 12_000 - elapsed);
+    if (timeoutMs <= 0) {
+      const payload: MissionControlState = {
+        ...state,
+        displayOptions: {
+          ...state.displayOptions,
+          redPlainsVisualVariant: 'pov',
+          redPlainsTransitionStartedAt: null
+        }
+      };
+      commitLocalState(payload);
+      return;
+    }
+
+    const to = setTimeout(() => {
+      const payload: MissionControlState = {
+        ...state,
+        displayOptions: {
+          ...state.displayOptions,
+          redPlainsVisualVariant: 'pov',
+          redPlainsTransitionStartedAt: null
+        }
+      };
+      commitLocalState(payload);
+    }, timeoutMs + 50);
+
+    return () => clearTimeout(to);
+  }, [route, state.activeLocation, state.displayOptions?.redPlainsVisualVariant, state.displayOptions?.redPlainsTransitionStartedAt]);
   const handleResetLoopEpoch = () => {
     setLoopEpochKey(prev => prev + 1);
   };
@@ -788,9 +1025,10 @@ export default function App() {
           
           {/* Main Landscape Cinemagraph Loop */}
           <Cinemagraph 
-            key={loopEpochKey}
+            key={`${loopEpochKey}-${activeVisual.src}-${activeVisual.variant}`}
             config={currentConfig}
-            imageUrl={activeLocation.image}
+            visual={activeVisual}
+            onOneShotComplete={handleVisualOneShotComplete}
             onFlickerSound={handleRoverFlickerSound}
             onScannerSound={handleScannerPulseSound}
           />
@@ -927,7 +1165,7 @@ export default function App() {
               <Cinemagraph 
                 key={loopEpochKey}
                 config={currentConfig}
-                imageUrl={activeLocation.image}
+                visual={resolveLocationVisual(activeLocation, currentConfig, state.displayOptions)}
               />
               <div className="mt-2.5 p-2 bg-stone-950/65 border border-stone-850 rounded text-[10px] font-mono text-stone-500 leading-normal">
                 Cette vignette montre une copie miniature de ce que voient vos joueurs. Toutes vos modifications ci-contre se propagent instantanément sur leur écran.
@@ -984,6 +1222,9 @@ export default function App() {
               onResetMission={handleResetMission}
               onModifySquad={handleModifySquad}
               onSceneShortcut={handleSceneShortcut}
+              newCarthageLoopVariant={state.displayOptions?.newCarthageLoopVariant}
+              newCarthageLoopCounts={state.displayOptions?.newCarthageLoopCounts}
+              onChangeNewCarthageLoopVariant={handleNewCarthageLoopVariant}
             />
           </section>
 

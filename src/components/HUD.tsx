@@ -34,6 +34,9 @@ interface HUDProps {
   onResetMission?: () => void;
   onModifySquad?: () => void;
   onSceneShortcut: (sceneId: string) => void;
+  newCarthageLoopVariant?: 'base' | 'workers' | 'rover_pass' | 'ship_takeoff' | 'easter_egg';
+  newCarthageLoopCounts?: { ship_takeoff: number; easter_egg: number };
+  onChangeNewCarthageLoopVariant?: (variant: 'base' | 'workers' | 'rover_pass' | 'ship_takeoff' | 'easter_egg') => void;
 }
 
 export default function HUD({
@@ -61,6 +64,7 @@ export default function HUD({
   onResetMission,
   onModifySquad,
   onSceneShortcut
+  , newCarthageLoopVariant, newCarthageLoopCounts, onChangeNewCarthageLoopVariant
 }: HUDProps) {
   const [locStatus, setLocStatus] = useState<Record<string,'loading'|'loaded'|'error'>>({});
 
@@ -103,8 +107,9 @@ export default function HUD({
           <div className="text-xs text-stone-400 mt-1">Site: <strong className="text-orange-400">{LOCATIONS.find(l=>l.id===activeLocation)?.label}</strong> • Sync: <strong className="font-bold">{networkSyncStatus}</strong></div>
         </div>
         <div className="flex gap-2">
-          <button onClick={() => updateSetting('audioRadioSilence', !config.audioRadioSilence)} className="px-3 py-1 border rounded"> <VolumeX className="w-4 h-4 inline"/> SILENCE RADIO</button>
-          <button onClick={() => updateSetting('screenBlack', !config.screenBlack)} className="px-3 py-1 border rounded"> <Power className="w-4 h-4 inline"/> ÉCRAN NOIR</button>
+          <button onClick={() => onResetMission && onResetMission()} className="px-3 py-1 border rounded text-sm">RESET SESSION</button>
+          <button onClick={() => updateSetting('audioRadioSilence', !config.audioRadioSilence)} className={`px-3 py-1 border rounded ${config.audioRadioSilence ? 'bg-red-700/70 border-red-600 text-white' : ''}`}> <VolumeX className="w-4 h-4 inline"/> {config.audioRadioSilence ? 'SILENCE RADIO ON' : 'SILENCE RADIO'}</button>
+          <button onClick={() => updateSetting('screenBlack', !config.screenBlack)} className={`px-3 py-1 border rounded ${config.screenBlack ? 'bg-red-700/70 border-red-600 text-white' : ''}`}> <Power className="w-4 h-4 inline"/> {config.screenBlack ? 'ÉCRAN NOIR ON' : 'ÉCRAN NOIR'}</button>
         </div>
       </div>
 
@@ -183,6 +188,46 @@ export default function HUD({
         </div>
       </div>
 
+      {/* New Carthage loops controls (only in New Carthage) */}
+      {activeLocation === 'new_carthage' && (
+        <div className="space-y-2 mb-4">
+          <div className="text-xs uppercase tracking-wider text-stone-500">Loops New Carthage</div>
+          <div className="flex gap-2 flex-wrap">
+            {/* Workers loop is implicit/always-on; do not present a button for it */}
+            <button onClick={() => onChangeNewCarthageLoopVariant && onChangeNewCarthageLoopVariant('rover_pass')} className={`px-2 py-1 border rounded text-sm ${newCarthageLoopVariant==='rover_pass' ? 'bg-orange-950/10 border-orange-500':''}`}>ROVER PASS</button>
+            {(() => {
+              const shipCount = newCarthageLoopCounts?.ship_takeoff || 0;
+              return (
+                <button disabled={shipCount >= 2} onClick={() => onChangeNewCarthageLoopVariant && onChangeNewCarthageLoopVariant('ship_takeoff')} className={`px-2 py-1 border rounded text-sm ${newCarthageLoopVariant==='ship_takeoff' ? 'bg-orange-950/10 border-orange-500':''} ${shipCount>=2 ? 'opacity-50 cursor-not-allowed':''}`}>
+                  SHIP TAKEOFF {shipCount>0 && (<span className="ml-2 text-[11px]">{shipCount}/2</span>)}{shipCount>=2 && (<span className="ml-2 text-[11px]">MAX</span>)}
+                </button>
+              );
+            })()}
+
+            {(() => {
+              const eggCount = newCarthageLoopCounts?.easter_egg || 0;
+              return (
+                <button disabled={eggCount >= 2} onClick={() => onChangeNewCarthageLoopVariant && onChangeNewCarthageLoopVariant('easter_egg')} className={`px-2 py-1 border rounded text-sm ${newCarthageLoopVariant==='easter_egg' ? 'bg-orange-950/10 border-orange-500':''} ${eggCount>=2 ? 'opacity-50 cursor-not-allowed':''}`}>
+                  EASTER EGG {eggCount>0 && (<span className="ml-2 text-[11px]">{eggCount}/2</span>)}{eggCount>=2 && (<span className="ml-2 text-[11px]">MAX</span>)}
+                </button>
+              );
+            })()}
+          </div>
+        </div>
+      )}
+
+      {/* Red Plains visual override */}
+      {activeLocation === 'red_plains' && (
+        <div className="space-y-2 mb-4">
+          <div className="text-xs uppercase tracking-wider text-stone-500">PLAINES ROUGES - Vue</div>
+          <div className="flex gap-2">
+            <button onClick={() => onRefreshLoop()} className="px-2 py-1 border rounded text-sm">(refresh)</button>
+            <button onClick={() => onSceneShortcut('traversee')} className="px-2 py-1 border rounded text-sm">VUE LARGE</button>
+            <button onClick={() => onSceneShortcut('anomalie_radio')} className="px-2 py-1 border rounded text-sm">POV ROVER</button>
+          </div>
+        </div>
+      )}
+
       {/* Ambiances */}
       <div className="space-y-2 mb-4">
         <div className="text-xs uppercase tracking-wider text-stone-500">Ambiances</div>
@@ -232,17 +277,17 @@ export default function HUD({
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
           <button onClick={() => onQuickAction('glitch_radio')} className="px-2 py-1 border rounded">Glitch Radio</button>
           <button onClick={() => onQuickAction('flash_em')} className="px-2 py-1 border rounded">Flash EM</button>
-          <button onClick={() => onQuickAction('ombre_hound')} className="px-2 py-1 border rounded">Ombre Hound</button>
+          <button onClick={() => onQuickAction('ombre_hound')} className="px-2 py-1 border rounded">CONTACT HOUND</button>
           <button onClick={() => onQuickAction('intervention')} className="px-2 py-1 border rounded">Intervention</button>
           <button onClick={() => onQuickAction('reset_calme')} className="px-2 py-1 border rounded">Reset Calme</button>
         </div>
       </div>
 
-      {/* Audio */}
+      {/* Audio controls (simplified) */}
       <div className="space-y-2 mb-4">
-        <div className="text-xs uppercase tracking-wider text-stone-500">Audio Mixer</div>
+        <div className="text-xs uppercase tracking-wider text-stone-500">Audio</div>
         <div className="flex gap-2">
-          <button onClick={() => updateSetting('audioEnabled', !config.audioEnabled)} className="px-2 py-1 border rounded">Audio {config.audioEnabled? 'On':'Off'}</button>
+          <button onClick={() => updateSetting('audioEnabled', !config.audioEnabled)} className={`px-2 py-1 border rounded ${config.audioEnabled ? 'bg-orange-950/10 border-orange-500' : ''}`}>Audio {config.audioEnabled? 'On':'Off'}</button>
         </div>
       </div>
 

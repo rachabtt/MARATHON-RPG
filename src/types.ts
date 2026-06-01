@@ -32,6 +32,15 @@ export interface CinemagraphConfig {
   screenBlack: boolean;            // Black screen override
 }
 
+export interface CinemagraphVisual {
+  src: string;
+  type: 'image' | 'video';
+  label: string;
+  variant: string;
+  loop: boolean;
+  oneShot: boolean;
+}
+
 export type QuickEffectType = 'glitch_radio' | 'flash_em' | 'ombre_hound';
 
 export interface QuickEffect {

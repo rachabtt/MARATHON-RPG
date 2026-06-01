@@ -42,6 +42,18 @@ export interface MissionControlState {
     screenBlack: boolean;
     activePresetId: string;
     activeTransmission: ActiveTransmission | null;
+    newCarthageLoopVariant?: "base" | "workers" | "rover_pass" | "ship_takeoff" | "easter_egg";
+    newCarthageLoopCounts?: {
+      ship_takeoff: number;
+      easter_egg: number;
+    };
+    // Automation and transition helpers for M01
+    newCarthagePhaseStartedAt?: number | null;
+    newCarthageLastAutoLoopAt?: number | null;
+    newCarthageAutoStep?: number;
+    newCarthageLastManualLoopAt?: number | null;
+    redPlainsVisualVariant?: 'wide' | 'pov';
+    redPlainsTransitionStartedAt?: number | null;
   };
   interventionOptions: {
     showPortrait: boolean;
@@ -142,7 +154,17 @@ export const INITIAL_MISSION_STATE: MissionControlState = {
   displayOptions: {
     screenBlack: false,
     activePresetId: 'delta6',
-    activeTransmission: null
+    activeTransmission: null,
+    newCarthageLoopVariant: 'workers',
+    newCarthageLoopCounts: {
+      ship_takeoff: 0,
+      easter_egg: 0
+    },
+    newCarthagePhaseStartedAt: null,
+    newCarthageLastAutoLoopAt: null,
+    newCarthageAutoStep: 0,
+    redPlainsVisualVariant: 'wide',
+    redPlainsTransitionStartedAt: null
   },
   interventionOptions: {
     showPortrait: true,
@@ -175,12 +197,38 @@ export function getStoredState(): MissionControlState {
         if (!('houndsVolume' in parsed.audio)) {
           parsed.audio.houndsVolume = 0;
         }
-        if (!parsed.displayOptions.activeTransmission) {
-          parsed.displayOptions.activeTransmission = null;
-        } else {
-          parsed.displayOptions.activeTransmission.sourceRole ??= 'TRANSMISSION UESC';
-          parsed.displayOptions.activeTransmission.sourceType ??= 'field';
-        }
+          if (!parsed.displayOptions) {
+            parsed.displayOptions = {};
+          }
+          if (!parsed.displayOptions.activeTransmission) {
+            parsed.displayOptions.activeTransmission = null;
+          } else {
+            parsed.displayOptions.activeTransmission.sourceRole ??= 'TRANSMISSION UESC';
+            parsed.displayOptions.activeTransmission.sourceType ??= 'field';
+          }
+
+          // Migration for newCarthage loop options and red plains
+          if (!('newCarthageLoopVariant' in parsed.displayOptions) || !parsed.displayOptions.newCarthageLoopVariant) {
+            parsed.displayOptions.newCarthageLoopVariant = 'workers';
+          }
+          if (!('newCarthageLoopCounts' in parsed.displayOptions) || !parsed.displayOptions.newCarthageLoopCounts) {
+            parsed.displayOptions.newCarthageLoopCounts = { ship_takeoff: 0, easter_egg: 0 };
+          }
+          if (!('newCarthagePhaseStartedAt' in parsed.displayOptions)) {
+            parsed.displayOptions.newCarthagePhaseStartedAt = null;
+          }
+          if (!('newCarthageLastAutoLoopAt' in parsed.displayOptions)) {
+            parsed.displayOptions.newCarthageLastAutoLoopAt = null;
+          }
+          if (!('newCarthageAutoStep' in parsed.displayOptions)) {
+            parsed.displayOptions.newCarthageAutoStep = 0;
+          }
+          if (!('redPlainsVisualVariant' in parsed.displayOptions) || !parsed.displayOptions.redPlainsVisualVariant) {
+            parsed.displayOptions.redPlainsVisualVariant = 'wide';
+          }
+          if (!('redPlainsTransitionStartedAt' in parsed.displayOptions)) {
+            parsed.displayOptions.redPlainsTransitionStartedAt = null;
+          }
         if (!('interventionOptions' in parsed)) {
           parsed.interventionOptions = {
             showPortrait: true,

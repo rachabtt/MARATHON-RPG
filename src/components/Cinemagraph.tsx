@@ -4,7 +4,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import { CinemagraphConfig } from '../types';
+import { CinemagraphConfig, CinemagraphVisual } from '../types';
 import { getLocationEffectProfile } from '../utils/locationEffects';
 import { getLocationAnchors } from '../utils/locationAnchors';
 import { getHoundVisualProfile } from '../utils/houndProfile';
@@ -12,7 +12,10 @@ import { getHoundVisualProfile } from '../utils/houndProfile';
 interface CinemagraphProps {
   key?: any;
   config: CinemagraphConfig;
-  imageUrl: string;
+  visual?: CinemagraphVisual;
+  // Backwards compatibility
+  imageUrl?: string;
+  onOneShotComplete?: () => void;
   onFlickerSound?: () => void;
   onScannerSound?: () => void;
 }
@@ -28,7 +31,7 @@ interface Particle {
   depth: number;         // For parallax/blur sizing
 }
 
-export default function Cinemagraph({ config, imageUrl, onFlickerSound, onScannerSound }: CinemagraphProps) {
+export default function Cinemagraph({ config, visual, imageUrl, onOneShotComplete, onFlickerSound, onScannerSound }: CinemagraphProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationFrameRef = useRef<number | null>(null);
@@ -36,9 +39,7 @@ export default function Cinemagraph({ config, imageUrl, onFlickerSound, onScanne
   
   const [imageLoadFailed, setImageLoadFailed] = useState(false);
 
-  useEffect(() => {
-    setImageLoadFailed(false);
-  }, [imageUrl]);
+  // imageLoadFailed will be reset when the effective source changes (see effect near render)
   
   // High-fidelity particle array
   const particlesRef = useRef<Particle[]>([]);
@@ -307,6 +308,9 @@ export default function Cinemagraph({ config, imageUrl, onFlickerSound, onScanne
   const isEmBurst = isQuickEffectActive && quickEffect?.type === 'flash_em';
   const isHoundBurst = isQuickEffectActive && quickEffect?.type === 'ombre_hound';
   const anchors = getLocationAnchors(config.activeLocation);
+  const isBlackArchesHoundVisual = config.activeLocation === 'black_arches' && (visual?.variant === 'hound');
+  const effectiveVignetteOpacity = isBlackArchesHoundVisual ? Math.min(locationEffect.vignetteOpacity, 0.12) : locationEffect.vignetteOpacity;
+  const houndMaxOpacity = (p: any) => isBlackArchesHoundVisual ? Math.min(p.opacity, 0.12) : p.opacity;
   const houndProfile = getHoundVisualProfile(config.activeLocation);
   const scannerX = anchors.scannerPulse.x * 1000;
   const scannerY = anchors.scannerPulse.y * 562.5;
@@ -418,6 +422,17 @@ export default function Cinemagraph({ config, imageUrl, onFlickerSound, onScanne
     ? 'none' 
     : 'filter 0.8s ease-in-out, transform 0.15s ease-out';
 
+  // Derive effective visual source and type (visual prop preferred)
+  const src = visual?.src ?? imageUrl ?? '';
+  const vType: 'image' | 'video' = (visual?.type ?? (imageUrl ? 'image' : 'image')) as any;
+  const vVariant = visual?.variant ?? 'base';
+  const vLoop = visual?.loop ?? false;
+  const vOneShot = visual?.oneShot ?? false;
+
+  useEffect(() => {
+    setImageLoadFailed(false);
+  }, [src]);
+
   return (
     <div 
       id="cinemagraph-viewport"
@@ -438,20 +453,34 @@ export default function Cinemagraph({ config, imageUrl, onFlickerSound, onScanne
         </div>
       )}
 
-      {/* 1. Base Landscape Image for active location */}
+      {/* 1. Base Landscape Image / Video for active location */}
       <div className="absolute inset-0 select-none pointer-events-none w-full h-full z-0">
         {imageLoadFailed ? (
           <div className="absolute inset-0 bg-black flex items-center justify-center text-[10px] font-mono tracking-widest text-stone-700 uppercase">
             // UESC VISUEL INDISPONIBLE
           </div>
+        ) : vType === 'video' ? (
+          <video
+            key={`${src}-${vVariant}`}
+            src={src}
+            autoPlay
+            muted
+            playsInline
+            loop={vLoop}
+            onEnded={() => {
+              if (vOneShot && onOneShotComplete) onOneShotComplete();
+            }}
+            onError={() => setImageLoadFailed(true)}
+            className="absolute inset-0 w-full h-full object-cover select-none pointer-events-none transition-opacity duration-700 ease-in-out"
+          />
         ) : (
           <img
-            key={imageUrl}
-            src={imageUrl}
-            alt="Tau Ceti IV - Lieu actif"
+            key={`${src}-${vVariant}`}
+            src={src}
+            alt={visual?.label ?? 'Lieu actif'}
             referrerPolicy="no-referrer"
             onError={() => setImageLoadFailed(true)}
-            className="absolute inset-0 w-full h-full object-cover select-none pointer-events-none transition-opacity duration-1000 ease-in-out"
+            className="absolute inset-0 w-full h-full object-cover select-none pointer-events-none transition-opacity duration-700 ease-in-out"
           />
         )}
       </div>
@@ -506,9 +535,9 @@ export default function Cinemagraph({ config, imageUrl, onFlickerSound, onScanne
       {(isSignalMode || isRadioBurst) && (
         <>
           {/* Cyan channel shift layer */}
-          {!imageLoadFailed && (
+          {!imageLoadFailed && vType === 'image' && (
             <img
-              src={imageUrl}
+              src={src}
               onError={() => setImageLoadFailed(true)}
               alt="Cyan offset channel"
               referrerPolicy="no-referrer"
@@ -520,9 +549,9 @@ export default function Cinemagraph({ config, imageUrl, onFlickerSound, onScanne
             />
           )}
           {/* Red channel shift layer */}
-          {!imageLoadFailed && (
+          {!imageLoadFailed && vType === 'image' && (
             <img
-              src={imageUrl}
+              src={src}
               onError={() => setImageLoadFailed(true)}
               alt="Red offset channel"
               referrerPolicy="no-referrer"
@@ -551,7 +580,7 @@ export default function Cinemagraph({ config, imageUrl, onFlickerSound, onScanne
               left: `${anchors.houndZones.cover.x * 100 - 12}%`,
               top: `${anchors.houndZones.cover.y * 100}%`,
               filter: `blur(${houndProfile.blurPx + 10}px)`,
-              opacity: houndProfile.opacity * (0.44 + 0.22 * Math.sin(timeSec * 2.2)),
+              opacity: houndMaxOpacity(houndProfile) * (0.44 + 0.22 * Math.sin(timeSec * 2.2)),
               transform: `scale(${houndProfile.scale + 0.08 * Math.sin(timeSec * 2.2)}) translate(${Math.sin(timeSec * 1.8) * 8}px, ${Math.cos(timeSec * 1.2) * 6}px) scaleY(0.42)`,
               transition: 'transform 0.5s ease-out'
             }}
@@ -568,7 +597,7 @@ export default function Cinemagraph({ config, imageUrl, onFlickerSound, onScanne
               top: `${houndY}%`,
               filter: `blur(${houndProfile.blurPx}px)`,
               transform: `scale(${houndProfile.scale}) scaleY(0.34) rotate(-3deg)`,
-              opacity: Math.max(0, houndProfile.opacity + 0.26 - houndProgress * 0.72)
+              opacity: Math.max(0, houndMaxOpacity(houndProfile) + 0.26 - houndProgress * 0.72)
             }}
           />
           <div
@@ -579,7 +608,7 @@ export default function Cinemagraph({ config, imageUrl, onFlickerSound, onScanne
               clipPath: 'polygon(4% 82%, 19% 43%, 38% 28%, 55% 18%, 72% 36%, 92% 78%, 80% 86%, 62% 64%, 46% 82%, 25% 67%, 12% 92%)',
               filter: `blur(${Math.max(2, houndProfile.blurPx - 7)}px)`,
               transform: `scale(${houndProfile.scale})`,
-              opacity: Math.max(0, houndProfile.opacity + 0.20 - houndProgress * 0.85)
+              opacity: Math.max(0, houndMaxOpacity(houndProfile) + 0.20 - houndProgress * 0.85)
             }}
           />
           <div
@@ -604,7 +633,7 @@ export default function Cinemagraph({ config, imageUrl, onFlickerSound, onScanne
               left: `${anchors.houndZones.entry.x * 100 + ((timeSec * 0.45) % 5.0) * (anchors.houndZones.exit.x - anchors.houndZones.entry.x) * 22}%`,
               width: houndProfile.variant === 'distant_silhouette' ? '120px' : '165px',
               height: houndProfile.variant === 'equipment_reflection' ? '42px' : '50px',
-              opacity: Math.sin(((timeSec * 0.8) % 5.0) * Math.PI / 5.0) * houndProfile.opacity,
+              opacity: Math.sin(((timeSec * 0.8) % 5.0) * Math.PI / 5.0) * houndMaxOpacity(houndProfile),
               transform: `scale(${houndProfile.scale}) scaleY(0.38) rotate(-4deg)`,
               transition: 'left 0.1s linear'
             }}
@@ -725,6 +754,21 @@ export default function Cinemagraph({ config, imageUrl, onFlickerSound, onScanne
           </g>
         )}
 
+        {/* Delta-6 localized scanner pulse (subtle) */}
+        {config.activeLocation === 'delta6' && (
+          <g>
+            <defs>
+              <filter id="delta6-pulse-blur">
+                <feGaussianBlur stdDeviation="6" />
+              </filter>
+            </defs>
+            <g style={{ transformOrigin: `${scannerX}px ${scannerY}px`, opacity: Math.min(0.32, 0.12 + (isScannerMode ? domePulse * 0.2 : 0)), transition: 'opacity 0.6s ease-in-out' }}>
+              <circle cx={scannerX} cy={scannerY} r={18 + 12 * domePulse} fill="rgba(140,220,255,0.16)" filter="url(#delta6-pulse-blur)" />
+              <rect x={scannerX - 6} y={scannerY - 180} width={12} height={160} rx={6} fill="rgba(160,220,255,0.04)" style={{ transformOrigin: 'center top', transform: `translateY(${ -8 * domePulse }px)` }} />
+            </g>
+          </g>
+        )}
+
         {/* ==================== B. AUTOMATED SCIENCE TOWER BEACONS ==================== */}
         <g>
           {/* Main scanning dome glow - pulses red/cyan/amber */}
@@ -796,7 +840,8 @@ export default function Cinemagraph({ config, imageUrl, onFlickerSound, onScanne
         )}
 
         {/* ==================== C. TRANSMITTER ANTENNA CABLES SWAYING ==================== */}
-        <g stroke="rgba(35, 30, 25, 0.8)" strokeWidth="1.6" fill="none">
+        {!anchors.disabledForegroundRig && (
+          <g stroke="rgba(35, 30, 25, 0.8)" strokeWidth="1.6" fill="none">
           <path 
             d={`M 952,80 Q ${896 + swayOffset * 1.5} ${210 + swayOffset * 0.4} 840,280`} 
             stroke="#1b1815"
@@ -812,7 +857,8 @@ export default function Cinemagraph({ config, imageUrl, onFlickerSound, onScanne
             stroke="#1a1816"
             strokeWidth="0.8"
           />
-        </g>
+          </g>
+        )}
       </svg>
 
       {/* 4. Canvas element for Particle Drift Simulation (Red dust particles, grains of sand) */}
@@ -832,6 +878,41 @@ export default function Cinemagraph({ config, imageUrl, onFlickerSound, onScanne
         }}
       />
 
+      {/* Delta-6 localized scanner pulse overlay */}
+      {config.activeLocation === 'delta6' && (
+        <div className="pointer-events-none z-18">
+          <div style={{
+            position: 'absolute',
+            left: `${anchors.scannerPulse.x * 100}%`,
+            top: `${anchors.scannerPulse.y * 100}%`,
+            transform: 'translate(-50%, -50%)',
+            width: '7vw',
+            height: '28vh',
+            borderRadius: '9999px',
+            filter: 'blur(18px)',
+            background: 'radial-gradient(circle at 40% 30%, rgba(176,255,255,0.32), rgba(0,183,255,0.04) 45%, rgba(0,0,0,0) 70%)',
+            mixBlendMode: 'screen',
+            opacity: 0.12,
+            pointerEvents: 'none',
+            animation: 'm01-scanner-pulse 2.6s ease-in-out infinite'
+          }} />
+          <div style={{
+            position: 'absolute',
+            left: `${anchors.scannerPulse.x * 100}%`,
+            top: `${(anchors.scannerPulse.y * 100) + 6}%`,
+            transform: 'translate(-50%, -50%)',
+            width: '4vw',
+            height: '4vw',
+            borderRadius: '9999px',
+            background: 'radial-gradient(circle, rgba(200,255,255,0.28), rgba(120,220,255,0.06))',
+            mixBlendMode: 'screen',
+            opacity: 0.18,
+            pointerEvents: 'none',
+            filter: 'blur(8px)'
+          }} />
+        </div>
+      )}
+
       {locationEffect.ghostingOpacity > 0 && !imageLoadFailed && (
         <img
           src={imageUrl}
@@ -848,7 +929,7 @@ export default function Cinemagraph({ config, imageUrl, onFlickerSound, onScanne
       <div
         className="absolute inset-0 pointer-events-none z-20"
         style={{
-          background: `radial-gradient(circle, transparent 42%, rgba(0,0,0,${locationEffect.vignetteOpacity}) 100%)`
+          background: `radial-gradient(circle, transparent 42%, rgba(0,0,0,${effectiveVignetteOpacity}) 100%)`
         }}
       />
 

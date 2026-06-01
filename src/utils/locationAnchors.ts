@@ -16,6 +16,7 @@ export interface LocationAnchors {
     exit: PointAnchor;
     cover: PointAnchor;
   };
+  disabledForegroundRig?: boolean;
 }
 
 export const LOCATION_ANCHORS: Record<LocationId, LocationAnchors> = {
@@ -33,6 +34,7 @@ export const LOCATION_ANCHORS: Record<LocationId, LocationAnchors> = {
       exit: { x: 0.38, y: 0.79 },
       cover: { x: 0.28, y: 0.72 },
     },
+    disabledForegroundRig: true,
   },
   red_plains: {
     skyGlow: { x: 0.52, y: 0.22 },
@@ -48,6 +50,7 @@ export const LOCATION_ANCHORS: Record<LocationId, LocationAnchors> = {
       exit: { x: 1.12, y: 0.57 },
       cover: { x: 0.58, y: 0.60 },
     },
+    disabledForegroundRig: true,
   },
   black_arches: {
     skyGlow: { x: 0.50, y: 0.12 },
@@ -63,6 +66,7 @@ export const LOCATION_ANCHORS: Record<LocationId, LocationAnchors> = {
       exit: { x: 0.78, y: 0.62 },
       cover: { x: 0.52, y: 0.55 },
     },
+    disabledForegroundRig: true,
   },
   delta6: {
     skyGlow: { x: 0.58, y: 0.18 },
@@ -79,6 +83,7 @@ export const LOCATION_ANCHORS: Record<LocationId, LocationAnchors> = {
       exit: { x: 0.34, y: 0.70 },
       cover: { x: 0.54, y: 0.66 },
     },
+    disabledForegroundRig: true,
   },
 };
 
