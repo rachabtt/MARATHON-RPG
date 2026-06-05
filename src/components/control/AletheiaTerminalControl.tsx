@@ -1,11 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { Radio, Trash2, Zap, SignalZero } from 'lucide-react';
-import { type AletheiaMessageCategory, type AletheiaMessageTone } from '../../data/aletheiaMessages';
-import {
-  getAletheiaCategoriesForScene,
-  getOtherAletheiaCategoriesForScene,
-} from '../../data/aletheiaSceneMap';
+import { useMission } from '../../context/MissionProvider';
+import { aletheiaSceneCategoryMap } from '../../data/aletheiaSceneMap';
 import { getMissionSceneById } from '../../data/missionScenes';
+import type { MissionAletheiaCategory, MissionAletheiaTone } from '../../types/missionSchema';
 import type { AletheiaTerminalMessageSource, AletheiaTerminalState } from '../../utils/syncState';
 
 type AletheiaTerminalControlProps = {
@@ -17,12 +15,18 @@ type AletheiaTerminalControlProps = {
   onToggleNoSignal: () => void;
 };
 
-const toneClassName: Record<AletheiaMessageTone, string> = {
+const FALLBACK_CONTEXTUAL_CATEGORY_IDS = ['departure', 'refusal_evasion'];
+
+const toneClassName: Record<MissionAletheiaTone, string> = {
   neutral: 'text-stone-400 border-stone-800',
   reassuring: 'text-emerald-200 border-emerald-900/70',
   warning: 'text-orange-200 border-orange-900/70',
   procedural: 'text-sky-200 border-sky-950/80',
-  glitch: 'text-red-200 border-red-900/70'
+  glitch: 'text-red-200 border-red-900/70',
+  uneasy: 'text-orange-200 border-orange-900/70',
+  urgent: 'text-red-200 border-red-900/70',
+  hostile: 'text-red-200 border-red-900/70',
+  calm: 'text-emerald-200 border-emerald-900/70'
 };
 
 function formatAletheiaMessage(input: string): string {
@@ -34,6 +38,24 @@ function formatAletheiaMessage(input: string): string {
   return hasFinalPunctuation ? capitalized : `${capitalized}.`;
 }
 
+function getContextualCategoryIds(
+  sceneId: string | null | undefined,
+  sceneMap: Record<string, string[]>,
+  fallbackCategoryIds: string[]
+): string[] {
+  const canonicalSceneId = getMissionSceneById(sceneId)?.id;
+  if (!canonicalSceneId) return fallbackCategoryIds;
+  return sceneMap[canonicalSceneId] ?? fallbackCategoryIds;
+}
+
+function getCategoriesByIds(
+  categories: MissionAletheiaCategory[],
+  categoryIds: string[]
+): MissionAletheiaCategory[] {
+  const wantedIds = new Set(categoryIds);
+  return categories.filter((category) => wantedIds.has(category.id));
+}
+
 export default function AletheiaTerminalControl({
   terminal,
   activeSceneId,
@@ -42,14 +64,21 @@ export default function AletheiaTerminalControl({
   onGlitchSignal,
   onToggleNoSignal
 }: AletheiaTerminalControlProps) {
+  const { currentMission } = useMission();
   const [customMessage, setCustomMessage] = useState('');
   const [showOtherResponses, setShowOtherResponses] = useState(false);
   const panelRef = useRef<HTMLElement | null>(null);
   const previousSceneIdRef = useRef<string | null | undefined>(activeSceneId);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const activeScene = getMissionSceneById(activeSceneId);
-  const contextualCategories = getAletheiaCategoriesForScene(activeSceneId);
-  const otherCategories = getOtherAletheiaCategoriesForScene(activeSceneId);
+  const missionAletheia = currentMission.aletheia;
+  const aletheiaCategories = missionAletheia?.categories ?? currentMission.aletheiaCategories ?? [];
+  const sceneCategoryMap = missionAletheia?.sceneMap ?? aletheiaSceneCategoryMap;
+  const fallbackCategoryIds = missionAletheia?.fallbackCategoryIds ?? FALLBACK_CONTEXTUAL_CATEGORY_IDS;
+  const contextualCategoryIds = getContextualCategoryIds(activeSceneId, sceneCategoryMap, fallbackCategoryIds);
+  const contextualCategories = getCategoriesByIds(aletheiaCategories, contextualCategoryIds);
+  const contextualIdSet = new Set(contextualCategoryIds);
+  const otherCategories = aletheiaCategories.filter((category) => !contextualIdSet.has(category.id));
   const glitchActive = Boolean(terminal.glitchUntil && terminal.glitchUntil > Date.now());
 
   useEffect(() => {
@@ -68,16 +97,16 @@ export default function AletheiaTerminalControl({
     window.requestAnimationFrame(() => textareaRef.current?.focus());
   };
 
-  const renderCategoryGroup = (group: AletheiaMessageCategory) => (
+  const renderCategoryGroup = (group: MissionAletheiaCategory) => (
     <div key={group.id} className="rounded border border-stone-900 bg-stone-950/60 p-2">
       <div className="mb-1 text-[10px] uppercase tracking-widest text-orange-300">{group.label}</div>
       <div className="mb-2 text-[10px] leading-snug text-stone-600">{group.description}</div>
       <div className="grid gap-1.5">
-        {group.messages.map((message) => (
+        {(group.messages ?? []).map((message) => (
           <button
             key={message.id}
             onClick={() => onSendMessage(message.text, 'preset')}
-            className={`rounded border bg-black/20 px-2 py-1.5 text-left text-[11px] leading-snug hover:border-emerald-800 hover:text-emerald-100 ${toneClassName[message.tone]}`}
+            className={`rounded border bg-black/20 px-2 py-1.5 text-left text-[11px] leading-snug hover:border-emerald-800 hover:text-emerald-100 ${toneClassName[message.tone ?? 'neutral']}`}
           >
             <span className="block text-[10px] uppercase tracking-wider text-stone-500">{message.label}</span>
             {message.text}

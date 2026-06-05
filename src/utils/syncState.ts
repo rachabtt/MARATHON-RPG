@@ -18,14 +18,14 @@ import { getResolvedAudioProfile } from './audioProfiles';
 import { getLocationEffectProfile } from './locationEffects';
 import { DEFAULT_SQUAD_OVERLAY } from './playerCharacters';
 import { createInitialPlayerEquipmentState } from '../data/playerCharacters';
+import { sanitizeTacticalRuntimeTokens } from './missionTacticalMap';
 import {
   DELTA6_DATA_PACKAGE_STATES,
   getDelta6DataPackageState,
   type Delta6DataStatus
 } from '../data/delta6DataPackage';
 import type { HoundActionId, HoundActionTone } from '../data/houndActions';
-import { MISSION01_TACTICAL_TOKENS } from '../data/mission01Tokens';
-import type { PlayerIntelTarget, PlayerIntelType } from '../data/scenePlayerIntel';
+import type { MissionPlayerIntel, MissionPlayerIntelTarget } from '../types/missionSchema';
 import type { TacticalMapToken } from '../types/tacticalMap';
 
 export interface ResourceState {
@@ -68,8 +68,8 @@ export type PlayerIntelDelivery = {
   intelId: string;
   sceneId: string;
   title: string;
-  type: PlayerIntelType;
-  target: PlayerIntelTarget;
+  type: MissionPlayerIntel['type'];
+  target: MissionPlayerIntelTarget;
   text: string;
   tone: "neutral" | "uneasy" | "procedural" | "urgent";
   recipients: PlayerIntelRecipient[];
@@ -181,8 +181,8 @@ function hydratePlayerIntelDeliveries(value: unknown): PlayerIntelDelivery[] {
       intelId: delivery.intelId!,
       sceneId: delivery.sceneId!,
       title: delivery.title!,
-      type: delivery.type as PlayerIntelType,
-      target: delivery.target as PlayerIntelTarget,
+      type: delivery.type as MissionPlayerIntel['type'],
+      target: delivery.target as MissionPlayerIntelTarget,
       text: delivery.text!,
       tone: delivery.tone as PlayerIntelDelivery['tone'],
       recipients: delivery.recipients!.filter((recipient): recipient is PlayerIntelRecipient => (
@@ -411,35 +411,14 @@ export const INITIAL_MISSION_STATE: MissionControlState = {
   playerEquipmentState: createInitialPlayerEquipmentState(),
   playerSelectionResetAt: 0,
   playerIntelDeliveries: [],
-  tacticalTokens: MISSION01_TACTICAL_TOKENS.map((token) => ({ ...token })),
+  tacticalTokens: [],
   transientEffects: {},
   quickEffect: null,
   logs: []
 };
 
 function hydrateTacticalTokens(value: unknown): TacticalMapToken[] {
-  const savedTokens = Array.isArray(value) ? value : [];
-  const savedById = new Map(
-    savedTokens
-      .filter((token): token is Partial<TacticalMapToken> => Boolean(token) && typeof token === 'object' && typeof (token as Partial<TacticalMapToken>).id === 'string')
-      .map((token) => [token.id, token])
-  );
-
-  return MISSION01_TACTICAL_TOKENS.map((defaultToken) => {
-    const saved = savedById.get(defaultToken.id);
-    if (!saved) return { ...defaultToken };
-
-    return {
-      ...defaultToken,
-      ...saved,
-      x: typeof saved.x === 'number' ? Math.max(0, Math.min(100, saved.x)) : defaultToken.x,
-      y: typeof saved.y === 'number' ? Math.max(0, Math.min(100, saved.y)) : defaultToken.y,
-      visibleToPlayers: typeof saved.visibleToPlayers === 'boolean' ? saved.visibleToPlayers : defaultToken.visibleToPlayers,
-      manualVisibilityOverride: typeof saved.manualVisibilityOverride === 'boolean' ? saved.manualVisibilityOverride : false,
-      visibleInControl: typeof saved.visibleInControl === 'boolean' ? saved.visibleInControl : defaultToken.visibleInControl,
-      inVehicle: saved.type === 'pj' && typeof saved.inVehicle === 'boolean' ? saved.inVehicle : false
-    };
-  });
+  return sanitizeTacticalRuntimeTokens(value);
 }
 
 function hydratePlayerEquipmentState(value: unknown): Record<PlayerCharacterId, CharacterEquipmentState> {

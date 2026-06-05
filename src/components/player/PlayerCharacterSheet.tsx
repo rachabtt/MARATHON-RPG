@@ -28,7 +28,7 @@ const STAT_LABELS: Array<[CharacterStatKey, string]> = [
   ['presence', 'PRÉSENCE']
 ];
 
-const PLAYER_INTEL_TYPE_LABELS: Record<PlayerIntelDelivery['type'], string> = {
+const PLAYER_INTEL_TYPE_LABELS: Partial<Record<PlayerIntelDelivery['type'], string>> = {
   cryo_dream: 'RÊVE CRYO',
   sensation: 'SENSATION',
   objective: 'OBJECTIF',
@@ -36,6 +36,10 @@ const PLAYER_INTEL_TYPE_LABELS: Record<PlayerIntelDelivery['type'], string> = {
   personal_prompt: 'PROMPT PJ',
   environment: 'ENVIRONNEMENT'
 };
+
+function getPlayerIntelTypeLabel(type: PlayerIntelDelivery['type']): string {
+  return PLAYER_INTEL_TYPE_LABELS[type] ?? type.replaceAll('_', ' ').toUpperCase();
+}
 
 const PLAYER_INTEL_TONE_CLASSES: Record<PlayerIntelDelivery['tone'], string> = {
   neutral: 'border-emerald-900/45 bg-black/35',
@@ -251,7 +255,7 @@ export default function PlayerCharacterSheet({
                   </div>
                   <div className="mt-2 flex flex-wrap items-center gap-2">
                     <span className="rounded border border-emerald-700/55 bg-emerald-950/35 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.16em] text-emerald-300">
-                      {PLAYER_INTEL_TYPE_LABELS[intel.type]}
+                      {getPlayerIntelTypeLabel(intel.type)}
                     </span>
                     <span className="min-w-0 truncate text-[9px] uppercase tracking-[0.14em] text-stone-600">
                       {intel.sceneId}

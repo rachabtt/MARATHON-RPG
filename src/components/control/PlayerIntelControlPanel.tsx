@@ -1,25 +1,22 @@
 import { useMemo, useState } from 'react';
 import { getMissionSceneById } from '../../data/missionScenes';
 import {
-  getPlayerIntelForScene,
-  type PlayerIntelTarget,
-  type ScenePlayerIntel
-} from '../../data/scenePlayerIntel';
-import {
   getAllPlayerCharacters,
 } from '../../data/playerCharacters';
+import { useMission } from '../../context/MissionProvider';
 import type { PlayerCharacterId } from '../../types';
+import type { MissionPlayerIntel, MissionPlayerIntelTarget } from '../../types/missionSchema';
 import type { PlayerIntelDelivery, PlayerIntelRecipient } from '../../utils/syncState';
 
 type PlayerIntelControlPanelProps = {
   activeSceneId?: string | null;
   selectedSquadIds: string[];
   sentIntelDeliveries: PlayerIntelDelivery[];
-  onSendIntel: (intel: ScenePlayerIntel, recipients: PlayerIntelRecipient[]) => void;
+  onSendIntel: (intel: MissionPlayerIntel, recipients: PlayerIntelRecipient[]) => void;
   onClearSentIntel: () => void;
 };
 
-const TARGET_LABELS: Record<PlayerIntelTarget, string> = {
+const TARGET_LABELS: Partial<Record<MissionPlayerIntelTarget, string>> = {
   all: 'Tous',
   selected_player: 'PJ choisi',
   role_security: 'Sécurité',
@@ -32,7 +29,7 @@ const TARGET_LABELS: Record<PlayerIntelTarget, string> = {
   role_logistics: 'Logistique'
 };
 
-const TYPE_LABELS: Record<ScenePlayerIntel['type'], string> = {
+const TYPE_LABELS: Partial<Record<MissionPlayerIntel['type'], string>> = {
   cryo_dream: 'Rêve cryo',
   sensation: 'Sensation',
   objective: 'Objectif',
@@ -41,11 +38,23 @@ const TYPE_LABELS: Record<ScenePlayerIntel['type'], string> = {
   environment: 'Environnement'
 };
 
+function getTargetLabel(target: MissionPlayerIntelTarget): string {
+  return TARGET_LABELS[target] ?? target
+    .replace(/^role_/, 'Rôle ')
+    .replace(/^character_/, 'PJ ')
+    .replaceAll('_', ' ')
+    .toUpperCase();
+}
+
+function getTypeLabel(type: MissionPlayerIntel['type']): string {
+  return TYPE_LABELS[type] ?? type.replaceAll('_', ' ').toUpperCase();
+}
+
 function toCanonicalPlayerId(id: string): PlayerCharacterId {
   return id.replaceAll('-', '_') as PlayerCharacterId;
 }
 
-function getRoleTarget(characterRole: string): PlayerIntelTarget | null {
+function getRoleTarget(characterRole: string): MissionPlayerIntelTarget | null {
   const normalizedRole = characterRole.toLowerCase();
   if (normalizedRole.includes('sécurité')) return 'role_security';
   if (normalizedRole.includes('ingénieur')) return 'role_engineer';
@@ -59,12 +68,16 @@ function getRoleTarget(characterRole: string): PlayerIntelTarget | null {
 }
 
 function getRecipientsForIntel(
-  intel: ScenePlayerIntel,
+  intel: MissionPlayerIntel,
   selectedCharacterId: PlayerCharacterId | '',
   selectedSquadIds: string[]
 ): PlayerIntelRecipient[] {
   if (intel.target === 'all') return ['all'];
   if (intel.target === 'selected_player') return selectedCharacterId ? [selectedCharacterId] : [];
+  if (intel.target.startsWith('character_')) {
+    const characterId = intel.target.replace(/^character_/, '') as PlayerCharacterId;
+    return getAllPlayerCharacters().some((character) => character.id === characterId) ? [characterId] : [];
+  }
 
   const selectedSet = new Set(selectedSquadIds.map(toCanonicalPlayerId));
   return getAllPlayerCharacters()
@@ -80,10 +93,13 @@ export default function PlayerIntelControlPanel({
   onSendIntel,
   onClearSentIntel
 }: PlayerIntelControlPanelProps) {
+  const { currentMission } = useMission();
   const [selectedPlayerByIntelId, setSelectedPlayerByIntelId] = useState<Record<string, PlayerCharacterId | ''>>({});
   const activeScene = getMissionSceneById(activeSceneId);
   const resolvedSceneId = activeScene?.id ?? activeSceneId ?? '';
-  const sceneIntel = useMemo(() => getPlayerIntelForScene(resolvedSceneId), [resolvedSceneId]);
+  const sceneIntel = useMemo(() => (
+    (currentMission.playerIntel ?? []).filter((intel) => intel.sceneId === resolvedSceneId)
+  ), [currentMission.playerIntel, resolvedSceneId]);
   const characters = getAllPlayerCharacters();
   const sentIntelById = useMemo(() => {
     return sentIntelDeliveries.reduce<Record<string, PlayerIntelDelivery[]>>((sentById, delivery) => {
@@ -144,10 +160,10 @@ export default function PlayerIntelControlPanel({
                     <div className="flex flex-wrap items-center gap-1.5">
                       <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-stone-100">{intel.title}</span>
                       <span className="rounded border border-stone-700 px-1.5 py-0.5 text-[9px] uppercase tracking-[0.12em] text-stone-400">
-                        {TYPE_LABELS[intel.type]}
+                        {getTypeLabel(intel.type)}
                       </span>
                       <span className="rounded border border-orange-900/70 px-1.5 py-0.5 text-[9px] uppercase tracking-[0.12em] text-orange-300">
-                        {TARGET_LABELS[intel.target]}
+                        {getTargetLabel(intel.target)}
                       </span>
                       {lastSentAt && (
                         <span className="rounded border border-emerald-700/55 bg-emerald-950/35 px-1.5 py-0.5 text-[9px] uppercase tracking-[0.12em] text-emerald-300">

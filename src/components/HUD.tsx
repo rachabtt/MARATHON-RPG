@@ -22,7 +22,7 @@ import DirectorGuidePanel from './DirectorGuidePanel';
 import AletheiaTerminalControl from './control/AletheiaTerminalControl';
 import PlayerIntelControlPanel from './control/PlayerIntelControlPanel';
 import { type HoundActionId } from '../data/houndActions';
-import type { ScenePlayerIntel } from '../data/scenePlayerIntel';
+import type { MissionPlayerIntel } from '../types/missionSchema';
 import type { PlayerIntelDelivery, PlayerIntelRecipient } from '../utils/syncState';
 
 const SHOW_DIRECTOR_GUIDE_PANEL = false;
@@ -57,7 +57,7 @@ interface HUDProps {
   onChangeDirectorSceneId?: (sceneId: string) => void;
   selectedSquadIds: string[];
   sentPlayerIntelDeliveries: PlayerIntelDelivery[];
-  onSendPlayerIntel: (intel: ScenePlayerIntel, recipients: PlayerIntelRecipient[]) => void;
+  onSendPlayerIntel: (intel: MissionPlayerIntel, recipients: PlayerIntelRecipient[]) => void;
   onClearPlayerIntel: () => void;
   newCarthageLoopVariant?: 'base' | 'workers' | 'rover_pass' | 'ship_takeoff' | 'easter_egg';
   newCarthageLoopCounts?: { ship_takeoff: number; easter_egg: number };

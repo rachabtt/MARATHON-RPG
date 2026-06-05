@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import Cinemagraph from './components/Cinemagraph';
 import HUD from './components/HUD';
 import TransmissionOverlay from './components/TransmissionOverlay';
@@ -37,6 +37,7 @@ import {
   setDataPackageVisible,
   type DataPackageStatus,
   type EmStormSeverity,
+  type PlayerIntelDelivery,
   type PlayerIntelRecipient
 } from './utils/syncState';
 import { getLocationById, LOCATIONS, resolveLocationVisual, type LocationId } from './utils/locations';
@@ -52,18 +53,22 @@ import { createMissionTransmission } from './utils/transmissions';
 import { getStoryBeat, type StoryAmbience } from './utils/storyBeats';
 import { getHoundAction, type HoundActionId } from './data/houndActions';
 import { getMissionSceneById } from './data/missionScenes';
-import type { ScenePlayerIntel } from './data/scenePlayerIntel';
+import type { MissionPlayerIntel } from './types/missionSchema';
 import { getGmScriptSceneIdForStoryBeat } from './data/mission01GmScript';
 import { createScenePopupTransmission } from './data/scenePopups';
 import { applyTokenSceneVisibility } from './utils/tokenSceneVisibility';
+import {
+  mergeTacticalRuntimeTokens,
+  missionTokensToTacticalMapTokens
+} from './utils/missionTacticalMap';
 import { getHoundVisualProfile } from './utils/houndProfile';
 import HoundOverlay from './components/HoundOverlay';
 import SquadOverlay from './components/SquadOverlay';
 import TacticalMapPanel from './components/control/TacticalMapPanel';
 import SquadControlPanel from './components/control/SquadControlPanel';
-import { MISSION01_TACTICAL_TOKENS } from './data/mission01Tokens';
 import PLAYER_CHARACTERS from './utils/playerCharacters';
 import { createInitialPlayerEquipmentState } from './data/playerCharacters';
+import { useMission } from './context/MissionProvider';
 import { 
   Volume2, 
   Radio, 
@@ -83,6 +88,14 @@ import {
 } from 'lucide-react';
 
 const UESC_ROVER_TOKEN_ID = 'rover-uesc';
+
+function toPlayerIntelDeliveryTone(tone: MissionPlayerIntel['tone']): PlayerIntelDelivery['tone'] {
+  if (tone === 'uneasy' || tone === 'procedural' || tone === 'urgent') {
+    return tone;
+  }
+
+  return 'neutral';
+}
 
 function clampTacticalPercent(value: number): number {
   return Math.max(0, Math.min(100, value));
@@ -152,6 +165,7 @@ function useRoute() {
 
 export default function App() {
   const { route, navigate } = useRoute();
+  const { currentMission } = useMission();
   const [state, setState] = useState<MissionControlState>(getStoredState);
   
   // Independent local audio and boot states per device context
@@ -261,7 +275,15 @@ export default function App() {
   const activeLocation = getLocationById(state.activeLocation);
   const isAudioBooted = (route === 'display' && displayBooted) || (route === 'control' && controlBooted);
   const activeVisual = resolveLocationVisual(activeLocation, visualConfig, state.displayOptions);
-  const tacticalTokens = state.tacticalTokens ?? MISSION01_TACTICAL_TOKENS;
+  const initialTacticalTokens = useMemo(
+    () => missionTokensToTacticalMapTokens(currentMission.tokens ?? []),
+    [currentMission.tokens]
+  );
+  const tacticalTokens = useMemo(
+    () => mergeTacticalRuntimeTokens(initialTacticalTokens, state.tacticalTokens),
+    [initialTacticalTokens, state.tacticalTokens]
+  );
+  const tacticalMapImagePath = currentMission.map?.imagePath ?? '/assets/maps/PLATEAU.png';
   const missionBootPhase = state.missionBoot?.phase ?? 'boot_idle';
 
   useEffect(() => {
@@ -785,7 +807,7 @@ export default function App() {
     }));
   };
 
-  const handleSendPlayerIntel = (intel: ScenePlayerIntel, recipients: PlayerIntelRecipient[]) => {
+  const handleSendPlayerIntel = (intel: MissionPlayerIntel, recipients: PlayerIntelRecipient[]) => {
     if (recipients.length === 0) return;
 
     const now = Date.now();
@@ -801,7 +823,7 @@ export default function App() {
           type: intel.type,
           target: intel.target,
           text: intel.text,
-          tone: intel.tone,
+          tone: toPlayerIntelDeliveryTone(intel.tone),
           recipients,
           sentAt: now
         }
@@ -1007,7 +1029,7 @@ export default function App() {
         activeTransmission: null
       },
       quickEffect: null,
-      tacticalTokens: MISSION01_TACTICAL_TOKENS.map((token) => ({ ...token })),
+      tacticalTokens: initialTacticalTokens.map((token) => ({ ...token })),
       playerEquipmentState: createInitialPlayerEquipmentState(),
       playerIntelDeliveries: [],
       playerSelectionResetAt: Date.now(),
@@ -1053,7 +1075,7 @@ export default function App() {
     const payload: MissionControlState = {
       ...state,
       tacticalTokens: tacticalTokens.map((token) => {
-        const defaultToken = MISSION01_TACTICAL_TOKENS.find((candidate) => candidate.id === token.id);
+        const defaultToken = initialTacticalTokens.find((candidate) => candidate.id === token.id);
         return {
           ...token,
           x: defaultToken?.x ?? token.x,
@@ -1943,6 +1965,7 @@ export default function App() {
 
               <TacticalMiniMapDisplay
                 tokens={tacticalTokens}
+                mapImageSrc={tacticalMapImagePath}
                 selectedSquadIds={state.squad?.selectedIds ?? []}
                 signalLabel={signalLabel}
                 visibilityLabel={visibilityLabel}
@@ -1957,6 +1980,7 @@ export default function App() {
         {!isFinalTerminalActive && !state.displayOptions.screenBlack && state.displayOptions.playerTacticalMapVisible && (
           <TacticalLargeMapDisplay
             tokens={tacticalTokens}
+            mapImageSrc={tacticalMapImagePath}
             selectedSquadIds={state.squad?.selectedIds ?? []}
           />
         )}
@@ -2157,6 +2181,7 @@ export default function App() {
               <section className="flex-1 min-w-0 min-h-0 flex">
                 <TacticalMapPanel 
                   tokens={filteredTacticalTokens} 
+                  mapImageSrc={tacticalMapImagePath}
                   onUpdateTokenPosition={handleUpdateTacticalTokenPosition}
                 />
               </section>

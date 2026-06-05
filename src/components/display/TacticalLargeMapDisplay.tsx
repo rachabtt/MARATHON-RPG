@@ -1,8 +1,8 @@
-import plateauMap from '../../assets/maps/PLATEAU.png';
 import type { TacticalMapToken } from '../../types/tacticalMap';
 
 interface TacticalLargeMapDisplayProps {
   tokens: TacticalMapToken[];
+  mapImageSrc: string;
   selectedSquadIds: string[];
 }
 
@@ -25,7 +25,7 @@ function getTokenClassName(token: TacticalMapToken, roverOccupied = false): stri
   return 'h-4 w-4 rotate-45 border border-red-100 bg-red-500 shadow-[0_0_14px_rgba(248,113,113,0.78)]';
 }
 
-export default function TacticalLargeMapDisplay({ tokens, selectedSquadIds }: TacticalLargeMapDisplayProps) {
+export default function TacticalLargeMapDisplay({ tokens, mapImageSrc, selectedSquadIds }: TacticalLargeMapDisplayProps) {
   const selectedSquadSet = new Set(selectedSquadIds);
   const roverOccupied = tokens.some((token) => (
     token.type === 'pj' &&
@@ -62,7 +62,7 @@ export default function TacticalLargeMapDisplay({ tokens, selectedSquadIds }: Ta
         <div className="relative mt-3 flex min-h-0 flex-1 items-center justify-center overflow-hidden rounded-sm border border-emerald-500/25 bg-stone-950/90">
           <div className="relative aspect-square h-full max-h-full max-w-full overflow-hidden">
             <img
-              src={plateauMap}
+              src={mapImageSrc}
               alt="Carte tactique Mission 01"
               className="h-full w-full object-contain opacity-90 contrast-125 saturate-75"
             />

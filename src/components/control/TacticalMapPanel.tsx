@@ -3,10 +3,11 @@ import type { TacticalMapToken } from '../../types/tacticalMap';
 
 interface Props {
   tokens?: TacticalMapToken[];
+  mapImageSrc: string;
   onUpdateTokenPosition?: (tokenId: string, x: number, y: number) => void;
 }
 
-export default function TacticalMapPanel({ tokens = [], onUpdateTokenPosition }: Props) {
+export default function TacticalMapPanel({ tokens = [], mapImageSrc, onUpdateTokenPosition }: Props) {
   const [draggingTokenId, setDraggingTokenId] = useState<string | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const roverOccupied = tokens.some((token) => token.type === 'pj' && token.inVehicle);
@@ -76,7 +77,7 @@ export default function TacticalMapPanel({ tokens = [], onUpdateTokenPosition }:
             className="relative overflow-hidden rounded-xl border border-stone-700/80 bg-stone-950/80 aspect-square h-full max-w-full max-h-full flex-shrink-0 flex items-center justify-center cursor-grab active:cursor-grabbing"
           >
             <img
-              src="/assets/maps/PLATEAU.png"
+              src={mapImageSrc}
               alt="Carte tactique"
               className="w-full h-full object-contain z-10 pointer-events-none"
             />

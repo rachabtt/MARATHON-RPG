@@ -1,9 +1,9 @@
-import plateauMap from '../../assets/maps/PLATEAU.png';
 import type { MissionTelemetryState } from '../../utils/syncState';
 import type { TacticalMapToken } from '../../types/tacticalMap';
 
 interface TacticalMiniMapDisplayProps {
   tokens: TacticalMapToken[];
+  mapImageSrc: string;
   selectedSquadIds: string[];
   signalLabel: string;
   visibilityLabel: string;
@@ -33,6 +33,7 @@ function getTokenClassName(token: TacticalMapToken, roverOccupied = false): stri
 
 export default function TacticalMiniMapDisplay({
   tokens,
+  mapImageSrc,
   selectedSquadIds,
   signalLabel,
   visibilityLabel,
@@ -63,7 +64,7 @@ export default function TacticalMiniMapDisplay({
 
         <div className="relative aspect-square overflow-hidden rounded-sm border border-emerald-500/25 bg-stone-950/90">
           <img
-            src={plateauMap}
+            src={mapImageSrc}
             alt="Carte tactique Mission 01"
             className="h-full w-full object-contain opacity-80 contrast-125 saturate-75"
           />
