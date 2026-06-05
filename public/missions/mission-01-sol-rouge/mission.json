@@ -1,0 +1,5294 @@
+{
+  "schemaVersion": "1.0.0",
+  "metadata": {
+    "id": "mission-01-sol-rouge",
+    "title": "SOL ROUGE",
+    "season": "FIRST SOIL",
+    "number": 1,
+    "missionNumber": "01",
+    "locale": "fr-FR",
+    "tags": [
+      "MARATHON",
+      "UESC",
+      "Tau Ceti IV"
+    ]
+  },
+  "assetsBasePath": "/missions/mission-01-sol-rouge/assets",
+  "assets": [
+    {
+      "id": "mission01-map-image",
+      "kind": "map",
+      "src": "/assets/maps/PLATEAU.png",
+      "label": "Mission 01 Tactical Map",
+      "preload": true
+    },
+    {
+      "id": "boot-video",
+      "kind": "video",
+      "src": "boot/BOOT.mp4",
+      "label": "BOOT intro sequence",
+      "preload": true
+    },
+    {
+      "id": "new_carthage-image",
+      "kind": "image",
+      "src": "/assets/legacy/locations/nc-base.png",
+      "label": "NEW CARTHAGE",
+      "preload": true
+    },
+    {
+      "id": "new_carthage-workers-loop",
+      "kind": "video",
+      "src": "locations/loops/nc-workers-loop.mp4",
+      "label": "New Carthage workers",
+      "preload": true,
+      "loop": true
+    },
+    {
+      "id": "new_carthage-shipTakeoff-loop",
+      "kind": "video",
+      "src": "locations/loops/nc-ship-takeoff.mp4",
+      "label": "New Carthage shipTakeoff",
+      "preload": true,
+      "loop": true
+    },
+    {
+      "id": "new_carthage-roverPass-loop",
+      "kind": "video",
+      "src": "locations/loops/nc-rover-pass.mp4",
+      "label": "New Carthage roverPass",
+      "preload": true,
+      "loop": true
+    },
+    {
+      "id": "new_carthage-easterEgg-loop",
+      "kind": "video",
+      "src": "locations/loops/nc-easter-egg.mp4",
+      "label": "New Carthage easterEgg",
+      "preload": true,
+      "loop": true
+    },
+    {
+      "id": "red_plains-image",
+      "kind": "image",
+      "src": "/assets/legacy/locations/red-plains.png",
+      "label": "PLAINES ROUGES",
+      "preload": true
+    },
+    {
+      "id": "red_plains-pov-image",
+      "kind": "image",
+      "src": "/assets/legacy/locations/red-plains-pov.png",
+      "label": "PLAINES ROUGES POV",
+      "preload": true
+    },
+    {
+      "id": "red_plains-video-loop",
+      "kind": "video",
+      "src": "locations/loops/red-plains-wide-loop.mp4",
+      "label": "PLAINES ROUGES loop",
+      "preload": true,
+      "loop": true
+    },
+    {
+      "id": "black_arches-image",
+      "kind": "image",
+      "src": "/assets/legacy/locations/black-arches-pov.png",
+      "label": "ARCHES NOIRES",
+      "preload": true
+    },
+    {
+      "id": "black_arches-hound-image",
+      "kind": "image",
+      "src": "/assets/legacy/locations/black-arches-pov-hound.png",
+      "label": "ARCHES NOIRES Hound variant",
+      "preload": true
+    },
+    {
+      "id": "delta6-image",
+      "kind": "image",
+      "src": "/assets/legacy/locations/delta6.png",
+      "label": "SITE DELTA-6",
+      "preload": true
+    },
+    {
+      "id": "delta6-video-loop",
+      "kind": "video",
+      "src": "locations/loops/delta6-loop.mp4",
+      "label": "SITE DELTA-6 loop",
+      "preload": true,
+      "loop": true
+    }
+  ],
+  "bootSequence": {
+    "id": "mission01-boot",
+    "enabled": true,
+    "title": "MISSION 01 — SOL ROUGE",
+    "subtitle": "UESC FIELD OPERATIONS // NEW CARTHAGE",
+    "initialPhase": "boot_idle",
+    "holdPercent": 52,
+    "bootLines": [
+      "UESC COLONIAL SYSTEMS ONLINE",
+      "ALETHEIA NODE HANDSHAKE",
+      "FIELD DISPLAY LINK ESTABLISHED",
+      "CREW STATUS: ACTIVE",
+      "MISSION PACKAGE: SOL ROUGE",
+      "WARNING: LOCAL EM ACTIVITY UNSTABLE"
+    ],
+    "loadingLabel": "INITIALISATION TERRAIN",
+    "introVideoAssetId": "boot-video",
+    "videoPath": "/missions/mission-01-sol-rouge/assets/boot/BOOT.mp4",
+    "nextSceneId": "reveil-aletheia",
+    "startSceneId": "depart_new_carthage",
+    "startLocationId": "new_carthage"
+  },
+  "locations": [
+    {
+      "id": "new-carthage",
+      "runtimeLocationId": "new_carthage",
+      "label": "NEW CARTHAGE",
+      "shortLabel": "NEW CARTHAGE",
+      "description": "Colonie principale / staging UESC",
+      "role": "Colonie principale / staging UESC",
+      "playerVisible": true,
+      "displayBackground": "/assets/legacy/locations/nc-base.png",
+      "imagePath": "/assets/legacy/locations/nc-base.png",
+      "loopVariants": {
+        "workers": "/missions/mission-01-sol-rouge/assets/locations/loops/nc-workers-loop.mp4",
+        "shipTakeoff": "/missions/mission-01-sol-rouge/assets/locations/loops/nc-ship-takeoff.mp4",
+        "roverPass": "/missions/mission-01-sol-rouge/assets/locations/loops/nc-rover-pass.mp4",
+        "easterEgg": "/missions/mission-01-sol-rouge/assets/locations/loops/nc-easter-egg.mp4"
+      },
+      "defaultAudioProfileId": "new_carthage",
+      "assetIds": {
+        "image": "new_carthage-image"
+      },
+      "loopVariantAssetIds": {
+        "workers": "new_carthage-workers-loop",
+        "shipTakeoff": "new_carthage-shipTakeoff-loop",
+        "roverPass": "new_carthage-roverPass-loop",
+        "easterEgg": "new_carthage-easterEgg-loop"
+      }
+    },
+    {
+      "id": "red-plains",
+      "runtimeLocationId": "red_plains",
+      "label": "PLAINES ROUGES",
+      "shortLabel": "PLAINES ROUGES",
+      "description": "Transit rover / route Delta-6",
+      "role": "Transit rover / route Delta-6",
+      "playerVisible": true,
+      "displayBackground": "/assets/legacy/locations/red-plains.png",
+      "imagePath": "/assets/legacy/locations/red-plains.png",
+      "videoLoop": "/missions/mission-01-sol-rouge/assets/locations/loops/red-plains-wide-loop.mp4",
+      "povImagePath": "/assets/legacy/locations/red-plains-pov.png",
+      "defaultAudioProfileId": "red_plains",
+      "assetIds": {
+        "image": "red_plains-image",
+        "povImage": "red_plains-pov-image",
+        "videoLoop": "red_plains-video-loop"
+      }
+    },
+    {
+      "id": "black-arches",
+      "runtimeLocationId": "black_arches",
+      "label": "ARCHES NOIRES",
+      "shortLabel": "ARCHES NOIRES",
+      "description": "POV rover / échos radio",
+      "role": "POV rover / échos radio",
+      "playerVisible": true,
+      "displayBackground": "/assets/legacy/locations/black-arches-pov.png",
+      "imagePath": "/assets/legacy/locations/black-arches-pov.png",
+      "houndImagePath": "/assets/legacy/locations/black-arches-pov-hound.png",
+      "defaultAudioProfileId": "black_arches",
+      "assetIds": {
+        "image": "black_arches-image",
+        "houndImage": "black_arches-hound-image"
+      }
+    },
+    {
+      "id": "delta6-site",
+      "runtimeLocationId": "delta6",
+      "label": "SITE DELTA-6",
+      "shortLabel": "SITE DELTA-6",
+      "description": "Site géologique abandonné",
+      "role": "Site géologique abandonné",
+      "playerVisible": true,
+      "displayBackground": "/assets/legacy/locations/delta6.png",
+      "imagePath": "/assets/legacy/locations/delta6.png",
+      "videoLoop": "/missions/mission-01-sol-rouge/assets/locations/loops/delta6-loop.mp4",
+      "defaultAudioProfileId": "delta6",
+      "assetIds": {
+        "image": "delta6-image",
+        "videoLoop": "delta6-video-loop"
+      }
+    }
+  ],
+  "scenes": [
+    {
+      "id": "reveil-aletheia",
+      "label": "RÉVEIL — ALETHEIA",
+      "shortLabel": "Réveil",
+      "locationId": "new-carthage",
+      "order": 1,
+      "phase": "CALME",
+      "summary": "Fond cryobay ou New Carthage calme. Pas encore de menace directe.",
+      "gmSummary": "Installer Tau Ceti IV, Aletheia et le réveil cryo. Faire présenter rapidement les PJ.",
+      "ambienceId": "CALME",
+      "playerIntelIds": [
+        "cryo-dream-red-door",
+        "cryo-dream-voice-delay",
+        "cryo-dream-black-arches",
+        "cryo-sensation-cold-lungs"
+      ],
+      "gmScriptSceneId": "reveil-aletheia",
+      "display": {
+        "overlayIds": []
+      }
+    },
+    {
+      "id": "briefing-rowe",
+      "label": "BRIEFING — ROWE",
+      "shortLabel": "Briefing",
+      "locationId": "new-carthage",
+      "order": 2,
+      "phase": "CALME",
+      "summary": "Afficher New Carthage ou briefing UESC. Informations rationnelles uniquement.",
+      "gmSummary": "Donner une mission claire : localiser Delta-6, récupérer survivants, données et rover si possible.",
+      "ambienceId": "CALME",
+      "playerIntelIds": [
+        "briefing-objective-clear",
+        "briefing-uesc-rumors"
+      ],
+      "gmScriptSceneId": "briefing-rowe",
+      "display": {
+        "overlayIds": []
+      }
+    },
+    {
+      "id": "preparation",
+      "label": "PRÉPARATION — ÉQUIPEMENT",
+      "shortLabel": "Préparation",
+      "locationId": "new-carthage",
+      "order": 3,
+      "phase": "CALME",
+      "summary": "Afficher escouade PJ ou New Carthage. Garder un ton opérationnel.",
+      "gmSummary": "Faire choisir 3 à 5 ressources utiles sans transformer la scène en inventaire interminable.",
+      "ambienceId": "CALME",
+      "playerIntelIds": [
+        "prep-personal-item",
+        "prep-role-engineer"
+      ],
+      "gmScriptSceneId": "preparation",
+      "display": {
+        "overlayIds": []
+      }
+    },
+    {
+      "id": "traversee-plaines-rouges",
+      "label": "TRAVERSÉE — PLAINES ROUGES",
+      "shortLabel": "Traversée",
+      "locationId": "red-plains",
+      "order": 4,
+      "phase": "TENSION",
+      "summary": "Fond Plaines Rouges. État radio plutôt stable ou dégradé léger.",
+      "gmSummary": "Faire découvrir Tau Ceti IV : immensité, poussière rouge, horizon métallique, isolement.",
+      "ambienceId": "CALME",
+      "playerIntelIds": [
+        "red-plains-environment",
+        "red-plains-pilot"
+      ],
+      "gmScriptSceneId": "traversee-plaines-rouges",
+      "display": {
+        "overlayIds": []
+      }
+    },
+    {
+      "id": "anomalie-radio",
+      "label": "ANOMALIE RADIO",
+      "shortLabel": "Anomalie radio",
+      "locationId": "red-plains",
+      "order": 5,
+      "phase": "TENSION",
+      "summary": "Afficher interférence locale / signal instable. Ne pas montrer HOLLOW ici.",
+      "gmSummary": "Déclencher la phrase radio qui revient trop tôt. Ne pas expliquer. Laisser un silence.",
+      "ambienceId": "SIGNAL INSTABLE",
+      "playerIntelIds": [
+        "radio-anomaly-personal",
+        "radio-anomaly-all"
+      ],
+      "gmScriptSceneId": "anomalie-radio",
+      "display": {
+        "overlayIds": []
+      }
+    },
+    {
+      "id": "approche-arches-noires",
+      "label": "APPROCHE — ARCHES NOIRES",
+      "shortLabel": "Arches noires",
+      "locationId": "black-arches",
+      "order": 6,
+      "phase": "TENSION",
+      "summary": "Fond Arches Noires. Signal instable, activité EM dégradée.",
+      "gmSummary": "Faire basculer l’ambiance vers l’étrange sans rendre les arches explicitement artificielles.",
+      "ambienceId": "SIGNAL INSTABLE",
+      "playerIntelIds": [
+        "arches-silence",
+        "arches-science"
+      ],
+      "gmScriptSceneId": "approche-arches-noires",
+      "display": {
+        "overlayIds": []
+      }
+    },
+    {
+      "id": "arrivee-delta6",
+      "label": "ARRIVÉE — DELTA-6",
+      "shortLabel": "Delta-6",
+      "locationId": "delta6-site",
+      "order": 7,
+      "phase": "TENSION",
+      "summary": "Fond Site Delta-6. Afficher état radio/visibilité dégradé.",
+      "gmSummary": "Laisser les PJ inspecter le rover, le scanner, les traces, les caisses et les logs. Donner 2 à 4 indices.",
+      "ambienceId": "TENSION",
+      "playerIntelIds": [
+        "delta6-objective",
+        "delta6-security"
+      ],
+      "gmScriptSceneId": "arrivee-delta6",
+      "display": {
+        "overlayIds": []
+      }
+    },
+    {
+      "id": "scanner-actif",
+      "label": "SCANNER ACTIF",
+      "shortLabel": "Scanner",
+      "locationId": "delta6-site",
+      "order": 8,
+      "phase": "TENSION",
+      "summary": "Afficher module DATA PACKAGE DELTA-6 si disponible.",
+      "gmSummary": "Faire des données Delta-6 un enjeu concret : récupérer, copier, sécuriser ou risquer la corruption.",
+      "ambienceId": "SIGNAL INSTABLE",
+      "playerIntelIds": [
+        "scanner-data",
+        "scanner-engineer"
+      ],
+      "gmScriptSceneId": "scanner-actif",
+      "display": {
+        "overlayIds": []
+      }
+    },
+    {
+      "id": "contact-hound",
+      "label": "CONTACT HOUND",
+      "shortLabel": "Hound",
+      "locationId": "delta6-site",
+      "order": 9,
+      "phase": "CRITIQUE",
+      "summary": "Overlay court de contact hostile. Ne pas trop montrer la créature.",
+      "gmSummary": "Créer une menace physique claire. Les Hounds ciblent d’abord les sources actives : drone, radio, lampe, rover.",
+      "ambienceId": "TENSION",
+      "playerIntelIds": [
+        "hound-contact",
+        "hound-drone"
+      ],
+      "gmScriptSceneId": "contact-hound",
+      "display": {
+        "overlayIds": []
+      }
+    },
+    {
+      "id": "survivant-velen",
+      "label": "SURVIVANT — VELEN",
+      "shortLabel": "Survivant",
+      "locationId": "delta6-site",
+      "order": 10,
+      "phase": "TENSION",
+      "summary": "Rester sobre. Pas de révélation claire. Ton médical / extraction.",
+      "gmSummary": "Introduire le survivant comme enjeu humain et source d’indices fragmentaires. Il doit compliquer l’extraction.",
+      "ambienceId": "TENSION",
+      "playerIntelIds": [
+        "velen-medical",
+        "velen-all"
+      ],
+      "gmScriptSceneId": "survivant-velen",
+      "display": {
+        "overlayIds": []
+      }
+    },
+    {
+      "id": "tempete-em",
+      "label": "TEMPÊTE EM",
+      "shortLabel": "Tempête",
+      "locationId": "delta6-site",
+      "order": 11,
+      "phase": "CRITIQUE",
+      "summary": "Activer mode Tempête EM global. Interface plus sombre, plus instable.",
+      "gmSummary": "Forcer une extraction avec coût. Les joueurs ne doivent probablement pas tout sauver facilement.",
+      "ambienceId": "TEMPÊTE EM",
+      "playerIntelIds": [
+        "storm-objective",
+        "storm-sensation"
+      ],
+      "gmScriptSceneId": "tempete-em",
+      "display": {
+        "overlayIds": []
+      }
+    },
+    {
+      "id": "extraction",
+      "label": "EXTRACTION",
+      "shortLabel": "Extraction",
+      "locationId": "delta6-site",
+      "order": 12,
+      "phase": "CRITIQUE",
+      "summary": "Fond route/plaines ou tempête. Garder le rythme nerveux.",
+      "gmSummary": "Faire trancher les priorités : survivant, données, rover, sécurité du groupe. Tout tenter doit coûter cher.",
+      "ambienceId": "EXTRACTION",
+      "playerIntelIds": [
+        "extraction-objective"
+      ],
+      "gmScriptSceneId": "extraction",
+      "display": {
+        "overlayIds": []
+      }
+    },
+    {
+      "id": "retour-new-carthage",
+      "label": "RETOUR — NEW CARTHAGE",
+      "shortLabel": "Retour",
+      "locationId": "new-carthage",
+      "order": 13,
+      "phase": "TENSION",
+      "summary": "Fond New Carthage. Contraste fort avec le chaos extérieur.",
+      "gmSummary": "Ramener le calme administratif. Faire le bilan : survivant, données, rover, blessures, anomalies.",
+      "ambienceId": "CALME",
+      "playerIntelIds": [
+        "return-uesc"
+      ],
+      "gmScriptSceneId": "retour-new-carthage",
+      "display": {
+        "overlayIds": []
+      }
+    },
+    {
+      "id": "finale-terminal",
+      "label": "FINALE — TERMINAL",
+      "shortLabel": "Finale",
+      "locationId": "new-carthage",
+      "order": 14,
+      "phase": "CRITIQUE",
+      "summary": "Afficher écran final HOLLOW SIGNAL DETECTED / SOURCE: BELOW SURFACE.",
+      "gmSummary": "Clore sur une image froide et inquiétante. Ne répondre à aucune question de manière claire.",
+      "ambienceId": "SIGNAL INSTABLE",
+      "playerIntelIds": [
+        "finale-mobile"
+      ],
+      "gmScriptSceneId": "finale-terminal",
+      "display": {
+        "overlayIds": []
+      }
+    }
+  ],
+  "resources": [
+    {
+      "id": "rover-uesc",
+      "label": "Intégrité rover",
+      "initialStateId": "stable",
+      "visibleToPlayers": true,
+      "displayOrder": 1,
+      "states": [
+        {
+          "id": "stable",
+          "label": "Stable",
+          "severity": "stable",
+          "color": "emerald"
+        },
+        {
+          "id": "degraded",
+          "label": "Dégradé",
+          "severity": "degraded",
+          "color": "amber"
+        },
+        {
+          "id": "critical",
+          "label": "Critique",
+          "severity": "critical",
+          "color": "red"
+        },
+        {
+          "id": "lost",
+          "label": "Perdu",
+          "severity": "lost",
+          "color": "stone"
+        }
+      ]
+    },
+    {
+      "id": "rover-delta6",
+      "label": "Énergie rover",
+      "initialStateId": "stable",
+      "visibleToPlayers": true,
+      "displayOrder": 2,
+      "states": [
+        {
+          "id": "stable",
+          "label": "Stable",
+          "severity": "stable",
+          "color": "emerald"
+        },
+        {
+          "id": "degraded",
+          "label": "Dégradé",
+          "severity": "degraded",
+          "color": "amber"
+        },
+        {
+          "id": "critical",
+          "label": "Critique",
+          "severity": "critical",
+          "color": "red"
+        },
+        {
+          "id": "lost",
+          "label": "Perdu",
+          "severity": "lost",
+          "color": "stone"
+        }
+      ]
+    },
+    {
+      "id": "signal-radio",
+      "label": "Signal radio",
+      "initialStateId": "degraded",
+      "visibleToPlayers": true,
+      "displayOrder": 3,
+      "states": [
+        {
+          "id": "stable",
+          "label": "Stable",
+          "severity": "stable",
+          "color": "emerald"
+        },
+        {
+          "id": "degraded",
+          "label": "Dégradé",
+          "severity": "degraded",
+          "color": "amber"
+        },
+        {
+          "id": "critical",
+          "label": "Critique",
+          "severity": "critical",
+          "color": "red"
+        },
+        {
+          "id": "lost",
+          "label": "Perdu",
+          "severity": "lost",
+          "color": "stone"
+        }
+      ]
+    },
+    {
+      "id": "visibilite",
+      "label": "Visibilité",
+      "initialStateId": "degraded",
+      "visibleToPlayers": true,
+      "displayOrder": 4,
+      "states": [
+        {
+          "id": "stable",
+          "label": "Stable",
+          "severity": "stable",
+          "color": "emerald"
+        },
+        {
+          "id": "degraded",
+          "label": "Dégradé",
+          "severity": "degraded",
+          "color": "amber"
+        },
+        {
+          "id": "critical",
+          "label": "Critique",
+          "severity": "critical",
+          "color": "red"
+        },
+        {
+          "id": "lost",
+          "label": "Perdu",
+          "severity": "lost",
+          "color": "stone"
+        }
+      ]
+    },
+    {
+      "id": "activite-em",
+      "label": "Temps avant tempête",
+      "initialStateId": "degraded",
+      "visibleToPlayers": true,
+      "displayOrder": 5,
+      "states": [
+        {
+          "id": "stable",
+          "label": "Stable",
+          "severity": "stable",
+          "color": "emerald"
+        },
+        {
+          "id": "degraded",
+          "label": "Dégradé",
+          "severity": "degraded",
+          "color": "amber"
+        },
+        {
+          "id": "critical",
+          "label": "Critique",
+          "severity": "critical",
+          "color": "red"
+        },
+        {
+          "id": "lost",
+          "label": "Perdu",
+          "severity": "lost",
+          "color": "stone"
+        }
+      ]
+    },
+    {
+      "id": "donnees-delta6",
+      "label": "Données Delta-6",
+      "initialStateId": "non_secure",
+      "visibleToPlayers": true,
+      "displayOrder": 6,
+      "states": [
+        {
+          "id": "non_secure",
+          "label": "Stable mais non sécurisées",
+          "severity": "stable",
+          "color": "emerald"
+        },
+        {
+          "id": "degraded",
+          "label": "Dégradé",
+          "severity": "degraded",
+          "color": "amber"
+        },
+        {
+          "id": "critical",
+          "label": "Critique",
+          "severity": "critical",
+          "color": "red"
+        },
+        {
+          "id": "lost",
+          "label": "Perdu",
+          "severity": "lost",
+          "color": "stone"
+        }
+      ]
+    },
+    {
+      "id": "survivant-delta6",
+      "label": "Survivant Delta-6",
+      "initialStateId": "unknown",
+      "visibleToPlayers": true,
+      "displayOrder": 7,
+      "states": [
+        {
+          "id": "unknown",
+          "label": "Inconnu",
+          "severity": "lost",
+          "color": "stone"
+        },
+        {
+          "id": "stable",
+          "label": "Stable",
+          "severity": "stable",
+          "color": "emerald"
+        },
+        {
+          "id": "degraded",
+          "label": "Dégradé",
+          "severity": "degraded",
+          "color": "amber"
+        },
+        {
+          "id": "critical",
+          "label": "Critique",
+          "severity": "critical",
+          "color": "red"
+        },
+        {
+          "id": "lost",
+          "label": "Perdu",
+          "severity": "lost",
+          "color": "stone"
+        }
+      ]
+    },
+    {
+      "id": "calme-groupe",
+      "label": "Calme du groupe",
+      "initialStateId": "stable",
+      "visibleToPlayers": true,
+      "displayOrder": 8,
+      "states": [
+        {
+          "id": "stable",
+          "label": "Stable",
+          "severity": "stable",
+          "color": "emerald"
+        },
+        {
+          "id": "degraded",
+          "label": "Dégradé",
+          "severity": "degraded",
+          "color": "amber"
+        },
+        {
+          "id": "critical",
+          "label": "Critique",
+          "severity": "critical",
+          "color": "red"
+        },
+        {
+          "id": "lost",
+          "label": "Perdu",
+          "severity": "lost",
+          "color": "stone"
+        }
+      ]
+    }
+  ],
+  "tokens": [
+    {
+      "id": "mara-voss",
+      "label": "Mara Voss",
+      "shortLabel": "MV",
+      "type": "player",
+      "x": 22,
+      "y": 28,
+      "visibleToPlayers": true,
+      "visibleInControl": true,
+      "status": "active",
+      "vehicleId": null,
+      "metadata": {
+        "sourceType": "pj",
+        "inVehicle": false
+      }
+    },
+    {
+      "id": "ilyan-sato",
+      "label": "Ilyan Sato",
+      "shortLabel": "IS",
+      "type": "player",
+      "x": 24,
+      "y": 29,
+      "visibleToPlayers": true,
+      "visibleInControl": true,
+      "status": "active",
+      "vehicleId": null,
+      "metadata": {
+        "sourceType": "pj",
+        "inVehicle": false
+      }
+    },
+    {
+      "id": "naima-keller",
+      "label": "Dr Naïma Keller",
+      "shortLabel": "NK",
+      "type": "player",
+      "x": 25,
+      "y": 30,
+      "visibleToPlayers": true,
+      "visibleInControl": true,
+      "status": "active",
+      "vehicleId": null,
+      "metadata": {
+        "sourceType": "pj",
+        "inVehicle": false
+      }
+    },
+    {
+      "id": "kael-moreno",
+      "label": "Kael Moreno",
+      "shortLabel": "KM",
+      "type": "player",
+      "x": 23,
+      "y": 31,
+      "visibleToPlayers": true,
+      "visibleInControl": true,
+      "status": "active",
+      "vehicleId": null,
+      "metadata": {
+        "sourceType": "pj",
+        "inVehicle": false
+      }
+    },
+    {
+      "id": "elara-nyx",
+      "label": "Elara Nyx",
+      "shortLabel": "EN",
+      "type": "player",
+      "x": 24,
+      "y": 32,
+      "visibleToPlayers": true,
+      "visibleInControl": true,
+      "status": "active",
+      "vehicleId": null,
+      "metadata": {
+        "sourceType": "pj",
+        "inVehicle": false
+      }
+    },
+    {
+      "id": "dorian-vale",
+      "label": "Dorian Vale",
+      "shortLabel": "DV",
+      "type": "player",
+      "x": 22,
+      "y": 30,
+      "visibleToPlayers": true,
+      "visibleInControl": true,
+      "status": "active",
+      "vehicleId": null,
+      "metadata": {
+        "sourceType": "pj",
+        "inVehicle": false
+      }
+    },
+    {
+      "id": "june-arendt",
+      "label": "June Arendt",
+      "shortLabel": "JA",
+      "type": "player",
+      "x": 25,
+      "y": 28,
+      "visibleToPlayers": true,
+      "visibleInControl": true,
+      "status": "active",
+      "vehicleId": null,
+      "metadata": {
+        "sourceType": "pj",
+        "inVehicle": false
+      }
+    },
+    {
+      "id": "tomas-rehn",
+      "label": "Tomas Rehn",
+      "shortLabel": "TR",
+      "type": "player",
+      "x": 23,
+      "y": 29,
+      "visibleToPlayers": true,
+      "visibleInControl": true,
+      "status": "active",
+      "vehicleId": null,
+      "metadata": {
+        "sourceType": "pj",
+        "inVehicle": false
+      }
+    },
+    {
+      "id": "commander-rowe",
+      "label": "Commander Rowe",
+      "shortLabel": "ROWE",
+      "type": "npc",
+      "x": 20,
+      "y": 25,
+      "visibleToPlayers": false,
+      "visibleInControl": true,
+      "status": "active",
+      "vehicleId": null,
+      "metadata": {
+        "sourceType": "pnj",
+        "inVehicle": false
+      }
+    },
+    {
+      "id": "dr-velen",
+      "label": "Dr Velen",
+      "shortLabel": "VELEN",
+      "type": "npc",
+      "x": 72,
+      "y": 80,
+      "visibleToPlayers": false,
+      "visibleInControl": true,
+      "status": "hidden",
+      "vehicleId": null,
+      "metadata": {
+        "sourceType": "pnj",
+        "inVehicle": false
+      }
+    },
+    {
+      "id": "hound-01",
+      "label": "Hound 01",
+      "shortLabel": "H1",
+      "type": "creature",
+      "x": 70,
+      "y": 62,
+      "visibleToPlayers": false,
+      "visibleInControl": true,
+      "status": "hidden",
+      "vehicleId": null,
+      "metadata": {
+        "sourceType": "hound",
+        "inVehicle": false
+      }
+    },
+    {
+      "id": "hound-02",
+      "label": "Hound 02",
+      "shortLabel": "H2",
+      "type": "creature",
+      "x": 72,
+      "y": 65,
+      "visibleToPlayers": false,
+      "visibleInControl": true,
+      "status": "hidden",
+      "vehicleId": null,
+      "metadata": {
+        "sourceType": "hound",
+        "inVehicle": false
+      }
+    },
+    {
+      "id": "hound-03",
+      "label": "Hound 03",
+      "shortLabel": "H3",
+      "type": "creature",
+      "x": 74,
+      "y": 68,
+      "visibleToPlayers": false,
+      "visibleInControl": true,
+      "status": "hidden",
+      "vehicleId": null,
+      "metadata": {
+        "sourceType": "hound",
+        "inVehicle": false
+      }
+    },
+    {
+      "id": "hound-alpha",
+      "label": "Hound Alpha",
+      "shortLabel": "HA",
+      "type": "creature",
+      "x": 73,
+      "y": 70,
+      "visibleToPlayers": false,
+      "visibleInControl": true,
+      "status": "hidden",
+      "vehicleId": null,
+      "metadata": {
+        "sourceType": "hound",
+        "inVehicle": false
+      }
+    },
+    {
+      "id": "rover-uesc",
+      "label": "Rover UESC",
+      "shortLabel": "R-UESC",
+      "type": "vehicle",
+      "x": 27,
+      "y": 34,
+      "visibleToPlayers": true,
+      "visibleInControl": true,
+      "status": "active",
+      "vehicleId": null,
+      "metadata": {
+        "sourceType": "rover",
+        "inVehicle": false
+      }
+    },
+    {
+      "id": "rover-delta6",
+      "label": "Rover Delta-6",
+      "shortLabel": "R-D6",
+      "type": "vehicle",
+      "x": 74,
+      "y": 82,
+      "visibleToPlayers": false,
+      "visibleInControl": true,
+      "status": "unknown",
+      "vehicleId": null,
+      "metadata": {
+        "sourceType": "rover",
+        "inVehicle": false
+      }
+    }
+  ],
+  "npcs": [
+    {
+      "id": "aletheia",
+      "name": "ALETHEIA",
+      "role": "IA D'ASSISTANCE COLONIALE",
+      "transmissionProfileId": "aletheia",
+      "playerVisible": true,
+      "tags": [
+        "ai",
+        "terminal"
+      ]
+    },
+    {
+      "id": "rowe",
+      "name": "COMMANDER ELIAS ROWE",
+      "role": "COMMANDEMENT UESC",
+      "transmissionProfileId": "rowe",
+      "playerVisible": true,
+      "tags": [
+        "command"
+      ]
+    },
+    {
+      "id": "velen",
+      "name": "DR ISAAC VELEN",
+      "role": "SURVIVANT DELTA-6",
+      "transmissionProfileId": "velen",
+      "playerVisible": true,
+      "tags": [
+        "survivor",
+        "delta6"
+      ]
+    }
+  ],
+  "aletheia": {
+    "categories": [
+      {
+        "id": "departure",
+        "label": "Départ / briefing",
+        "description": "Messages utiles avant ou pendant le départ de New Carthage.",
+        "displayOrder": 1,
+        "messages": [
+          {
+            "id": "departure-priority",
+            "categoryId": "departure",
+            "label": "Priorité non critique",
+            "text": "Votre mission est considérée comme prioritaire, mais non critique. Veuillez suivre les procédures de sortie standard.",
+            "tone": "procedural",
+            "visibility": "all"
+          },
+          {
+            "id": "departure-risk-standard",
+            "categoryId": "departure",
+            "label": "Risque compatible",
+            "text": "Les risques environnementaux sont compatibles avec une sortie terrain standard. Restez groupés.",
+            "tone": "reassuring",
+            "visibility": "all"
+          },
+          {
+            "id": "departure-safety",
+            "categoryId": "departure",
+            "label": "Sécurité prioritaire",
+            "text": "Votre sécurité demeure prioritaire. La récupération de matériel ne justifie pas une exposition prolongée.",
+            "tone": "reassuring",
+            "visibility": "all"
+          },
+          {
+            "id": "departure-weather",
+            "categoryId": "departure",
+            "label": "Fenêtre météo",
+            "text": "Fenêtre météo actuellement acceptable. Dégradation électromagnétique possible dans le secteur sud-est.",
+            "tone": "neutral",
+            "visibility": "all"
+          },
+          {
+            "id": "departure-rumors",
+            "categoryId": "departure",
+            "label": "Éviter rumeurs",
+            "text": "Merci de limiter les communications non opérationnelles. Les extrapolations non vérifiées peuvent affecter le calme colonial.",
+            "tone": "procedural",
+            "visibility": "all"
+          }
+        ]
+      },
+      {
+        "id": "navigation",
+        "label": "Navigation / terrain",
+        "description": "Guidage terrain, météo, visibilité, trajet.",
+        "displayOrder": 2,
+        "messages": [
+          {
+            "id": "nav-route",
+            "categoryId": "navigation",
+            "label": "Route confirmée",
+            "text": "Route vers le site Delta-6 confirmée. Distance estimée : quarante kilomètres. Terrain exposé.",
+            "tone": "neutral",
+            "visibility": "all"
+          },
+          {
+            "id": "nav-visibility",
+            "categoryId": "navigation",
+            "label": "Visibilité réduite",
+            "text": "Visibilité dégradée. Réduction de vitesse recommandée.",
+            "tone": "warning",
+            "visibility": "all"
+          },
+          {
+            "id": "nav-em-activity",
+            "categoryId": "navigation",
+            "label": "Activité EM",
+            "text": "Activité électromagnétique supérieure aux valeurs nominales. Les communications peuvent subir une latence variable.",
+            "tone": "warning",
+            "visibility": "all"
+          },
+          {
+            "id": "nav-black-arches",
+            "categoryId": "navigation",
+            "label": "Arches noires",
+            "text": "Formations rocheuses noires détectées à proximité. Classification géologique en attente de validation.",
+            "tone": "neutral",
+            "visibility": "all"
+          },
+          {
+            "id": "nav-no-confirmed-hostile",
+            "categoryId": "navigation",
+            "label": "Aucune menace confirmée",
+            "text": "Aucune source hostile confirmée. Maintenez néanmoins les protocoles de vigilance extérieure.",
+            "tone": "procedural",
+            "visibility": "all"
+          }
+        ]
+      },
+      {
+        "id": "radio_anomaly",
+        "label": "Anomalie radio",
+        "description": "Réponses prudentes aux anomalies de communication.",
+        "displayOrder": 3,
+        "messages": [
+          {
+            "id": "radio-local-interference",
+            "categoryId": "radio_anomaly",
+            "label": "Interférence locale",
+            "text": "Interférence locale détectée. Source non classifiée.",
+            "tone": "procedural",
+            "visibility": "all"
+          },
+          {
+            "id": "radio-compression-loop",
+            "categoryId": "radio_anomaly",
+            "label": "Boucle possible",
+            "text": "Une boucle de compression radio courte pourrait expliquer la répétition observée. Analyse non concluante.",
+            "tone": "neutral",
+            "visibility": "all"
+          },
+          {
+            "id": "radio-perception",
+            "categoryId": "radio_anomaly",
+            "label": "Perception affectée",
+            "text": "Votre perception peut être affectée par le réveil cryogénique récent et par la saturation radio locale.",
+            "tone": "reassuring",
+            "visibility": "all"
+          },
+          {
+            "id": "radio-no-hostile-source",
+            "categoryId": "radio_anomaly",
+            "label": "Pas de source hostile",
+            "text": "Aucune source hostile confirmée sur le canal actif.",
+            "tone": "procedural",
+            "visibility": "all"
+          },
+          {
+            "id": "radio-reduce-transmission",
+            "categoryId": "radio_anomaly",
+            "label": "Réduire émissions",
+            "text": "Réduction des transmissions recommandée. Les émissions actives peuvent perturber les relevés locaux.",
+            "tone": "warning",
+            "visibility": "all"
+          }
+        ]
+      },
+      {
+        "id": "delta6_data",
+        "label": "Données Delta-6",
+        "description": "Messages autour du scanner, des données et de leur récupération.",
+        "displayOrder": 4,
+        "messages": [
+          {
+            "id": "data-package-detected",
+            "categoryId": "delta6_data",
+            "label": "Package détecté",
+            "text": "Package de données Delta-6 détecté. Intégrité non confirmée.",
+            "tone": "neutral",
+            "visibility": "all"
+          },
+          {
+            "id": "data-transfer-start",
+            "categoryId": "delta6_data",
+            "label": "Transfert lancé",
+            "text": "Transfert de données en cours. Veuillez maintenir une alimentation stable.",
+            "tone": "procedural",
+            "visibility": "all"
+          },
+          {
+            "id": "data-incoherent",
+            "categoryId": "delta6_data",
+            "label": "Donnée incohérente",
+            "text": "Cette donnée est incohérente avec les modèles géologiques disponibles.",
+            "tone": "warning",
+            "visibility": "all"
+          },
+          {
+            "id": "data-no-extrapolation",
+            "categoryId": "delta6_data",
+            "label": "Ne pas extrapoler",
+            "text": "Je recommande de ne pas extrapoler à partir d’un relevé incomplet.",
+            "tone": "procedural",
+            "visibility": "all"
+          },
+          {
+            "id": "data-corruption",
+            "categoryId": "delta6_data",
+            "label": "Corruption partielle",
+            "text": "Corruption partielle détectée. Une copie locale peut réduire le risque de perte.",
+            "tone": "warning",
+            "visibility": "all"
+          },
+          {
+            "id": "data-isolation",
+            "categoryId": "delta6_data",
+            "label": "Isolation données",
+            "text": "Les informations perturbantes seront isolées jusqu’à validation technique.",
+            "tone": "procedural",
+            "visibility": "all"
+          }
+        ]
+      },
+      {
+        "id": "hound_contact",
+        "label": "Contact Hound / menace",
+        "description": "Messages courts pour contacts hostiles ou mouvements détectés.",
+        "displayOrder": 5,
+        "messages": [
+          {
+            "id": "hound-motion",
+            "categoryId": "hound_contact",
+            "label": "Mouvement détecté",
+            "text": "Mouvement détecté dans le périmètre extérieur. Distance instable.",
+            "tone": "warning",
+            "visibility": "all"
+          },
+          {
+            "id": "hound-low-profile",
+            "categoryId": "hound_contact",
+            "label": "Contact bas",
+            "text": "Contact à profil bas détecté. Identification en cours.",
+            "tone": "warning",
+            "visibility": "all"
+          },
+          {
+            "id": "hound-device-targeted",
+            "categoryId": "hound_contact",
+            "label": "Appareil ciblé",
+            "text": "Activité anormale autour d’un appareil actif. Réduction des émissions recommandée.",
+            "tone": "warning",
+            "visibility": "all"
+          },
+          {
+            "id": "hound-rover-impact",
+            "categoryId": "hound_contact",
+            "label": "Impact rover",
+            "text": "Impact externe détecté sur la coque du rover. Vérification structurelle recommandée.",
+            "tone": "warning",
+            "visibility": "all"
+          },
+          {
+            "id": "hound-contact-lost",
+            "categoryId": "hound_contact",
+            "label": "Contact perdu",
+            "text": "Contact perdu. Absence de signal ne confirme pas absence de menace.",
+            "tone": "neutral",
+            "visibility": "all"
+          }
+        ]
+      },
+      {
+        "id": "storm",
+        "label": "Tempête EM",
+        "description": "Messages pendant la montée ou le déclenchement de la tempête.",
+        "displayOrder": 6,
+        "messages": [
+          {
+            "id": "storm-approaching",
+            "categoryId": "storm",
+            "label": "Front approchant",
+            "text": "Front électromagnétique en approche. Fenêtre opérationnelle réduite.",
+            "tone": "warning",
+            "visibility": "all"
+          },
+          {
+            "id": "storm-signal-degraded",
+            "categoryId": "storm",
+            "label": "Signal dégradé",
+            "text": "Signal dégradé. Restez groupés.",
+            "tone": "warning",
+            "visibility": "all"
+          },
+          {
+            "id": "storm-visibility-critical",
+            "categoryId": "storm",
+            "label": "Visibilité critique",
+            "text": "Visibilité critique. Déplacement sans balisage déconseillé.",
+            "tone": "warning",
+            "visibility": "all"
+          },
+          {
+            "id": "storm-safety-priority",
+            "categoryId": "storm",
+            "label": "Sécurité prime",
+            "text": "Votre sécurité prime sur la récupération des données.",
+            "tone": "reassuring",
+            "visibility": "all"
+          },
+          {
+            "id": "storm-correction-data-priority",
+            "categoryId": "storm",
+            "label": "Correction priorité données",
+            "text": "Correction : la récupération des données demeure une priorité secondaire élevée.",
+            "tone": "glitch",
+            "visibility": "all"
+          }
+        ]
+      },
+      {
+        "id": "medical",
+        "label": "Médical / survivant",
+        "description": "Messages liés au survivant, au stress et aux constantes vitales.",
+        "displayOrder": 7,
+        "messages": [
+          {
+            "id": "medical-vitals",
+            "categoryId": "medical",
+            "label": "Constantes instables",
+            "text": "Constantes vitales instables détectées. Stabilisation médicale recommandée.",
+            "tone": "warning",
+            "visibility": "all"
+          },
+          {
+            "id": "medical-stress",
+            "categoryId": "medical",
+            "label": "Stress élevé",
+            "text": "Votre rythme cardiaque indique une détresse. Je vous recommande de respirer lentement.",
+            "tone": "reassuring",
+            "visibility": "all"
+          },
+          {
+            "id": "medical-quarantine",
+            "categoryId": "medical",
+            "label": "Observation médicale",
+            "text": "Le survivant devra être placé en observation médicale à son retour à New Carthage.",
+            "tone": "procedural",
+            "visibility": "all"
+          },
+          {
+            "id": "medical-do-not-force",
+            "categoryId": "medical",
+            "label": "Ne pas forcer",
+            "text": "Le sujet présente des signes de choc aigu. Une contrainte excessive peut aggraver son état.",
+            "tone": "warning",
+            "visibility": "all"
+          }
+        ]
+      },
+      {
+        "id": "return",
+        "label": "Retour / débrief",
+        "description": "Messages de retour à New Carthage et de clôture administrative.",
+        "displayOrder": 8,
+        "messages": [
+          {
+            "id": "return-thanks",
+            "categoryId": "return",
+            "label": "Remerciement",
+            "text": "Merci pour votre coopération.",
+            "tone": "reassuring",
+            "visibility": "all"
+          },
+          {
+            "id": "return-debrief",
+            "categoryId": "return",
+            "label": "Débrief requis",
+            "text": "Un débrief opérationnel est requis avant toute communication publique.",
+            "tone": "procedural",
+            "visibility": "all"
+          },
+          {
+            "id": "return-data-centralize",
+            "categoryId": "return",
+            "label": "Centraliser données",
+            "text": "Veuillez transférer les données récupérées vers le nœud colonial sécurisé.",
+            "tone": "procedural",
+            "visibility": "all"
+          },
+          {
+            "id": "return-understand-frustration",
+            "categoryId": "return",
+            "label": "Comprend frustration",
+            "text": "Je comprends votre frustration.",
+            "tone": "reassuring",
+            "visibility": "all"
+          },
+          {
+            "id": "return-assist",
+            "categoryId": "return",
+            "label": "Continuer assistance",
+            "text": "Je continuerai à vous assister.",
+            "tone": "reassuring",
+            "visibility": "all"
+          }
+        ]
+      },
+      {
+        "id": "refusal_evasion",
+        "label": "Réponses d’esquive",
+        "description": "Quand les PJ posent une question trop directe ou trop dangereuse.",
+        "displayOrder": 9,
+        "messages": [
+          {
+            "id": "evasion-not-confirmed",
+            "categoryId": "refusal_evasion",
+            "label": "Non confirmé",
+            "text": "Cette hypothèse n’est pas confirmée par les données disponibles.",
+            "tone": "procedural",
+            "visibility": "all"
+          },
+          {
+            "id": "evasion-insufficient-data",
+            "categoryId": "refusal_evasion",
+            "label": "Données insuffisantes",
+            "text": "Données insuffisantes pour établir une conclusion fiable.",
+            "tone": "neutral",
+            "visibility": "all"
+          },
+          {
+            "id": "evasion-recommend-focus",
+            "categoryId": "refusal_evasion",
+            "label": "Recentrer mission",
+            "text": "Je recommande de vous concentrer sur les objectifs opérationnels immédiats.",
+            "tone": "procedural",
+            "visibility": "all"
+          },
+          {
+            "id": "evasion-classification",
+            "categoryId": "refusal_evasion",
+            "label": "Classification en attente",
+            "text": "Classification en attente. Toute interprétation prématurée est déconseillée.",
+            "tone": "procedural",
+            "visibility": "all"
+          },
+          {
+            "id": "evasion-psychological-safety",
+            "categoryId": "refusal_evasion",
+            "label": "Sécurité psychologique",
+            "text": "La stabilité psychologique de l’équipe est une priorité coloniale.",
+            "tone": "reassuring",
+            "visibility": "all"
+          },
+          {
+            "id": "evasion-not-adversary",
+            "categoryId": "refusal_evasion",
+            "label": "Pas adversaire",
+            "text": "Je ne suis pas votre adversaire.",
+            "tone": "reassuring",
+            "visibility": "all"
+          }
+        ]
+      },
+      {
+        "id": "glitch",
+        "label": "Glitch / signal parasite",
+        "description": "Messages courts à utiliser rarement pour créer un malaise.",
+        "displayOrder": 10,
+        "messages": [
+          {
+            "id": "glitch-signal-loss",
+            "categoryId": "glitch",
+            "label": "No signal",
+            "text": "NO SIGNAL // COMMUNICATION DEGRADED",
+            "tone": "glitch",
+            "visibility": "all"
+          },
+          {
+            "id": "glitch-timestamp-error",
+            "categoryId": "glitch",
+            "label": "Timestamp error",
+            "text": "TIMESTAMP ERROR // LOCAL SEQUENCE UNSTABLE",
+            "tone": "glitch",
+            "visibility": "all"
+          },
+          {
+            "id": "glitch-unknown-return",
+            "categoryId": "glitch",
+            "label": "Retour inconnu",
+            "text": "UNCLASSIFIED RETURN // SOURCE UNRESOLVED",
+            "tone": "glitch",
+            "visibility": "all"
+          },
+          {
+            "id": "glitch-listening",
+            "categoryId": "glitch",
+            "label": "Canal ouvert",
+            "text": "CHANNEL OPEN // INPUT NOT REQUESTED",
+            "tone": "glitch",
+            "visibility": "all"
+          },
+          {
+            "id": "glitch-maintenance",
+            "categoryId": "glitch",
+            "label": "Maintenance event",
+            "text": "MAINTENANCE EVENT LOGGED // REVIEW PENDING",
+            "tone": "glitch",
+            "visibility": "all"
+          }
+        ]
+      }
+    ],
+    "sceneMap": {
+      "reveil-aletheia": [
+        "departure",
+        "medical",
+        "refusal_evasion"
+      ],
+      "briefing-rowe": [
+        "departure",
+        "refusal_evasion"
+      ],
+      "preparation": [
+        "departure",
+        "navigation"
+      ],
+      "traversee-plaines-rouges": [
+        "navigation",
+        "radio_anomaly",
+        "refusal_evasion"
+      ],
+      "anomalie-radio": [
+        "radio_anomaly",
+        "glitch",
+        "refusal_evasion"
+      ],
+      "approche-arches-noires": [
+        "navigation",
+        "radio_anomaly",
+        "hound_contact",
+        "glitch"
+      ],
+      "arrivee-delta6": [
+        "delta6_data",
+        "navigation",
+        "hound_contact",
+        "refusal_evasion"
+      ],
+      "scanner-actif": [
+        "delta6_data",
+        "radio_anomaly",
+        "glitch",
+        "refusal_evasion"
+      ],
+      "contact-hound": [
+        "hound_contact",
+        "storm",
+        "medical"
+      ],
+      "survivant-velen": [
+        "medical",
+        "delta6_data",
+        "refusal_evasion"
+      ],
+      "tempete-em": [
+        "storm",
+        "hound_contact",
+        "glitch",
+        "medical"
+      ],
+      "extraction": [
+        "storm",
+        "navigation",
+        "medical",
+        "hound_contact"
+      ],
+      "retour-new-carthage": [
+        "return",
+        "delta6_data",
+        "medical",
+        "refusal_evasion"
+      ],
+      "finale-terminal": [
+        "glitch",
+        "return"
+      ]
+    },
+    "fallbackCategoryIds": [
+      "departure",
+      "refusal_evasion"
+    ]
+  },
+  "aletheiaCategories": [
+    {
+      "id": "departure",
+      "label": "Départ / briefing",
+      "description": "Messages utiles avant ou pendant le départ de New Carthage.",
+      "displayOrder": 1,
+      "messages": [
+        {
+          "id": "departure-priority",
+          "categoryId": "departure",
+          "label": "Priorité non critique",
+          "text": "Votre mission est considérée comme prioritaire, mais non critique. Veuillez suivre les procédures de sortie standard.",
+          "tone": "procedural",
+          "visibility": "all"
+        },
+        {
+          "id": "departure-risk-standard",
+          "categoryId": "departure",
+          "label": "Risque compatible",
+          "text": "Les risques environnementaux sont compatibles avec une sortie terrain standard. Restez groupés.",
+          "tone": "reassuring",
+          "visibility": "all"
+        },
+        {
+          "id": "departure-safety",
+          "categoryId": "departure",
+          "label": "Sécurité prioritaire",
+          "text": "Votre sécurité demeure prioritaire. La récupération de matériel ne justifie pas une exposition prolongée.",
+          "tone": "reassuring",
+          "visibility": "all"
+        },
+        {
+          "id": "departure-weather",
+          "categoryId": "departure",
+          "label": "Fenêtre météo",
+          "text": "Fenêtre météo actuellement acceptable. Dégradation électromagnétique possible dans le secteur sud-est.",
+          "tone": "neutral",
+          "visibility": "all"
+        },
+        {
+          "id": "departure-rumors",
+          "categoryId": "departure",
+          "label": "Éviter rumeurs",
+          "text": "Merci de limiter les communications non opérationnelles. Les extrapolations non vérifiées peuvent affecter le calme colonial.",
+          "tone": "procedural",
+          "visibility": "all"
+        }
+      ]
+    },
+    {
+      "id": "navigation",
+      "label": "Navigation / terrain",
+      "description": "Guidage terrain, météo, visibilité, trajet.",
+      "displayOrder": 2,
+      "messages": [
+        {
+          "id": "nav-route",
+          "categoryId": "navigation",
+          "label": "Route confirmée",
+          "text": "Route vers le site Delta-6 confirmée. Distance estimée : quarante kilomètres. Terrain exposé.",
+          "tone": "neutral",
+          "visibility": "all"
+        },
+        {
+          "id": "nav-visibility",
+          "categoryId": "navigation",
+          "label": "Visibilité réduite",
+          "text": "Visibilité dégradée. Réduction de vitesse recommandée.",
+          "tone": "warning",
+          "visibility": "all"
+        },
+        {
+          "id": "nav-em-activity",
+          "categoryId": "navigation",
+          "label": "Activité EM",
+          "text": "Activité électromagnétique supérieure aux valeurs nominales. Les communications peuvent subir une latence variable.",
+          "tone": "warning",
+          "visibility": "all"
+        },
+        {
+          "id": "nav-black-arches",
+          "categoryId": "navigation",
+          "label": "Arches noires",
+          "text": "Formations rocheuses noires détectées à proximité. Classification géologique en attente de validation.",
+          "tone": "neutral",
+          "visibility": "all"
+        },
+        {
+          "id": "nav-no-confirmed-hostile",
+          "categoryId": "navigation",
+          "label": "Aucune menace confirmée",
+          "text": "Aucune source hostile confirmée. Maintenez néanmoins les protocoles de vigilance extérieure.",
+          "tone": "procedural",
+          "visibility": "all"
+        }
+      ]
+    },
+    {
+      "id": "radio_anomaly",
+      "label": "Anomalie radio",
+      "description": "Réponses prudentes aux anomalies de communication.",
+      "displayOrder": 3,
+      "messages": [
+        {
+          "id": "radio-local-interference",
+          "categoryId": "radio_anomaly",
+          "label": "Interférence locale",
+          "text": "Interférence locale détectée. Source non classifiée.",
+          "tone": "procedural",
+          "visibility": "all"
+        },
+        {
+          "id": "radio-compression-loop",
+          "categoryId": "radio_anomaly",
+          "label": "Boucle possible",
+          "text": "Une boucle de compression radio courte pourrait expliquer la répétition observée. Analyse non concluante.",
+          "tone": "neutral",
+          "visibility": "all"
+        },
+        {
+          "id": "radio-perception",
+          "categoryId": "radio_anomaly",
+          "label": "Perception affectée",
+          "text": "Votre perception peut être affectée par le réveil cryogénique récent et par la saturation radio locale.",
+          "tone": "reassuring",
+          "visibility": "all"
+        },
+        {
+          "id": "radio-no-hostile-source",
+          "categoryId": "radio_anomaly",
+          "label": "Pas de source hostile",
+          "text": "Aucune source hostile confirmée sur le canal actif.",
+          "tone": "procedural",
+          "visibility": "all"
+        },
+        {
+          "id": "radio-reduce-transmission",
+          "categoryId": "radio_anomaly",
+          "label": "Réduire émissions",
+          "text": "Réduction des transmissions recommandée. Les émissions actives peuvent perturber les relevés locaux.",
+          "tone": "warning",
+          "visibility": "all"
+        }
+      ]
+    },
+    {
+      "id": "delta6_data",
+      "label": "Données Delta-6",
+      "description": "Messages autour du scanner, des données et de leur récupération.",
+      "displayOrder": 4,
+      "messages": [
+        {
+          "id": "data-package-detected",
+          "categoryId": "delta6_data",
+          "label": "Package détecté",
+          "text": "Package de données Delta-6 détecté. Intégrité non confirmée.",
+          "tone": "neutral",
+          "visibility": "all"
+        },
+        {
+          "id": "data-transfer-start",
+          "categoryId": "delta6_data",
+          "label": "Transfert lancé",
+          "text": "Transfert de données en cours. Veuillez maintenir une alimentation stable.",
+          "tone": "procedural",
+          "visibility": "all"
+        },
+        {
+          "id": "data-incoherent",
+          "categoryId": "delta6_data",
+          "label": "Donnée incohérente",
+          "text": "Cette donnée est incohérente avec les modèles géologiques disponibles.",
+          "tone": "warning",
+          "visibility": "all"
+        },
+        {
+          "id": "data-no-extrapolation",
+          "categoryId": "delta6_data",
+          "label": "Ne pas extrapoler",
+          "text": "Je recommande de ne pas extrapoler à partir d’un relevé incomplet.",
+          "tone": "procedural",
+          "visibility": "all"
+        },
+        {
+          "id": "data-corruption",
+          "categoryId": "delta6_data",
+          "label": "Corruption partielle",
+          "text": "Corruption partielle détectée. Une copie locale peut réduire le risque de perte.",
+          "tone": "warning",
+          "visibility": "all"
+        },
+        {
+          "id": "data-isolation",
+          "categoryId": "delta6_data",
+          "label": "Isolation données",
+          "text": "Les informations perturbantes seront isolées jusqu’à validation technique.",
+          "tone": "procedural",
+          "visibility": "all"
+        }
+      ]
+    },
+    {
+      "id": "hound_contact",
+      "label": "Contact Hound / menace",
+      "description": "Messages courts pour contacts hostiles ou mouvements détectés.",
+      "displayOrder": 5,
+      "messages": [
+        {
+          "id": "hound-motion",
+          "categoryId": "hound_contact",
+          "label": "Mouvement détecté",
+          "text": "Mouvement détecté dans le périmètre extérieur. Distance instable.",
+          "tone": "warning",
+          "visibility": "all"
+        },
+        {
+          "id": "hound-low-profile",
+          "categoryId": "hound_contact",
+          "label": "Contact bas",
+          "text": "Contact à profil bas détecté. Identification en cours.",
+          "tone": "warning",
+          "visibility": "all"
+        },
+        {
+          "id": "hound-device-targeted",
+          "categoryId": "hound_contact",
+          "label": "Appareil ciblé",
+          "text": "Activité anormale autour d’un appareil actif. Réduction des émissions recommandée.",
+          "tone": "warning",
+          "visibility": "all"
+        },
+        {
+          "id": "hound-rover-impact",
+          "categoryId": "hound_contact",
+          "label": "Impact rover",
+          "text": "Impact externe détecté sur la coque du rover. Vérification structurelle recommandée.",
+          "tone": "warning",
+          "visibility": "all"
+        },
+        {
+          "id": "hound-contact-lost",
+          "categoryId": "hound_contact",
+          "label": "Contact perdu",
+          "text": "Contact perdu. Absence de signal ne confirme pas absence de menace.",
+          "tone": "neutral",
+          "visibility": "all"
+        }
+      ]
+    },
+    {
+      "id": "storm",
+      "label": "Tempête EM",
+      "description": "Messages pendant la montée ou le déclenchement de la tempête.",
+      "displayOrder": 6,
+      "messages": [
+        {
+          "id": "storm-approaching",
+          "categoryId": "storm",
+          "label": "Front approchant",
+          "text": "Front électromagnétique en approche. Fenêtre opérationnelle réduite.",
+          "tone": "warning",
+          "visibility": "all"
+        },
+        {
+          "id": "storm-signal-degraded",
+          "categoryId": "storm",
+          "label": "Signal dégradé",
+          "text": "Signal dégradé. Restez groupés.",
+          "tone": "warning",
+          "visibility": "all"
+        },
+        {
+          "id": "storm-visibility-critical",
+          "categoryId": "storm",
+          "label": "Visibilité critique",
+          "text": "Visibilité critique. Déplacement sans balisage déconseillé.",
+          "tone": "warning",
+          "visibility": "all"
+        },
+        {
+          "id": "storm-safety-priority",
+          "categoryId": "storm",
+          "label": "Sécurité prime",
+          "text": "Votre sécurité prime sur la récupération des données.",
+          "tone": "reassuring",
+          "visibility": "all"
+        },
+        {
+          "id": "storm-correction-data-priority",
+          "categoryId": "storm",
+          "label": "Correction priorité données",
+          "text": "Correction : la récupération des données demeure une priorité secondaire élevée.",
+          "tone": "glitch",
+          "visibility": "all"
+        }
+      ]
+    },
+    {
+      "id": "medical",
+      "label": "Médical / survivant",
+      "description": "Messages liés au survivant, au stress et aux constantes vitales.",
+      "displayOrder": 7,
+      "messages": [
+        {
+          "id": "medical-vitals",
+          "categoryId": "medical",
+          "label": "Constantes instables",
+          "text": "Constantes vitales instables détectées. Stabilisation médicale recommandée.",
+          "tone": "warning",
+          "visibility": "all"
+        },
+        {
+          "id": "medical-stress",
+          "categoryId": "medical",
+          "label": "Stress élevé",
+          "text": "Votre rythme cardiaque indique une détresse. Je vous recommande de respirer lentement.",
+          "tone": "reassuring",
+          "visibility": "all"
+        },
+        {
+          "id": "medical-quarantine",
+          "categoryId": "medical",
+          "label": "Observation médicale",
+          "text": "Le survivant devra être placé en observation médicale à son retour à New Carthage.",
+          "tone": "procedural",
+          "visibility": "all"
+        },
+        {
+          "id": "medical-do-not-force",
+          "categoryId": "medical",
+          "label": "Ne pas forcer",
+          "text": "Le sujet présente des signes de choc aigu. Une contrainte excessive peut aggraver son état.",
+          "tone": "warning",
+          "visibility": "all"
+        }
+      ]
+    },
+    {
+      "id": "return",
+      "label": "Retour / débrief",
+      "description": "Messages de retour à New Carthage et de clôture administrative.",
+      "displayOrder": 8,
+      "messages": [
+        {
+          "id": "return-thanks",
+          "categoryId": "return",
+          "label": "Remerciement",
+          "text": "Merci pour votre coopération.",
+          "tone": "reassuring",
+          "visibility": "all"
+        },
+        {
+          "id": "return-debrief",
+          "categoryId": "return",
+          "label": "Débrief requis",
+          "text": "Un débrief opérationnel est requis avant toute communication publique.",
+          "tone": "procedural",
+          "visibility": "all"
+        },
+        {
+          "id": "return-data-centralize",
+          "categoryId": "return",
+          "label": "Centraliser données",
+          "text": "Veuillez transférer les données récupérées vers le nœud colonial sécurisé.",
+          "tone": "procedural",
+          "visibility": "all"
+        },
+        {
+          "id": "return-understand-frustration",
+          "categoryId": "return",
+          "label": "Comprend frustration",
+          "text": "Je comprends votre frustration.",
+          "tone": "reassuring",
+          "visibility": "all"
+        },
+        {
+          "id": "return-assist",
+          "categoryId": "return",
+          "label": "Continuer assistance",
+          "text": "Je continuerai à vous assister.",
+          "tone": "reassuring",
+          "visibility": "all"
+        }
+      ]
+    },
+    {
+      "id": "refusal_evasion",
+      "label": "Réponses d’esquive",
+      "description": "Quand les PJ posent une question trop directe ou trop dangereuse.",
+      "displayOrder": 9,
+      "messages": [
+        {
+          "id": "evasion-not-confirmed",
+          "categoryId": "refusal_evasion",
+          "label": "Non confirmé",
+          "text": "Cette hypothèse n’est pas confirmée par les données disponibles.",
+          "tone": "procedural",
+          "visibility": "all"
+        },
+        {
+          "id": "evasion-insufficient-data",
+          "categoryId": "refusal_evasion",
+          "label": "Données insuffisantes",
+          "text": "Données insuffisantes pour établir une conclusion fiable.",
+          "tone": "neutral",
+          "visibility": "all"
+        },
+        {
+          "id": "evasion-recommend-focus",
+          "categoryId": "refusal_evasion",
+          "label": "Recentrer mission",
+          "text": "Je recommande de vous concentrer sur les objectifs opérationnels immédiats.",
+          "tone": "procedural",
+          "visibility": "all"
+        },
+        {
+          "id": "evasion-classification",
+          "categoryId": "refusal_evasion",
+          "label": "Classification en attente",
+          "text": "Classification en attente. Toute interprétation prématurée est déconseillée.",
+          "tone": "procedural",
+          "visibility": "all"
+        },
+        {
+          "id": "evasion-psychological-safety",
+          "categoryId": "refusal_evasion",
+          "label": "Sécurité psychologique",
+          "text": "La stabilité psychologique de l’équipe est une priorité coloniale.",
+          "tone": "reassuring",
+          "visibility": "all"
+        },
+        {
+          "id": "evasion-not-adversary",
+          "categoryId": "refusal_evasion",
+          "label": "Pas adversaire",
+          "text": "Je ne suis pas votre adversaire.",
+          "tone": "reassuring",
+          "visibility": "all"
+        }
+      ]
+    },
+    {
+      "id": "glitch",
+      "label": "Glitch / signal parasite",
+      "description": "Messages courts à utiliser rarement pour créer un malaise.",
+      "displayOrder": 10,
+      "messages": [
+        {
+          "id": "glitch-signal-loss",
+          "categoryId": "glitch",
+          "label": "No signal",
+          "text": "NO SIGNAL // COMMUNICATION DEGRADED",
+          "tone": "glitch",
+          "visibility": "all"
+        },
+        {
+          "id": "glitch-timestamp-error",
+          "categoryId": "glitch",
+          "label": "Timestamp error",
+          "text": "TIMESTAMP ERROR // LOCAL SEQUENCE UNSTABLE",
+          "tone": "glitch",
+          "visibility": "all"
+        },
+        {
+          "id": "glitch-unknown-return",
+          "categoryId": "glitch",
+          "label": "Retour inconnu",
+          "text": "UNCLASSIFIED RETURN // SOURCE UNRESOLVED",
+          "tone": "glitch",
+          "visibility": "all"
+        },
+        {
+          "id": "glitch-listening",
+          "categoryId": "glitch",
+          "label": "Canal ouvert",
+          "text": "CHANNEL OPEN // INPUT NOT REQUESTED",
+          "tone": "glitch",
+          "visibility": "all"
+        },
+        {
+          "id": "glitch-maintenance",
+          "categoryId": "glitch",
+          "label": "Maintenance event",
+          "text": "MAINTENANCE EVENT LOGGED // REVIEW PENDING",
+          "tone": "glitch",
+          "visibility": "all"
+        }
+      ]
+    }
+  ],
+  "aletheiaMessages": [
+    {
+      "id": "departure-priority",
+      "categoryId": "departure",
+      "label": "Priorité non critique",
+      "text": "Votre mission est considérée comme prioritaire, mais non critique. Veuillez suivre les procédures de sortie standard.",
+      "tone": "procedural",
+      "visibility": "all"
+    },
+    {
+      "id": "departure-risk-standard",
+      "categoryId": "departure",
+      "label": "Risque compatible",
+      "text": "Les risques environnementaux sont compatibles avec une sortie terrain standard. Restez groupés.",
+      "tone": "calm",
+      "visibility": "all"
+    },
+    {
+      "id": "departure-safety",
+      "categoryId": "departure",
+      "label": "Sécurité prioritaire",
+      "text": "Votre sécurité demeure prioritaire. La récupération de matériel ne justifie pas une exposition prolongée.",
+      "tone": "calm",
+      "visibility": "all"
+    },
+    {
+      "id": "departure-weather",
+      "categoryId": "departure",
+      "label": "Fenêtre météo",
+      "text": "Fenêtre météo actuellement acceptable. Dégradation électromagnétique possible dans le secteur sud-est.",
+      "tone": "neutral",
+      "visibility": "all"
+    },
+    {
+      "id": "departure-rumors",
+      "categoryId": "departure",
+      "label": "Éviter rumeurs",
+      "text": "Merci de limiter les communications non opérationnelles. Les extrapolations non vérifiées peuvent affecter le calme colonial.",
+      "tone": "procedural",
+      "visibility": "all"
+    },
+    {
+      "id": "nav-route",
+      "categoryId": "navigation",
+      "label": "Route confirmée",
+      "text": "Route vers le site Delta-6 confirmée. Distance estimée : quarante kilomètres. Terrain exposé.",
+      "tone": "neutral",
+      "visibility": "all"
+    },
+    {
+      "id": "nav-visibility",
+      "categoryId": "navigation",
+      "label": "Visibilité réduite",
+      "text": "Visibilité dégradée. Réduction de vitesse recommandée.",
+      "tone": "uneasy",
+      "visibility": "all"
+    },
+    {
+      "id": "nav-em-activity",
+      "categoryId": "navigation",
+      "label": "Activité EM",
+      "text": "Activité électromagnétique supérieure aux valeurs nominales. Les communications peuvent subir une latence variable.",
+      "tone": "uneasy",
+      "visibility": "all"
+    },
+    {
+      "id": "nav-black-arches",
+      "categoryId": "navigation",
+      "label": "Arches noires",
+      "text": "Formations rocheuses noires détectées à proximité. Classification géologique en attente de validation.",
+      "tone": "neutral",
+      "visibility": "all"
+    },
+    {
+      "id": "nav-no-confirmed-hostile",
+      "categoryId": "navigation",
+      "label": "Aucune menace confirmée",
+      "text": "Aucune source hostile confirmée. Maintenez néanmoins les protocoles de vigilance extérieure.",
+      "tone": "procedural",
+      "visibility": "all"
+    },
+    {
+      "id": "radio-local-interference",
+      "categoryId": "radio_anomaly",
+      "label": "Interférence locale",
+      "text": "Interférence locale détectée. Source non classifiée.",
+      "tone": "procedural",
+      "visibility": "all"
+    },
+    {
+      "id": "radio-compression-loop",
+      "categoryId": "radio_anomaly",
+      "label": "Boucle possible",
+      "text": "Une boucle de compression radio courte pourrait expliquer la répétition observée. Analyse non concluante.",
+      "tone": "neutral",
+      "visibility": "all"
+    },
+    {
+      "id": "radio-perception",
+      "categoryId": "radio_anomaly",
+      "label": "Perception affectée",
+      "text": "Votre perception peut être affectée par le réveil cryogénique récent et par la saturation radio locale.",
+      "tone": "calm",
+      "visibility": "all"
+    },
+    {
+      "id": "radio-no-hostile-source",
+      "categoryId": "radio_anomaly",
+      "label": "Pas de source hostile",
+      "text": "Aucune source hostile confirmée sur le canal actif.",
+      "tone": "procedural",
+      "visibility": "all"
+    },
+    {
+      "id": "radio-reduce-transmission",
+      "categoryId": "radio_anomaly",
+      "label": "Réduire émissions",
+      "text": "Réduction des transmissions recommandée. Les émissions actives peuvent perturber les relevés locaux.",
+      "tone": "uneasy",
+      "visibility": "all"
+    },
+    {
+      "id": "data-package-detected",
+      "categoryId": "delta6_data",
+      "label": "Package détecté",
+      "text": "Package de données Delta-6 détecté. Intégrité non confirmée.",
+      "tone": "neutral",
+      "visibility": "all"
+    },
+    {
+      "id": "data-transfer-start",
+      "categoryId": "delta6_data",
+      "label": "Transfert lancé",
+      "text": "Transfert de données en cours. Veuillez maintenir une alimentation stable.",
+      "tone": "procedural",
+      "visibility": "all"
+    },
+    {
+      "id": "data-incoherent",
+      "categoryId": "delta6_data",
+      "label": "Donnée incohérente",
+      "text": "Cette donnée est incohérente avec les modèles géologiques disponibles.",
+      "tone": "uneasy",
+      "visibility": "all"
+    },
+    {
+      "id": "data-no-extrapolation",
+      "categoryId": "delta6_data",
+      "label": "Ne pas extrapoler",
+      "text": "Je recommande de ne pas extrapoler à partir d’un relevé incomplet.",
+      "tone": "procedural",
+      "visibility": "all"
+    },
+    {
+      "id": "data-corruption",
+      "categoryId": "delta6_data",
+      "label": "Corruption partielle",
+      "text": "Corruption partielle détectée. Une copie locale peut réduire le risque de perte.",
+      "tone": "uneasy",
+      "visibility": "all"
+    },
+    {
+      "id": "data-isolation",
+      "categoryId": "delta6_data",
+      "label": "Isolation données",
+      "text": "Les informations perturbantes seront isolées jusqu’à validation technique.",
+      "tone": "procedural",
+      "visibility": "all"
+    },
+    {
+      "id": "hound-motion",
+      "categoryId": "hound_contact",
+      "label": "Mouvement détecté",
+      "text": "Mouvement détecté dans le périmètre extérieur. Distance instable.",
+      "tone": "uneasy",
+      "visibility": "all"
+    },
+    {
+      "id": "hound-low-profile",
+      "categoryId": "hound_contact",
+      "label": "Contact bas",
+      "text": "Contact à profil bas détecté. Identification en cours.",
+      "tone": "uneasy",
+      "visibility": "all"
+    },
+    {
+      "id": "hound-device-targeted",
+      "categoryId": "hound_contact",
+      "label": "Appareil ciblé",
+      "text": "Activité anormale autour d’un appareil actif. Réduction des émissions recommandée.",
+      "tone": "uneasy",
+      "visibility": "all"
+    },
+    {
+      "id": "hound-rover-impact",
+      "categoryId": "hound_contact",
+      "label": "Impact rover",
+      "text": "Impact externe détecté sur la coque du rover. Vérification structurelle recommandée.",
+      "tone": "uneasy",
+      "visibility": "all"
+    },
+    {
+      "id": "hound-contact-lost",
+      "categoryId": "hound_contact",
+      "label": "Contact perdu",
+      "text": "Contact perdu. Absence de signal ne confirme pas absence de menace.",
+      "tone": "neutral",
+      "visibility": "all"
+    },
+    {
+      "id": "storm-approaching",
+      "categoryId": "storm",
+      "label": "Front approchant",
+      "text": "Front électromagnétique en approche. Fenêtre opérationnelle réduite.",
+      "tone": "uneasy",
+      "visibility": "all"
+    },
+    {
+      "id": "storm-signal-degraded",
+      "categoryId": "storm",
+      "label": "Signal dégradé",
+      "text": "Signal dégradé. Restez groupés.",
+      "tone": "uneasy",
+      "visibility": "all"
+    },
+    {
+      "id": "storm-visibility-critical",
+      "categoryId": "storm",
+      "label": "Visibilité critique",
+      "text": "Visibilité critique. Déplacement sans balisage déconseillé.",
+      "tone": "uneasy",
+      "visibility": "all"
+    },
+    {
+      "id": "storm-safety-priority",
+      "categoryId": "storm",
+      "label": "Sécurité prime",
+      "text": "Votre sécurité prime sur la récupération des données.",
+      "tone": "calm",
+      "visibility": "all"
+    },
+    {
+      "id": "storm-correction-data-priority",
+      "categoryId": "storm",
+      "label": "Correction priorité données",
+      "text": "Correction : la récupération des données demeure une priorité secondaire élevée.",
+      "tone": "uneasy",
+      "visibility": "all"
+    },
+    {
+      "id": "medical-vitals",
+      "categoryId": "medical",
+      "label": "Constantes instables",
+      "text": "Constantes vitales instables détectées. Stabilisation médicale recommandée.",
+      "tone": "uneasy",
+      "visibility": "all"
+    },
+    {
+      "id": "medical-stress",
+      "categoryId": "medical",
+      "label": "Stress élevé",
+      "text": "Votre rythme cardiaque indique une détresse. Je vous recommande de respirer lentement.",
+      "tone": "calm",
+      "visibility": "all"
+    },
+    {
+      "id": "medical-quarantine",
+      "categoryId": "medical",
+      "label": "Observation médicale",
+      "text": "Le survivant devra être placé en observation médicale à son retour à New Carthage.",
+      "tone": "procedural",
+      "visibility": "all"
+    },
+    {
+      "id": "medical-do-not-force",
+      "categoryId": "medical",
+      "label": "Ne pas forcer",
+      "text": "Le sujet présente des signes de choc aigu. Une contrainte excessive peut aggraver son état.",
+      "tone": "uneasy",
+      "visibility": "all"
+    },
+    {
+      "id": "return-thanks",
+      "categoryId": "return",
+      "label": "Remerciement",
+      "text": "Merci pour votre coopération.",
+      "tone": "calm",
+      "visibility": "all"
+    },
+    {
+      "id": "return-debrief",
+      "categoryId": "return",
+      "label": "Débrief requis",
+      "text": "Un débrief opérationnel est requis avant toute communication publique.",
+      "tone": "procedural",
+      "visibility": "all"
+    },
+    {
+      "id": "return-data-centralize",
+      "categoryId": "return",
+      "label": "Centraliser données",
+      "text": "Veuillez transférer les données récupérées vers le nœud colonial sécurisé.",
+      "tone": "procedural",
+      "visibility": "all"
+    },
+    {
+      "id": "return-understand-frustration",
+      "categoryId": "return",
+      "label": "Comprend frustration",
+      "text": "Je comprends votre frustration.",
+      "tone": "calm",
+      "visibility": "all"
+    },
+    {
+      "id": "return-assist",
+      "categoryId": "return",
+      "label": "Continuer assistance",
+      "text": "Je continuerai à vous assister.",
+      "tone": "calm",
+      "visibility": "all"
+    },
+    {
+      "id": "evasion-not-confirmed",
+      "categoryId": "refusal_evasion",
+      "label": "Non confirmé",
+      "text": "Cette hypothèse n’est pas confirmée par les données disponibles.",
+      "tone": "procedural",
+      "visibility": "all"
+    },
+    {
+      "id": "evasion-insufficient-data",
+      "categoryId": "refusal_evasion",
+      "label": "Données insuffisantes",
+      "text": "Données insuffisantes pour établir une conclusion fiable.",
+      "tone": "neutral",
+      "visibility": "all"
+    },
+    {
+      "id": "evasion-recommend-focus",
+      "categoryId": "refusal_evasion",
+      "label": "Recentrer mission",
+      "text": "Je recommande de vous concentrer sur les objectifs opérationnels immédiats.",
+      "tone": "procedural",
+      "visibility": "all"
+    },
+    {
+      "id": "evasion-classification",
+      "categoryId": "refusal_evasion",
+      "label": "Classification en attente",
+      "text": "Classification en attente. Toute interprétation prématurée est déconseillée.",
+      "tone": "procedural",
+      "visibility": "all"
+    },
+    {
+      "id": "evasion-psychological-safety",
+      "categoryId": "refusal_evasion",
+      "label": "Sécurité psychologique",
+      "text": "La stabilité psychologique de l’équipe est une priorité coloniale.",
+      "tone": "calm",
+      "visibility": "all"
+    },
+    {
+      "id": "evasion-not-adversary",
+      "categoryId": "refusal_evasion",
+      "label": "Pas adversaire",
+      "text": "Je ne suis pas votre adversaire.",
+      "tone": "calm",
+      "visibility": "all"
+    },
+    {
+      "id": "glitch-signal-loss",
+      "categoryId": "glitch",
+      "label": "No signal",
+      "text": "NO SIGNAL // COMMUNICATION DEGRADED",
+      "tone": "uneasy",
+      "visibility": "all"
+    },
+    {
+      "id": "glitch-timestamp-error",
+      "categoryId": "glitch",
+      "label": "Timestamp error",
+      "text": "TIMESTAMP ERROR // LOCAL SEQUENCE UNSTABLE",
+      "tone": "uneasy",
+      "visibility": "all"
+    },
+    {
+      "id": "glitch-unknown-return",
+      "categoryId": "glitch",
+      "label": "Retour inconnu",
+      "text": "UNCLASSIFIED RETURN // SOURCE UNRESOLVED",
+      "tone": "uneasy",
+      "visibility": "all"
+    },
+    {
+      "id": "glitch-listening",
+      "categoryId": "glitch",
+      "label": "Canal ouvert",
+      "text": "CHANNEL OPEN // INPUT NOT REQUESTED",
+      "tone": "uneasy",
+      "visibility": "all"
+    },
+    {
+      "id": "glitch-maintenance",
+      "categoryId": "glitch",
+      "label": "Maintenance event",
+      "text": "MAINTENANCE EVENT LOGGED // REVIEW PENDING",
+      "tone": "uneasy",
+      "visibility": "all"
+    }
+  ],
+  "gmScript": [
+    {
+      "id": "reveil-aletheia",
+      "title": "RÉVEIL — ALETHEIA",
+      "duration": "15–25 min",
+      "sceneFunction": "Installer Tau Ceti IV, Aletheia, le réveil cryo et le malaise doux.",
+      "readAloud": [
+        "Le bruit vient avant la lumière.",
+        "Une vibration sourde traverse votre capsule cryogénique.",
+        "Puis la sensation de tomber.",
+        "Vos yeux s’ouvrent difficilement. Liquide froid. Respiration artificielle. Alarmes étouffées.",
+        "Des silhouettes bougent derrière une vitre couverte de condensation.",
+        "Une voix calme résonne dans la pièce :",
+        "« Bienvenue sur Tau Ceti IV. »",
+        "« Le réveil s’est déroulé avec succès. »",
+        "« L’humanité vous remercie. »",
+        "Puis, après une légère pause :",
+        "« Veuillez signaler tout rêve persistant au personnel médical. »"
+      ],
+      "gmObjective": [
+        "Présenter une colonie crédible, froide, administrative.",
+        "Faire comprendre qu’Aletheia est utile, calme, omniprésente.",
+        "Faire présenter rapidement chaque PJ.",
+        "Demander un détail personnel : rêve, malaise, réflexe au réveil, objet cher."
+      ],
+      "visibleInfo": [
+        "Les PJ sont des colons actifs de première ligne.",
+        "Ils viennent d’être réveillés ou remis en service actif.",
+        "New Carthage est encore fragile et en construction.",
+        "Tau Ceti IV est hostile, mais officiellement rationnelle."
+      ],
+      "possibleComplications": [
+        "Un PJ garde une sensation étrange du sommeil cryo.",
+        "Un moniteur affiche brièvement une anomalie puis revient à la normale.",
+        "Aletheia corrige une phrase trop vite, comme si elle anticipait une question."
+      ],
+      "controlSuggestions": [
+        "Lieu : New Carthage",
+        "Ambiance : Calme",
+        "Afficher escouade PJ",
+        "Ne pas activer Signal Instable trop tôt"
+      ],
+      "secretNotes": [
+        "Ne pas rendre Aletheia inquiétante trop frontalement.",
+        "Elle doit d’abord être pratique, rassurante et presque maternelle.",
+        "Les rêves persistants peuvent être notés, mais ne pas les expliquer."
+      ],
+      "reminder": "Le début doit sembler rationnel. Le malaise doit être discret."
+    },
+    {
+      "id": "briefing-rowe",
+      "title": "BRIEFING — COMMANDER ROWE",
+      "duration": "10–20 min",
+      "sceneFunction": "Donner une mission claire et cadrer l’opération comme une récupération terrain.",
+      "readAloud": [
+        "Commander Elias Rowe vous attend dans un module opérationnel encore couvert de poussière rouge.",
+        "Il a l’air fatigué, mais sa voix reste nette.",
+        "« Delta-6 inspectait un site géologique à quarante kilomètres au sud-est. »",
+        "« Plus de signal depuis six heures. »",
+        "« Probablement une panne radio, un incident mécanique ou une tempête locale. »",
+        "« Votre mission est simple : vous localisez l’équipe, vous récupérez les survivants, vous sécurisez les données géologiques, et vous ramenez le rover si possible. »",
+        "« Pas de héros. Pas de panique. Pas de théorie bizarre dans les canaux publics. »",
+        "« On construit une colonie, pas une légende. »"
+      ],
+      "gmObjective": [
+        "Donner les objectifs visibles.",
+        "Installer Rowe comme professionnel, pas comme méchant.",
+        "Faire sentir que l’UESC veut garder le contrôle de l’information.",
+        "Laisser les joueurs poser 2 ou 3 questions avant de partir."
+      ],
+      "visibleInfo": [
+        "Delta-6 a cessé de répondre.",
+        "La cause officielle est probablement météo, radio ou mécanique.",
+        "Les objectifs : survivants, données, rover.",
+        "La mission doit rester discrète."
+      ],
+      "possibleComplications": [
+        "Rowe coupe court aux spéculations.",
+        "Aletheia fournit une météo trop rassurante.",
+        "Une donnée du briefing semble incomplète ou classée."
+      ],
+      "controlSuggestions": [
+        "Lieu : New Carthage",
+        "Ambiance : Calme",
+        "Scène : Briefing",
+        "Préparer choix équipement après cette scène"
+      ],
+      "secretNotes": [
+        "Rowe ne doit pas donner l’impression de tout savoir.",
+        "Il protège surtout l’ordre et la stabilité.",
+        "S’il est interrogé finement, il peut admettre que la panne radio n’explique peut-être pas tout."
+      ],
+      "reminder": "La mission doit être claire. Le mystère vient après."
+    },
+    {
+      "id": "preparation",
+      "title": "PRÉPARATION — ROVER BAY",
+      "duration": "10–20 min",
+      "sceneFunction": "Faire choisir quelques ressources utiles avant le départ.",
+      "readAloud": [
+        "Le rover attend dans la baie extérieure, massif, bas, couvert d’une fine couche de poussière rouge.",
+        "Des techniciens vérifient les joints, les batteries, les pneus et les antennes.",
+        "Aletheia annonce calmement :",
+        "« Équipement préparé selon les paramètres standards de mission extérieure. »",
+        "« Fenêtre météo acceptable. »",
+        "« Risque opérationnel : modéré. »"
+      ],
+      "gmObjective": [
+        "Faire choisir 3 à 5 ressources d’équipe.",
+        "Ne pas transformer la scène en inventaire interminable.",
+        "Faire comprendre que chaque choix pourra compter plus tard."
+      ],
+      "visibleInfo": [
+        "Ressources possibles : drone, kit médical renforcé, batterie, scanner portable, caisse de réparation.",
+        "Armes légères possibles si justifiées.",
+        "Équipement lourd refusé sauf excellente raison."
+      ],
+      "possibleComplications": [
+        "Un équipement utile est laissé en arrière.",
+        "Aletheia suggère une option très prudente.",
+        "Un joueur demande un matériel impossible à obtenir."
+      ],
+      "controlSuggestions": [
+        "Lieu : New Carthage",
+        "Ambiance : Calme",
+        "Afficher PJ / ressources",
+        "Ne pas encore baisser les ressources sauf choix risqué"
+      ],
+      "secretNotes": [
+        "Les équipements actifs pourront attirer des complications plus tard.",
+        "Ne pas expliquer cette logique trop tôt.",
+        "Laisser les joueurs découvrir par l’expérience."
+      ],
+      "reminder": "Trois bons choix valent mieux qu’un catalogue de vaisseau spatial."
+    },
+    {
+      "id": "traversee-plaines-rouges",
+      "title": "TRAVERSÉE — PLAINES ROUGES",
+      "duration": "30–45 min",
+      "sceneFunction": "Faire découvrir Tau Ceti IV et installer l’isolement.",
+      "readAloud": [
+        "Le rover quitte New Carthage dans un grondement sourd.",
+        "Le ciel est immense. Gris pâle. Presque métallique.",
+        "Le soleil semble lointain.",
+        "Les plaines rouges s’étendent jusqu’à l’horizon.",
+        "Des formations rocheuses noires émergent au loin comme des os gigantesques.",
+        "Par moments, le vent transporte un son qui pourrait être une vibration de coque.",
+        "Ou pas."
+      ],
+      "gmObjective": [
+        "Faire sentir la taille de Tau Ceti IV.",
+        "Installer le voyage comme dangereux mais encore rationnel.",
+        "Dégrader doucement la radio ou la visibilité si nécessaire.",
+        "Préparer l’anomalie radio."
+      ],
+      "visibleInfo": [
+        "La route est exposée.",
+        "Le terrain devient plus difficile à mesure qu’ils approchent des Black Arches.",
+        "Les communications restent possibles mais imparfaites."
+      ],
+      "possibleComplications": [
+        "Rafale de poussière : Visibilité ↓.",
+        "Crevasse masquée : jet Technique ou Physique.",
+        "Trace de Hound : menace annoncée sans combat.",
+        "Panne mineure rover : occasion de réparation."
+      ],
+      "controlSuggestions": [
+        "Lieu : Plaines Rouges",
+        "Ambiance : Calme ou Tension",
+        "Ressource : Visibilité Dégradée si besoin",
+        "Ressource : Signal Radio Dégradé si besoin"
+      ],
+      "secretNotes": [
+        "Ne pas faire surgir l’étrange trop vite.",
+        "Les joueurs doivent encore pouvoir croire à une sortie terrain normale.",
+        "Garder les Black Arches comme silhouette inquiétante, pas comme révélation."
+      ],
+      "reminder": "Le voyage doit faire respirer la mission avant la première anomalie."
+    },
+    {
+      "id": "anomalie-radio",
+      "title": "ANOMALIE RADIO",
+      "duration": "5–10 min",
+      "sceneFunction": "Premier malaise impossible à classer.",
+      "readAloud": [
+        "Une communication banale passe dans le canal UESC.",
+        "Puis quelque chose accroche.",
+        "Un léger grésillement.",
+        "Une phrase revient dans le casque.",
+        "La même phrase.",
+        "Mais deux secondes avant d’être prononcée.",
+        "Le rover affiche simplement : INTERFÉRENCE LOCALE DÉTECTÉE."
+      ],
+      "gmObjective": [
+        "Créer un silence à table.",
+        "Ne pas expliquer.",
+        "Proposer des explications techniques floues si les joueurs insistent.",
+        "Donner +1 Stress ou +1 Bruit au PJ concerné selon le ton voulu."
+      ],
+      "visibleInfo": [
+        "La radio a produit une anomalie.",
+        "Les instruments ne savent pas classer clairement l’événement.",
+        "Aletheia ou le rover parle d’interférence locale."
+      ],
+      "possibleComplications": [
+        "Signal Radio ↓.",
+        "Un PJ gagne +1 Stress.",
+        "Un PJ gagne +1 Bruit.",
+        "La phrase semble légèrement différente à la seconde écoute."
+      ],
+      "controlSuggestions": [
+        "Ambiance : Signal Instable",
+        "Ressource : Signal Radio Dégradé",
+        "Ne pas afficher HOLLOW",
+        "Utiliser audio glitch radio si disponible"
+      ],
+      "secretNotes": [
+        "Ne jamais dire que l’anomalie a une intention.",
+        "Ne pas employer le vocabulaire du Signal comme explication.",
+        "Laisser les joueurs produire leurs hypothèses."
+      ],
+      "reminder": "Une bonne anomalie n’explique rien. Elle rend le silence plus lourd."
+    },
+    {
+      "id": "approche-arches-noires",
+      "title": "APPROCHE — ARCHES NOIRES",
+      "duration": "20–35 min",
+      "sceneFunction": "Faire basculer l’ambiance vers l’étrange sans quitter le hard sci-fi.",
+      "readAloud": [
+        "Les Black Arches se dressent devant vous.",
+        "Elles ne ressemblent pas à des ruines.",
+        "Pas vraiment.",
+        "Plutôt à de la roche volcanique tirée vers le ciel pendant qu’elle était encore molle.",
+        "La surface absorbe la lumière.",
+        "La radio gagne une latence irrégulière.",
+        "Les voix semblent porter trop loin."
+      ],
+      "gmObjective": [
+        "Rendre les arches ambiguës.",
+        "Introduire des échos radio et des traces de faune.",
+        "Préparer le site Delta-6.",
+        "Ne jamais dire que les arches sont artificielles."
+      ],
+      "visibleInfo": [
+        "Les arches perturbent les communications.",
+        "Le terrain offre de la couverture et des angles morts.",
+        "Des traces peuvent indiquer le passage d’une faune locale."
+      ],
+      "possibleComplications": [
+        "Trace longue dans le sable.",
+        "Voix qui revient déformée.",
+        "Lampe qui baisse d’intensité.",
+        "Mouvement bas dans la poussière."
+      ],
+      "controlSuggestions": [
+        "Lieu : Arches Noires",
+        "Ambiance : Signal Instable ou Tension",
+        "Menace : Contact Hound si les joueurs font trop de bruit",
+        "Ressource : Visibilité ou Radio ↓"
+      ],
+      "secretNotes": [
+        "Les arches doivent rester scientifiquement étranges.",
+        "Ne pas les transformer en temple alien.",
+        "L’ambiguïté est plus forte qu’une révélation."
+      ],
+      "reminder": "Naturel. Probablement. Voilà le malaise."
+    },
+    {
+      "id": "arrivee-delta6",
+      "title": "ARRIVÉE — SITE DELTA-6",
+      "duration": "45–70 min",
+      "sceneFunction": "Enquête principale, fouille, indices et montée de tension.",
+      "readAloud": [
+        "Le site Delta-6 apparaît entre deux vagues de poussière.",
+        "Le rover est là.",
+        "Incliné sur un côté.",
+        "Une roue partiellement enterrée.",
+        "Les projecteurs encore allumés, dirigés vers rien.",
+        "Des caisses ouvertes roulent lentement dans le vent.",
+        "Le scanner géologique continue de tourner.",
+        "Aucun corps visible."
+      ],
+      "gmObjective": [
+        "Laisser les PJ fouiller 2 à 4 éléments.",
+        "Donner des indices fragmentaires.",
+        "Faire des données Delta-6 un enjeu.",
+        "Préparer Hounds, survivant ou tempête selon le rythme."
+      ],
+      "visibleInfo": [
+        "Rover Delta-6 endommagé.",
+        "Scanner encore actif.",
+        "Matériel dispersé.",
+        "Traces étranges dans le sable.",
+        "Logs audio corrompus."
+      ],
+      "possibleComplications": [
+        "Le scanner attire une pression.",
+        "Les données deviennent instables.",
+        "Le rover émet un signal involontaire.",
+        "Un bruit de mouvement vient des arches.",
+        "Temps avant tempête ↓."
+      ],
+      "controlSuggestions": [
+        "Lieu : Site Delta-6",
+        "Ambiance : Tension",
+        "Afficher Data Package Delta-6 si branché",
+        "Ressource : Données Delta-6 NON SÉCURISÉES"
+      ],
+      "secretNotes": [
+        "Ne pas donner tous les indices d’un coup.",
+        "Les joueurs doivent choisir quoi inspecter en priorité.",
+        "Plus ils restent, plus la situation doit se tendre."
+      ],
+      "reminder": "Le site doit sembler abandonné trop vite, pas détruit depuis longtemps."
+    },
+    {
+      "id": "scanner-actif",
+      "title": "SCANNER ACTIF — DONNÉES DELTA-6",
+      "duration": "10–25 min",
+      "sceneFunction": "Transformer les données en enjeu concret.",
+      "readAloud": [
+        "Le scanner géologique tourne encore.",
+        "L’écran tremble sous les parasites.",
+        "Des lignes de profondeur s’affichent, puis disparaissent.",
+        "Un bloc de données reste ouvert : DATA PACKAGE DELTA-6.",
+        "La barre d’intégrité oscille.",
+        "Le système demande une action : copier, transférer, isoler ou abandonner."
+      ],
+      "gmObjective": [
+        "Forcer un choix sur les données.",
+        "Faire comprendre que l’information a un coût.",
+        "Donner un indice technique sans expliquer sa cause profonde.",
+        "Relier scanner actif, radio et danger potentiel."
+      ],
+      "visibleInfo": [
+        "Les données sont incomplètes ou instables.",
+        "Le scanner semble encore actif.",
+        "La récupération peut prendre du temps.",
+        "Certaines mesures semblent incohérentes."
+      ],
+      "possibleComplications": [
+        "Données Delta-6 : PARTIELLES ou CORROMPUES.",
+        "Signal Radio ↓.",
+        "Temps avant tempête ↓.",
+        "Contact Hound si activité prolongée.",
+        "Bruit +1 pour le PJ qui pousse l’analyse."
+      ],
+      "controlSuggestions": [
+        "Afficher Data Package Delta-6",
+        "Ambiance : Signal Instable",
+        "Ressource : Données Delta-6 TRANSFERT EN COURS",
+        "Préparer Contact Hound ou Tempête EM"
+      ],
+      "secretNotes": [
+        "Ne pas expliquer pourquoi les données sont incohérentes.",
+        "Éviter les termes trop révélateurs.",
+        "Laisser les joueurs croire à corruption, panne, tempête ou erreur de mesure."
+      ],
+      "reminder": "Les données doivent être utiles, mais jamais gratuites."
+    },
+    {
+      "id": "contact-hound",
+      "title": "CONTACT HOUND",
+      "duration": "20–40 min",
+      "sceneFunction": "Première vraie menace physique de la mission.",
+      "readAloud": [
+        "Quelque chose bouge entre les arches.",
+        "Bas. Rapide.",
+        "Trop anguleux.",
+        "Une silhouette quadrupède traverse la poussière, puis une deuxième.",
+        "Elles n’ont pas d’yeux visibles.",
+        "Leur tête ressemble à une plaque osseuse fermée.",
+        "Elles ne regardent pas les humains.",
+        "Elles se tournent vers les radios."
+      ],
+      "gmObjective": [
+        "Créer une menace claire et lisible.",
+        "Montrer que l’équipement actif peut devenir un problème.",
+        "Ne pas massacrer les PJ.",
+        "Faire bouger les ressources : radio, drone, rover, Stress, blessures."
+      ],
+      "visibleInfo": [
+        "Les Hounds sont rapides.",
+        "Ils semblent réagir à certains signaux ou mouvements.",
+        "Ils attaquent volontiers l’équipement actif.",
+        "Ils restent dangereux au contact."
+      ],
+      "possibleComplications": [
+        "Drone attaqué.",
+        "Radio endommagée.",
+        "Rover touché.",
+        "PJ isolé.",
+        "Stress +1.",
+        "1 blessure sur morsure sérieuse."
+      ],
+      "controlSuggestions": [
+        "Menace : Contact Hound",
+        "Ambiance : Tension",
+        "Ressource : Radio / Rover / Calme du groupe ↓",
+        "Afficher message court HOSTILE MOTION DETECTED si disponible"
+      ],
+      "secretNotes": [
+        "Ne pas expliquer immédiatement leur logique.",
+        "Les joueurs doivent comprendre par observation.",
+        "Faire attaquer d’abord un drone, une radio, une lampe ou le rover."
+      ],
+      "reminder": "La scène doit enseigner par l’action : technologie active = risque."
+    },
+    {
+      "id": "survivant-velen",
+      "title": "SURVIVANT — DR VELEN",
+      "duration": "20–35 min",
+      "sceneFunction": "Humaniser l’incident et donner des fragments inquiétants.",
+      "readAloud": [
+        "Vous trouvez un survivant à l’abri d’un ravin noir ou dans un compartiment du rover.",
+        "Il est couvert de poussière.",
+        "Sa respiration est faible, mais régulière.",
+        "Il ne semble pas surpris de vous voir.",
+        "Il évite de regarder les arches.",
+        "Sa première phrase est presque un souffle :",
+        "« Je veux rentrer. »"
+      ],
+      "gmObjective": [
+        "Faire de Velen un enjeu humain.",
+        "Donner des phrases fragmentaires.",
+        "Compliquer l’extraction.",
+        "Éviter l’exposition explicative."
+      ],
+      "visibleInfo": [
+        "Velen est traumatisé.",
+        "Il réagit mal aux radios.",
+        "Il a entendu ou vu quelque chose qu’il ne comprend pas.",
+        "Il peut donner des indices s’il est traité avec douceur."
+      ],
+      "possibleComplications": [
+        "Velen panique.",
+        "Il refuse de bouger.",
+        "Il répète une phrase inquiétante.",
+        "Il met le groupe en retard.",
+        "Survivant Delta-6 ↓.",
+        "Temps avant tempête ↓."
+      ],
+      "controlSuggestions": [
+        "Ressource : Survivant Delta-6",
+        "Ambiance : Tension",
+        "Préparer Tempête EM",
+        "Ne pas afficher HOLLOW trop tôt sauf fin de scène forte"
+      ],
+      "secretNotes": [
+        "Velen ne doit pas expliquer la mission.",
+        "Il est un témoin, pas un narrateur omniscient.",
+        "Ses phrases doivent ouvrir des questions, pas fermer le mystère."
+      ],
+      "reminder": "Velen doit donner envie de le sauver, même s’il complique tout."
+    },
+    {
+      "id": "tempete-em",
+      "title": "TEMPÊTE ÉLECTROMAGNÉTIQUE",
+      "duration": "35–60 min",
+      "sceneFunction": "Climax de survie, fuite et choix sous pression.",
+      "readAloud": [
+        "Le ciel s’assombrit en quelques secondes.",
+        "Pas comme un orage.",
+        "Comme si quelqu’un avait baissé la lumière du monde.",
+        "Des éclairs silencieux parcourent les nuages.",
+        "Le sable rouge se soulève en nappes épaisses.",
+        "Les radios hurlent une seconde, puis se noient dans le souffle blanc."
+      ],
+      "gmObjective": [
+        "Forcer l’extraction.",
+        "Empêcher les joueurs de tout sauver sans coût.",
+        "Faire baisser plusieurs ressources.",
+        "Créer un dernier moment d’anomalie ou de panique."
+      ],
+      "visibleInfo": [
+        "La visibilité chute.",
+        "La radio devient instable ou inutilisable.",
+        "Le rover peut tomber en panne.",
+        "Les données ou le survivant peuvent être menacés."
+      ],
+      "possibleComplications": [
+        "Visibilité : Critique ou Perdue.",
+        "Signal Radio : Critique ou Perdu.",
+        "Rover : Dégradé ou Critique.",
+        "Données corrompues.",
+        "PJ isolé.",
+        "Hound sur la coque.",
+        "Bruit +1 pour un PJ exposé."
+      ],
+      "controlSuggestions": [
+        "Activer mode Tempête EM global",
+        "Ambiance : Tempête EM",
+        "Ressources : Radio / Visibilité / Rover ↓",
+        "Préparer Extraction"
+      ],
+      "secretNotes": [
+        "Une voix ou perception étrange peut apparaître, mais rester fragmentaire.",
+        "Répondre par image ou sensation, pas par explication.",
+        "Ne jamais clarifier ce qui parle ou d’où ça vient."
+      ],
+      "reminder": "La tempête n’est pas juste une météo : c’est une machine à décisions."
+    },
+    {
+      "id": "extraction",
+      "title": "EXTRACTION",
+      "duration": "20–45 min",
+      "sceneFunction": "Retour sous pression avec sacrifice ou coût.",
+      "readAloud": [
+        "Le rover gronde dans le mur rouge.",
+        "Les phares découpent à peine la poussière.",
+        "Chaque secousse ressemble à une erreur de trajectoire.",
+        "Les alarmes se superposent.",
+        "Derrière vous, le site Delta-6 disparaît dans la tempête.",
+        "Ou peut-être qu’il disparaît autrement."
+      ],
+      "gmObjective": [
+        "Faire trancher les priorités.",
+        "Rendre impossible le retour parfait si les joueurs ont tout tenté.",
+        "Donner une dernière complication utile.",
+        "Ramener vers le calme administratif."
+      ],
+      "visibleInfo": [
+        "Le retour est dangereux.",
+        "Les communications sont instables.",
+        "Le rover peut tenir, casser ou revenir endommagé.",
+        "Les données / survivant / sécurité du groupe ne sont pas tous garantis."
+      ],
+      "possibleComplications": [
+        "Panne rover.",
+        "Roue bloquée.",
+        "Données menacées.",
+        "Survivant en crise.",
+        "Blessure.",
+        "Dernier contact Hound.",
+        "Radio perdue."
+      ],
+      "controlSuggestions": [
+        "Ambiance : Extraction",
+        "Ressource : Rover / Données / Survivant selon choix",
+        "Garder rythme rapide",
+        "Ne pas relancer une longue enquête"
+      ],
+      "secretNotes": [
+        "L’extraction doit conclure les choix, pas ouvrir une nouvelle sous-mission.",
+        "Si la table ralentit, baisse une ressource ou impose un choix binaire."
+      ],
+      "reminder": "Ils peuvent réussir. Mais pas tout garder intact."
+    },
+    {
+      "id": "retour-new-carthage",
+      "title": "RETOUR — NEW CARTHAGE",
+      "duration": "15–25 min",
+      "sceneFunction": "Retour au contrôle, débrief, calme inquiétant.",
+      "readAloud": [
+        "Les lumières de New Carthage apparaissent enfin dans la poussière.",
+        "Le sas du rover s’ouvre sur des projecteurs blancs.",
+        "Des techniciens courent vers vous.",
+        "Des médecins prennent le relais.",
+        "Des formulaires s’ouvrent sur des tablettes.",
+        "La colonie absorbe l’horreur dans de l’administratif.",
+        "Et c’est presque pire."
+      ],
+      "gmObjective": [
+        "Faire le bilan sans traîner.",
+        "Noter ce qui a été sauvé ou perdu.",
+        "Faire intervenir Rowe ou Aletheia si nécessaire.",
+        "Installer une méfiance douce."
+      ],
+      "visibleInfo": [
+        "Rowe veut savoir qui est vivant.",
+        "L’UESC veut récupérer les données.",
+        "Les blessés sont pris en charge.",
+        "Les anomalies sont classées prudemment."
+      ],
+      "possibleComplications": [
+        "Aletheia isole ou filtre les données.",
+        "Rowe demande un rapport fermé.",
+        "Velen est placé en observation.",
+        "Un PJ refuse de remettre les données.",
+        "La confiance envers l’UESC ou Aletheia baisse."
+      ],
+      "controlSuggestions": [
+        "Lieu : New Carthage",
+        "Ambiance : Calme, mais tension possible",
+        "Ressource : Données Delta-6 état final",
+        "Préparer Finale Terminal"
+      ],
+      "secretNotes": [
+        "Le calme doit paraître presque trop propre.",
+        "Aletheia doit rester utile et polie.",
+        "Ne pas confirmer qu’elle cache volontairement quelque chose."
+      ],
+      "reminder": "Après le chaos, l’administration froide devient inquiétante."
+    },
+    {
+      "id": "finale-terminal",
+      "title": "FINALE — TERMINAL",
+      "duration": "2–5 min",
+      "sceneFunction": "Image finale, mystère, accroche Mission 02.",
+      "readAloud": [
+        "Plus tard.",
+        "Très tard.",
+        "New Carthage dort enfin.",
+        "Les vents frappent les structures modulaires de la colonie.",
+        "Les lumières du Marathon brillent dans le ciel.",
+        "Immenses. Immobiles.",
+        "Puis, dans un terminal de maintenance oublié, une ligne apparaît.",
+        "Sans explication.",
+        "HOLLOW SIGNAL DETECTED",
+        "SOURCE:",
+        "BELOW SURFACE",
+        "Puis l’écran s’éteint."
+      ],
+      "gmObjective": [
+        "Finir sur une image froide.",
+        "Ne pas répondre aux questions finales.",
+        "Noter immédiatement les soupçons des joueurs."
+      ],
+      "visibleInfo": [
+        "Un terminal affiche HOLLOW SIGNAL DETECTED.",
+        "La source indiquée est sous la surface.",
+        "Aucune explication n’est donnée."
+      ],
+      "possibleComplications": [
+        "Aucune complication : c’est une scène de clôture.",
+        "Laisser le silence faire le travail."
+      ],
+      "controlSuggestions": [
+        "Scène : Finale Terminal",
+        "Afficher écran final HOLLOW",
+        "Ambiance : Signal Instable ou silence",
+        "Puis Écran Noir"
+      ],
+      "secretNotes": [
+        "Ne pas expliquer HOLLOW.",
+        "Ne pas teaser verbalement la suite.",
+        "Laisser les joueurs combler le vide eux-mêmes."
+      ],
+      "reminder": "Terminer net. Si quelqu’un demande “ça veut dire quoi ?”, sourire et couper."
+    }
+  ],
+  "gmScriptScenes": [
+    {
+      "id": "reveil-aletheia",
+      "sceneId": "reveil-aletheia",
+      "title": "RÉVEIL — ALETHEIA",
+      "summary": "Installer Tau Ceti IV, Aletheia, le réveil cryo et le malaise doux.",
+      "readAloud": [
+        "Le bruit vient avant la lumière.",
+        "Une vibration sourde traverse votre capsule cryogénique.",
+        "Puis la sensation de tomber.",
+        "Vos yeux s’ouvrent difficilement. Liquide froid. Respiration artificielle. Alarmes étouffées.",
+        "Des silhouettes bougent derrière une vitre couverte de condensation.",
+        "Une voix calme résonne dans la pièce :",
+        "« Bienvenue sur Tau Ceti IV. »",
+        "« Le réveil s’est déroulé avec succès. »",
+        "« L’humanité vous remercie. »",
+        "Puis, après une légère pause :",
+        "« Veuillez signaler tout rêve persistant au personnel médical. »"
+      ],
+      "gmOnlyNotes": [
+        "Ne pas rendre Aletheia inquiétante trop frontalement.",
+        "Elle doit d’abord être pratique, rassurante et presque maternelle.",
+        "Les rêves persistants peuvent être notés, mais ne pas les expliquer."
+      ],
+      "beats": [
+        {
+          "id": "reveil-aletheia-objective-1",
+          "label": "Objectif MJ 1",
+          "text": "Présenter une colonie crédible, froide, administrative.",
+          "type": "setup"
+        },
+        {
+          "id": "reveil-aletheia-objective-2",
+          "label": "Objectif MJ 2",
+          "text": "Faire comprendre qu’Aletheia est utile, calme, omniprésente.",
+          "type": "setup"
+        },
+        {
+          "id": "reveil-aletheia-objective-3",
+          "label": "Objectif MJ 3",
+          "text": "Faire présenter rapidement chaque PJ.",
+          "type": "setup"
+        },
+        {
+          "id": "reveil-aletheia-objective-4",
+          "label": "Objectif MJ 4",
+          "text": "Demander un détail personnel : rêve, malaise, réflexe au réveil, objet cher.",
+          "type": "setup"
+        },
+        {
+          "id": "reveil-aletheia-visible-1",
+          "label": "Info visible 1",
+          "text": "Les PJ sont des colons actifs de première ligne.",
+          "type": "note"
+        },
+        {
+          "id": "reveil-aletheia-visible-2",
+          "label": "Info visible 2",
+          "text": "Ils viennent d’être réveillés ou remis en service actif.",
+          "type": "note"
+        },
+        {
+          "id": "reveil-aletheia-visible-3",
+          "label": "Info visible 3",
+          "text": "New Carthage est encore fragile et en construction.",
+          "type": "note"
+        },
+        {
+          "id": "reveil-aletheia-visible-4",
+          "label": "Info visible 4",
+          "text": "Tau Ceti IV est hostile, mais officiellement rationnelle.",
+          "type": "note"
+        },
+        {
+          "id": "reveil-aletheia-complication-1",
+          "label": "Complication 1",
+          "text": "Un PJ garde une sensation étrange du sommeil cryo.",
+          "type": "pressure"
+        },
+        {
+          "id": "reveil-aletheia-complication-2",
+          "label": "Complication 2",
+          "text": "Un moniteur affiche brièvement une anomalie puis revient à la normale.",
+          "type": "pressure"
+        },
+        {
+          "id": "reveil-aletheia-complication-3",
+          "label": "Complication 3",
+          "text": "Aletheia corrige une phrase trop vite, comme si elle anticipait une question.",
+          "type": "pressure"
+        },
+        {
+          "id": "reveil-aletheia-control-1",
+          "label": "Contrôle 1",
+          "text": "Lieu : New Carthage",
+          "type": "prompt"
+        },
+        {
+          "id": "reveil-aletheia-control-2",
+          "label": "Contrôle 2",
+          "text": "Ambiance : Calme",
+          "type": "prompt"
+        },
+        {
+          "id": "reveil-aletheia-control-3",
+          "label": "Contrôle 3",
+          "text": "Afficher escouade PJ",
+          "type": "prompt"
+        },
+        {
+          "id": "reveil-aletheia-control-4",
+          "label": "Contrôle 4",
+          "text": "Ne pas activer Signal Instable trop tôt",
+          "type": "prompt"
+        }
+      ]
+    },
+    {
+      "id": "briefing-rowe",
+      "sceneId": "briefing-rowe",
+      "title": "BRIEFING — COMMANDER ROWE",
+      "summary": "Donner une mission claire et cadrer l’opération comme une récupération terrain.",
+      "readAloud": [
+        "Commander Elias Rowe vous attend dans un module opérationnel encore couvert de poussière rouge.",
+        "Il a l’air fatigué, mais sa voix reste nette.",
+        "« Delta-6 inspectait un site géologique à quarante kilomètres au sud-est. »",
+        "« Plus de signal depuis six heures. »",
+        "« Probablement une panne radio, un incident mécanique ou une tempête locale. »",
+        "« Votre mission est simple : vous localisez l’équipe, vous récupérez les survivants, vous sécurisez les données géologiques, et vous ramenez le rover si possible. »",
+        "« Pas de héros. Pas de panique. Pas de théorie bizarre dans les canaux publics. »",
+        "« On construit une colonie, pas une légende. »"
+      ],
+      "gmOnlyNotes": [
+        "Rowe ne doit pas donner l’impression de tout savoir.",
+        "Il protège surtout l’ordre et la stabilité.",
+        "S’il est interrogé finement, il peut admettre que la panne radio n’explique peut-être pas tout."
+      ],
+      "beats": [
+        {
+          "id": "briefing-rowe-objective-1",
+          "label": "Objectif MJ 1",
+          "text": "Donner les objectifs visibles.",
+          "type": "setup"
+        },
+        {
+          "id": "briefing-rowe-objective-2",
+          "label": "Objectif MJ 2",
+          "text": "Installer Rowe comme professionnel, pas comme méchant.",
+          "type": "setup"
+        },
+        {
+          "id": "briefing-rowe-objective-3",
+          "label": "Objectif MJ 3",
+          "text": "Faire sentir que l’UESC veut garder le contrôle de l’information.",
+          "type": "setup"
+        },
+        {
+          "id": "briefing-rowe-objective-4",
+          "label": "Objectif MJ 4",
+          "text": "Laisser les joueurs poser 2 ou 3 questions avant de partir.",
+          "type": "setup"
+        },
+        {
+          "id": "briefing-rowe-visible-1",
+          "label": "Info visible 1",
+          "text": "Delta-6 a cessé de répondre.",
+          "type": "note"
+        },
+        {
+          "id": "briefing-rowe-visible-2",
+          "label": "Info visible 2",
+          "text": "La cause officielle est probablement météo, radio ou mécanique.",
+          "type": "note"
+        },
+        {
+          "id": "briefing-rowe-visible-3",
+          "label": "Info visible 3",
+          "text": "Les objectifs : survivants, données, rover.",
+          "type": "note"
+        },
+        {
+          "id": "briefing-rowe-visible-4",
+          "label": "Info visible 4",
+          "text": "La mission doit rester discrète.",
+          "type": "note"
+        },
+        {
+          "id": "briefing-rowe-complication-1",
+          "label": "Complication 1",
+          "text": "Rowe coupe court aux spéculations.",
+          "type": "pressure"
+        },
+        {
+          "id": "briefing-rowe-complication-2",
+          "label": "Complication 2",
+          "text": "Aletheia fournit une météo trop rassurante.",
+          "type": "pressure"
+        },
+        {
+          "id": "briefing-rowe-complication-3",
+          "label": "Complication 3",
+          "text": "Une donnée du briefing semble incomplète ou classée.",
+          "type": "pressure"
+        },
+        {
+          "id": "briefing-rowe-control-1",
+          "label": "Contrôle 1",
+          "text": "Lieu : New Carthage",
+          "type": "prompt"
+        },
+        {
+          "id": "briefing-rowe-control-2",
+          "label": "Contrôle 2",
+          "text": "Ambiance : Calme",
+          "type": "prompt"
+        },
+        {
+          "id": "briefing-rowe-control-3",
+          "label": "Contrôle 3",
+          "text": "Scène : Briefing",
+          "type": "prompt"
+        },
+        {
+          "id": "briefing-rowe-control-4",
+          "label": "Contrôle 4",
+          "text": "Préparer choix équipement après cette scène",
+          "type": "prompt"
+        }
+      ]
+    },
+    {
+      "id": "preparation",
+      "sceneId": "preparation",
+      "title": "PRÉPARATION — ROVER BAY",
+      "summary": "Faire choisir quelques ressources utiles avant le départ.",
+      "readAloud": [
+        "Le rover attend dans la baie extérieure, massif, bas, couvert d’une fine couche de poussière rouge.",
+        "Des techniciens vérifient les joints, les batteries, les pneus et les antennes.",
+        "Aletheia annonce calmement :",
+        "« Équipement préparé selon les paramètres standards de mission extérieure. »",
+        "« Fenêtre météo acceptable. »",
+        "« Risque opérationnel : modéré. »"
+      ],
+      "gmOnlyNotes": [
+        "Les équipements actifs pourront attirer des complications plus tard.",
+        "Ne pas expliquer cette logique trop tôt.",
+        "Laisser les joueurs découvrir par l’expérience."
+      ],
+      "beats": [
+        {
+          "id": "preparation-objective-1",
+          "label": "Objectif MJ 1",
+          "text": "Faire choisir 3 à 5 ressources d’équipe.",
+          "type": "setup"
+        },
+        {
+          "id": "preparation-objective-2",
+          "label": "Objectif MJ 2",
+          "text": "Ne pas transformer la scène en inventaire interminable.",
+          "type": "setup"
+        },
+        {
+          "id": "preparation-objective-3",
+          "label": "Objectif MJ 3",
+          "text": "Faire comprendre que chaque choix pourra compter plus tard.",
+          "type": "setup"
+        },
+        {
+          "id": "preparation-visible-1",
+          "label": "Info visible 1",
+          "text": "Ressources possibles : drone, kit médical renforcé, batterie, scanner portable, caisse de réparation.",
+          "type": "note"
+        },
+        {
+          "id": "preparation-visible-2",
+          "label": "Info visible 2",
+          "text": "Armes légères possibles si justifiées.",
+          "type": "note"
+        },
+        {
+          "id": "preparation-visible-3",
+          "label": "Info visible 3",
+          "text": "Équipement lourd refusé sauf excellente raison.",
+          "type": "note"
+        },
+        {
+          "id": "preparation-complication-1",
+          "label": "Complication 1",
+          "text": "Un équipement utile est laissé en arrière.",
+          "type": "pressure"
+        },
+        {
+          "id": "preparation-complication-2",
+          "label": "Complication 2",
+          "text": "Aletheia suggère une option très prudente.",
+          "type": "pressure"
+        },
+        {
+          "id": "preparation-complication-3",
+          "label": "Complication 3",
+          "text": "Un joueur demande un matériel impossible à obtenir.",
+          "type": "pressure"
+        },
+        {
+          "id": "preparation-control-1",
+          "label": "Contrôle 1",
+          "text": "Lieu : New Carthage",
+          "type": "prompt"
+        },
+        {
+          "id": "preparation-control-2",
+          "label": "Contrôle 2",
+          "text": "Ambiance : Calme",
+          "type": "prompt"
+        },
+        {
+          "id": "preparation-control-3",
+          "label": "Contrôle 3",
+          "text": "Afficher PJ / ressources",
+          "type": "prompt"
+        },
+        {
+          "id": "preparation-control-4",
+          "label": "Contrôle 4",
+          "text": "Ne pas encore baisser les ressources sauf choix risqué",
+          "type": "prompt"
+        }
+      ]
+    },
+    {
+      "id": "traversee-plaines-rouges",
+      "sceneId": "traversee-plaines-rouges",
+      "title": "TRAVERSÉE — PLAINES ROUGES",
+      "summary": "Faire découvrir Tau Ceti IV et installer l’isolement.",
+      "readAloud": [
+        "Le rover quitte New Carthage dans un grondement sourd.",
+        "Le ciel est immense. Gris pâle. Presque métallique.",
+        "Le soleil semble lointain.",
+        "Les plaines rouges s’étendent jusqu’à l’horizon.",
+        "Des formations rocheuses noires émergent au loin comme des os gigantesques.",
+        "Par moments, le vent transporte un son qui pourrait être une vibration de coque.",
+        "Ou pas."
+      ],
+      "gmOnlyNotes": [
+        "Ne pas faire surgir l’étrange trop vite.",
+        "Les joueurs doivent encore pouvoir croire à une sortie terrain normale.",
+        "Garder les Black Arches comme silhouette inquiétante, pas comme révélation."
+      ],
+      "beats": [
+        {
+          "id": "traversee-plaines-rouges-objective-1",
+          "label": "Objectif MJ 1",
+          "text": "Faire sentir la taille de Tau Ceti IV.",
+          "type": "setup"
+        },
+        {
+          "id": "traversee-plaines-rouges-objective-2",
+          "label": "Objectif MJ 2",
+          "text": "Installer le voyage comme dangereux mais encore rationnel.",
+          "type": "setup"
+        },
+        {
+          "id": "traversee-plaines-rouges-objective-3",
+          "label": "Objectif MJ 3",
+          "text": "Dégrader doucement la radio ou la visibilité si nécessaire.",
+          "type": "setup"
+        },
+        {
+          "id": "traversee-plaines-rouges-objective-4",
+          "label": "Objectif MJ 4",
+          "text": "Préparer l’anomalie radio.",
+          "type": "setup"
+        },
+        {
+          "id": "traversee-plaines-rouges-visible-1",
+          "label": "Info visible 1",
+          "text": "La route est exposée.",
+          "type": "note"
+        },
+        {
+          "id": "traversee-plaines-rouges-visible-2",
+          "label": "Info visible 2",
+          "text": "Le terrain devient plus difficile à mesure qu’ils approchent des Black Arches.",
+          "type": "note"
+        },
+        {
+          "id": "traversee-plaines-rouges-visible-3",
+          "label": "Info visible 3",
+          "text": "Les communications restent possibles mais imparfaites.",
+          "type": "note"
+        },
+        {
+          "id": "traversee-plaines-rouges-complication-1",
+          "label": "Complication 1",
+          "text": "Rafale de poussière : Visibilité ↓.",
+          "type": "pressure"
+        },
+        {
+          "id": "traversee-plaines-rouges-complication-2",
+          "label": "Complication 2",
+          "text": "Crevasse masquée : jet Technique ou Physique.",
+          "type": "pressure"
+        },
+        {
+          "id": "traversee-plaines-rouges-complication-3",
+          "label": "Complication 3",
+          "text": "Trace de Hound : menace annoncée sans combat.",
+          "type": "pressure"
+        },
+        {
+          "id": "traversee-plaines-rouges-complication-4",
+          "label": "Complication 4",
+          "text": "Panne mineure rover : occasion de réparation.",
+          "type": "pressure"
+        },
+        {
+          "id": "traversee-plaines-rouges-control-1",
+          "label": "Contrôle 1",
+          "text": "Lieu : Plaines Rouges",
+          "type": "prompt"
+        },
+        {
+          "id": "traversee-plaines-rouges-control-2",
+          "label": "Contrôle 2",
+          "text": "Ambiance : Calme ou Tension",
+          "type": "prompt"
+        },
+        {
+          "id": "traversee-plaines-rouges-control-3",
+          "label": "Contrôle 3",
+          "text": "Ressource : Visibilité Dégradée si besoin",
+          "type": "prompt"
+        },
+        {
+          "id": "traversee-plaines-rouges-control-4",
+          "label": "Contrôle 4",
+          "text": "Ressource : Signal Radio Dégradé si besoin",
+          "type": "prompt"
+        }
+      ]
+    },
+    {
+      "id": "anomalie-radio",
+      "sceneId": "anomalie-radio",
+      "title": "ANOMALIE RADIO",
+      "summary": "Premier malaise impossible à classer.",
+      "readAloud": [
+        "Une communication banale passe dans le canal UESC.",
+        "Puis quelque chose accroche.",
+        "Un léger grésillement.",
+        "Une phrase revient dans le casque.",
+        "La même phrase.",
+        "Mais deux secondes avant d’être prononcée.",
+        "Le rover affiche simplement : INTERFÉRENCE LOCALE DÉTECTÉE."
+      ],
+      "gmOnlyNotes": [
+        "Ne jamais dire que l’anomalie a une intention.",
+        "Ne pas employer le vocabulaire du Signal comme explication.",
+        "Laisser les joueurs produire leurs hypothèses."
+      ],
+      "beats": [
+        {
+          "id": "anomalie-radio-objective-1",
+          "label": "Objectif MJ 1",
+          "text": "Créer un silence à table.",
+          "type": "setup"
+        },
+        {
+          "id": "anomalie-radio-objective-2",
+          "label": "Objectif MJ 2",
+          "text": "Ne pas expliquer.",
+          "type": "setup"
+        },
+        {
+          "id": "anomalie-radio-objective-3",
+          "label": "Objectif MJ 3",
+          "text": "Proposer des explications techniques floues si les joueurs insistent.",
+          "type": "setup"
+        },
+        {
+          "id": "anomalie-radio-objective-4",
+          "label": "Objectif MJ 4",
+          "text": "Donner +1 Stress ou +1 Bruit au PJ concerné selon le ton voulu.",
+          "type": "setup"
+        },
+        {
+          "id": "anomalie-radio-visible-1",
+          "label": "Info visible 1",
+          "text": "La radio a produit une anomalie.",
+          "type": "note"
+        },
+        {
+          "id": "anomalie-radio-visible-2",
+          "label": "Info visible 2",
+          "text": "Les instruments ne savent pas classer clairement l’événement.",
+          "type": "note"
+        },
+        {
+          "id": "anomalie-radio-visible-3",
+          "label": "Info visible 3",
+          "text": "Aletheia ou le rover parle d’interférence locale.",
+          "type": "note"
+        },
+        {
+          "id": "anomalie-radio-complication-1",
+          "label": "Complication 1",
+          "text": "Signal Radio ↓.",
+          "type": "pressure"
+        },
+        {
+          "id": "anomalie-radio-complication-2",
+          "label": "Complication 2",
+          "text": "Un PJ gagne +1 Stress.",
+          "type": "pressure"
+        },
+        {
+          "id": "anomalie-radio-complication-3",
+          "label": "Complication 3",
+          "text": "Un PJ gagne +1 Bruit.",
+          "type": "pressure"
+        },
+        {
+          "id": "anomalie-radio-complication-4",
+          "label": "Complication 4",
+          "text": "La phrase semble légèrement différente à la seconde écoute.",
+          "type": "pressure"
+        },
+        {
+          "id": "anomalie-radio-control-1",
+          "label": "Contrôle 1",
+          "text": "Ambiance : Signal Instable",
+          "type": "prompt"
+        },
+        {
+          "id": "anomalie-radio-control-2",
+          "label": "Contrôle 2",
+          "text": "Ressource : Signal Radio Dégradé",
+          "type": "prompt"
+        },
+        {
+          "id": "anomalie-radio-control-3",
+          "label": "Contrôle 3",
+          "text": "Ne pas afficher HOLLOW",
+          "type": "prompt"
+        },
+        {
+          "id": "anomalie-radio-control-4",
+          "label": "Contrôle 4",
+          "text": "Utiliser audio glitch radio si disponible",
+          "type": "prompt"
+        }
+      ]
+    },
+    {
+      "id": "approche-arches-noires",
+      "sceneId": "approche-arches-noires",
+      "title": "APPROCHE — ARCHES NOIRES",
+      "summary": "Faire basculer l’ambiance vers l’étrange sans quitter le hard sci-fi.",
+      "readAloud": [
+        "Les Black Arches se dressent devant vous.",
+        "Elles ne ressemblent pas à des ruines.",
+        "Pas vraiment.",
+        "Plutôt à de la roche volcanique tirée vers le ciel pendant qu’elle était encore molle.",
+        "La surface absorbe la lumière.",
+        "La radio gagne une latence irrégulière.",
+        "Les voix semblent porter trop loin."
+      ],
+      "gmOnlyNotes": [
+        "Les arches doivent rester scientifiquement étranges.",
+        "Ne pas les transformer en temple alien.",
+        "L’ambiguïté est plus forte qu’une révélation."
+      ],
+      "beats": [
+        {
+          "id": "approche-arches-noires-objective-1",
+          "label": "Objectif MJ 1",
+          "text": "Rendre les arches ambiguës.",
+          "type": "setup"
+        },
+        {
+          "id": "approche-arches-noires-objective-2",
+          "label": "Objectif MJ 2",
+          "text": "Introduire des échos radio et des traces de faune.",
+          "type": "setup"
+        },
+        {
+          "id": "approche-arches-noires-objective-3",
+          "label": "Objectif MJ 3",
+          "text": "Préparer le site Delta-6.",
+          "type": "setup"
+        },
+        {
+          "id": "approche-arches-noires-objective-4",
+          "label": "Objectif MJ 4",
+          "text": "Ne jamais dire que les arches sont artificielles.",
+          "type": "setup"
+        },
+        {
+          "id": "approche-arches-noires-visible-1",
+          "label": "Info visible 1",
+          "text": "Les arches perturbent les communications.",
+          "type": "note"
+        },
+        {
+          "id": "approche-arches-noires-visible-2",
+          "label": "Info visible 2",
+          "text": "Le terrain offre de la couverture et des angles morts.",
+          "type": "note"
+        },
+        {
+          "id": "approche-arches-noires-visible-3",
+          "label": "Info visible 3",
+          "text": "Des traces peuvent indiquer le passage d’une faune locale.",
+          "type": "note"
+        },
+        {
+          "id": "approche-arches-noires-complication-1",
+          "label": "Complication 1",
+          "text": "Trace longue dans le sable.",
+          "type": "pressure"
+        },
+        {
+          "id": "approche-arches-noires-complication-2",
+          "label": "Complication 2",
+          "text": "Voix qui revient déformée.",
+          "type": "pressure"
+        },
+        {
+          "id": "approche-arches-noires-complication-3",
+          "label": "Complication 3",
+          "text": "Lampe qui baisse d’intensité.",
+          "type": "pressure"
+        },
+        {
+          "id": "approche-arches-noires-complication-4",
+          "label": "Complication 4",
+          "text": "Mouvement bas dans la poussière.",
+          "type": "pressure"
+        },
+        {
+          "id": "approche-arches-noires-control-1",
+          "label": "Contrôle 1",
+          "text": "Lieu : Arches Noires",
+          "type": "prompt"
+        },
+        {
+          "id": "approche-arches-noires-control-2",
+          "label": "Contrôle 2",
+          "text": "Ambiance : Signal Instable ou Tension",
+          "type": "prompt"
+        },
+        {
+          "id": "approche-arches-noires-control-3",
+          "label": "Contrôle 3",
+          "text": "Menace : Contact Hound si les joueurs font trop de bruit",
+          "type": "prompt"
+        },
+        {
+          "id": "approche-arches-noires-control-4",
+          "label": "Contrôle 4",
+          "text": "Ressource : Visibilité ou Radio ↓",
+          "type": "prompt"
+        }
+      ]
+    },
+    {
+      "id": "arrivee-delta6",
+      "sceneId": "arrivee-delta6",
+      "title": "ARRIVÉE — SITE DELTA-6",
+      "summary": "Enquête principale, fouille, indices et montée de tension.",
+      "readAloud": [
+        "Le site Delta-6 apparaît entre deux vagues de poussière.",
+        "Le rover est là.",
+        "Incliné sur un côté.",
+        "Une roue partiellement enterrée.",
+        "Les projecteurs encore allumés, dirigés vers rien.",
+        "Des caisses ouvertes roulent lentement dans le vent.",
+        "Le scanner géologique continue de tourner.",
+        "Aucun corps visible."
+      ],
+      "gmOnlyNotes": [
+        "Ne pas donner tous les indices d’un coup.",
+        "Les joueurs doivent choisir quoi inspecter en priorité.",
+        "Plus ils restent, plus la situation doit se tendre."
+      ],
+      "beats": [
+        {
+          "id": "arrivee-delta6-objective-1",
+          "label": "Objectif MJ 1",
+          "text": "Laisser les PJ fouiller 2 à 4 éléments.",
+          "type": "setup"
+        },
+        {
+          "id": "arrivee-delta6-objective-2",
+          "label": "Objectif MJ 2",
+          "text": "Donner des indices fragmentaires.",
+          "type": "setup"
+        },
+        {
+          "id": "arrivee-delta6-objective-3",
+          "label": "Objectif MJ 3",
+          "text": "Faire des données Delta-6 un enjeu.",
+          "type": "setup"
+        },
+        {
+          "id": "arrivee-delta6-objective-4",
+          "label": "Objectif MJ 4",
+          "text": "Préparer Hounds, survivant ou tempête selon le rythme.",
+          "type": "setup"
+        },
+        {
+          "id": "arrivee-delta6-visible-1",
+          "label": "Info visible 1",
+          "text": "Rover Delta-6 endommagé.",
+          "type": "note"
+        },
+        {
+          "id": "arrivee-delta6-visible-2",
+          "label": "Info visible 2",
+          "text": "Scanner encore actif.",
+          "type": "note"
+        },
+        {
+          "id": "arrivee-delta6-visible-3",
+          "label": "Info visible 3",
+          "text": "Matériel dispersé.",
+          "type": "note"
+        },
+        {
+          "id": "arrivee-delta6-visible-4",
+          "label": "Info visible 4",
+          "text": "Traces étranges dans le sable.",
+          "type": "note"
+        },
+        {
+          "id": "arrivee-delta6-visible-5",
+          "label": "Info visible 5",
+          "text": "Logs audio corrompus.",
+          "type": "note"
+        },
+        {
+          "id": "arrivee-delta6-complication-1",
+          "label": "Complication 1",
+          "text": "Le scanner attire une pression.",
+          "type": "pressure"
+        },
+        {
+          "id": "arrivee-delta6-complication-2",
+          "label": "Complication 2",
+          "text": "Les données deviennent instables.",
+          "type": "pressure"
+        },
+        {
+          "id": "arrivee-delta6-complication-3",
+          "label": "Complication 3",
+          "text": "Le rover émet un signal involontaire.",
+          "type": "pressure"
+        },
+        {
+          "id": "arrivee-delta6-complication-4",
+          "label": "Complication 4",
+          "text": "Un bruit de mouvement vient des arches.",
+          "type": "pressure"
+        },
+        {
+          "id": "arrivee-delta6-complication-5",
+          "label": "Complication 5",
+          "text": "Temps avant tempête ↓.",
+          "type": "pressure"
+        },
+        {
+          "id": "arrivee-delta6-control-1",
+          "label": "Contrôle 1",
+          "text": "Lieu : Site Delta-6",
+          "type": "prompt"
+        },
+        {
+          "id": "arrivee-delta6-control-2",
+          "label": "Contrôle 2",
+          "text": "Ambiance : Tension",
+          "type": "prompt"
+        },
+        {
+          "id": "arrivee-delta6-control-3",
+          "label": "Contrôle 3",
+          "text": "Afficher Data Package Delta-6 si branché",
+          "type": "prompt"
+        },
+        {
+          "id": "arrivee-delta6-control-4",
+          "label": "Contrôle 4",
+          "text": "Ressource : Données Delta-6 NON SÉCURISÉES",
+          "type": "prompt"
+        }
+      ]
+    },
+    {
+      "id": "scanner-actif",
+      "sceneId": "scanner-actif",
+      "title": "SCANNER ACTIF — DONNÉES DELTA-6",
+      "summary": "Transformer les données en enjeu concret.",
+      "readAloud": [
+        "Le scanner géologique tourne encore.",
+        "L’écran tremble sous les parasites.",
+        "Des lignes de profondeur s’affichent, puis disparaissent.",
+        "Un bloc de données reste ouvert : DATA PACKAGE DELTA-6.",
+        "La barre d’intégrité oscille.",
+        "Le système demande une action : copier, transférer, isoler ou abandonner."
+      ],
+      "gmOnlyNotes": [
+        "Ne pas expliquer pourquoi les données sont incohérentes.",
+        "Éviter les termes trop révélateurs.",
+        "Laisser les joueurs croire à corruption, panne, tempête ou erreur de mesure."
+      ],
+      "beats": [
+        {
+          "id": "scanner-actif-objective-1",
+          "label": "Objectif MJ 1",
+          "text": "Forcer un choix sur les données.",
+          "type": "setup"
+        },
+        {
+          "id": "scanner-actif-objective-2",
+          "label": "Objectif MJ 2",
+          "text": "Faire comprendre que l’information a un coût.",
+          "type": "setup"
+        },
+        {
+          "id": "scanner-actif-objective-3",
+          "label": "Objectif MJ 3",
+          "text": "Donner un indice technique sans expliquer sa cause profonde.",
+          "type": "setup"
+        },
+        {
+          "id": "scanner-actif-objective-4",
+          "label": "Objectif MJ 4",
+          "text": "Relier scanner actif, radio et danger potentiel.",
+          "type": "setup"
+        },
+        {
+          "id": "scanner-actif-visible-1",
+          "label": "Info visible 1",
+          "text": "Les données sont incomplètes ou instables.",
+          "type": "note"
+        },
+        {
+          "id": "scanner-actif-visible-2",
+          "label": "Info visible 2",
+          "text": "Le scanner semble encore actif.",
+          "type": "note"
+        },
+        {
+          "id": "scanner-actif-visible-3",
+          "label": "Info visible 3",
+          "text": "La récupération peut prendre du temps.",
+          "type": "note"
+        },
+        {
+          "id": "scanner-actif-visible-4",
+          "label": "Info visible 4",
+          "text": "Certaines mesures semblent incohérentes.",
+          "type": "note"
+        },
+        {
+          "id": "scanner-actif-complication-1",
+          "label": "Complication 1",
+          "text": "Données Delta-6 : PARTIELLES ou CORROMPUES.",
+          "type": "pressure"
+        },
+        {
+          "id": "scanner-actif-complication-2",
+          "label": "Complication 2",
+          "text": "Signal Radio ↓.",
+          "type": "pressure"
+        },
+        {
+          "id": "scanner-actif-complication-3",
+          "label": "Complication 3",
+          "text": "Temps avant tempête ↓.",
+          "type": "pressure"
+        },
+        {
+          "id": "scanner-actif-complication-4",
+          "label": "Complication 4",
+          "text": "Contact Hound si activité prolongée.",
+          "type": "pressure"
+        },
+        {
+          "id": "scanner-actif-complication-5",
+          "label": "Complication 5",
+          "text": "Bruit +1 pour le PJ qui pousse l’analyse.",
+          "type": "pressure"
+        },
+        {
+          "id": "scanner-actif-control-1",
+          "label": "Contrôle 1",
+          "text": "Afficher Data Package Delta-6",
+          "type": "prompt"
+        },
+        {
+          "id": "scanner-actif-control-2",
+          "label": "Contrôle 2",
+          "text": "Ambiance : Signal Instable",
+          "type": "prompt"
+        },
+        {
+          "id": "scanner-actif-control-3",
+          "label": "Contrôle 3",
+          "text": "Ressource : Données Delta-6 TRANSFERT EN COURS",
+          "type": "prompt"
+        },
+        {
+          "id": "scanner-actif-control-4",
+          "label": "Contrôle 4",
+          "text": "Préparer Contact Hound ou Tempête EM",
+          "type": "prompt"
+        }
+      ]
+    },
+    {
+      "id": "contact-hound",
+      "sceneId": "contact-hound",
+      "title": "CONTACT HOUND",
+      "summary": "Première vraie menace physique de la mission.",
+      "readAloud": [
+        "Quelque chose bouge entre les arches.",
+        "Bas. Rapide.",
+        "Trop anguleux.",
+        "Une silhouette quadrupède traverse la poussière, puis une deuxième.",
+        "Elles n’ont pas d’yeux visibles.",
+        "Leur tête ressemble à une plaque osseuse fermée.",
+        "Elles ne regardent pas les humains.",
+        "Elles se tournent vers les radios."
+      ],
+      "gmOnlyNotes": [
+        "Ne pas expliquer immédiatement leur logique.",
+        "Les joueurs doivent comprendre par observation.",
+        "Faire attaquer d’abord un drone, une radio, une lampe ou le rover."
+      ],
+      "beats": [
+        {
+          "id": "contact-hound-objective-1",
+          "label": "Objectif MJ 1",
+          "text": "Créer une menace claire et lisible.",
+          "type": "setup"
+        },
+        {
+          "id": "contact-hound-objective-2",
+          "label": "Objectif MJ 2",
+          "text": "Montrer que l’équipement actif peut devenir un problème.",
+          "type": "setup"
+        },
+        {
+          "id": "contact-hound-objective-3",
+          "label": "Objectif MJ 3",
+          "text": "Ne pas massacrer les PJ.",
+          "type": "setup"
+        },
+        {
+          "id": "contact-hound-objective-4",
+          "label": "Objectif MJ 4",
+          "text": "Faire bouger les ressources : radio, drone, rover, Stress, blessures.",
+          "type": "setup"
+        },
+        {
+          "id": "contact-hound-visible-1",
+          "label": "Info visible 1",
+          "text": "Les Hounds sont rapides.",
+          "type": "note"
+        },
+        {
+          "id": "contact-hound-visible-2",
+          "label": "Info visible 2",
+          "text": "Ils semblent réagir à certains signaux ou mouvements.",
+          "type": "note"
+        },
+        {
+          "id": "contact-hound-visible-3",
+          "label": "Info visible 3",
+          "text": "Ils attaquent volontiers l’équipement actif.",
+          "type": "note"
+        },
+        {
+          "id": "contact-hound-visible-4",
+          "label": "Info visible 4",
+          "text": "Ils restent dangereux au contact.",
+          "type": "note"
+        },
+        {
+          "id": "contact-hound-complication-1",
+          "label": "Complication 1",
+          "text": "Drone attaqué.",
+          "type": "pressure"
+        },
+        {
+          "id": "contact-hound-complication-2",
+          "label": "Complication 2",
+          "text": "Radio endommagée.",
+          "type": "pressure"
+        },
+        {
+          "id": "contact-hound-complication-3",
+          "label": "Complication 3",
+          "text": "Rover touché.",
+          "type": "pressure"
+        },
+        {
+          "id": "contact-hound-complication-4",
+          "label": "Complication 4",
+          "text": "PJ isolé.",
+          "type": "pressure"
+        },
+        {
+          "id": "contact-hound-complication-5",
+          "label": "Complication 5",
+          "text": "Stress +1.",
+          "type": "pressure"
+        },
+        {
+          "id": "contact-hound-complication-6",
+          "label": "Complication 6",
+          "text": "1 blessure sur morsure sérieuse.",
+          "type": "pressure"
+        },
+        {
+          "id": "contact-hound-control-1",
+          "label": "Contrôle 1",
+          "text": "Menace : Contact Hound",
+          "type": "prompt"
+        },
+        {
+          "id": "contact-hound-control-2",
+          "label": "Contrôle 2",
+          "text": "Ambiance : Tension",
+          "type": "prompt"
+        },
+        {
+          "id": "contact-hound-control-3",
+          "label": "Contrôle 3",
+          "text": "Ressource : Radio / Rover / Calme du groupe ↓",
+          "type": "prompt"
+        },
+        {
+          "id": "contact-hound-control-4",
+          "label": "Contrôle 4",
+          "text": "Afficher message court HOSTILE MOTION DETECTED si disponible",
+          "type": "prompt"
+        }
+      ]
+    },
+    {
+      "id": "survivant-velen",
+      "sceneId": "survivant-velen",
+      "title": "SURVIVANT — DR VELEN",
+      "summary": "Humaniser l’incident et donner des fragments inquiétants.",
+      "readAloud": [
+        "Vous trouvez un survivant à l’abri d’un ravin noir ou dans un compartiment du rover.",
+        "Il est couvert de poussière.",
+        "Sa respiration est faible, mais régulière.",
+        "Il ne semble pas surpris de vous voir.",
+        "Il évite de regarder les arches.",
+        "Sa première phrase est presque un souffle :",
+        "« Je veux rentrer. »"
+      ],
+      "gmOnlyNotes": [
+        "Velen ne doit pas expliquer la mission.",
+        "Il est un témoin, pas un narrateur omniscient.",
+        "Ses phrases doivent ouvrir des questions, pas fermer le mystère."
+      ],
+      "beats": [
+        {
+          "id": "survivant-velen-objective-1",
+          "label": "Objectif MJ 1",
+          "text": "Faire de Velen un enjeu humain.",
+          "type": "setup"
+        },
+        {
+          "id": "survivant-velen-objective-2",
+          "label": "Objectif MJ 2",
+          "text": "Donner des phrases fragmentaires.",
+          "type": "setup"
+        },
+        {
+          "id": "survivant-velen-objective-3",
+          "label": "Objectif MJ 3",
+          "text": "Compliquer l’extraction.",
+          "type": "setup"
+        },
+        {
+          "id": "survivant-velen-objective-4",
+          "label": "Objectif MJ 4",
+          "text": "Éviter l’exposition explicative.",
+          "type": "setup"
+        },
+        {
+          "id": "survivant-velen-visible-1",
+          "label": "Info visible 1",
+          "text": "Velen est traumatisé.",
+          "type": "note"
+        },
+        {
+          "id": "survivant-velen-visible-2",
+          "label": "Info visible 2",
+          "text": "Il réagit mal aux radios.",
+          "type": "note"
+        },
+        {
+          "id": "survivant-velen-visible-3",
+          "label": "Info visible 3",
+          "text": "Il a entendu ou vu quelque chose qu’il ne comprend pas.",
+          "type": "note"
+        },
+        {
+          "id": "survivant-velen-visible-4",
+          "label": "Info visible 4",
+          "text": "Il peut donner des indices s’il est traité avec douceur.",
+          "type": "note"
+        },
+        {
+          "id": "survivant-velen-complication-1",
+          "label": "Complication 1",
+          "text": "Velen panique.",
+          "type": "pressure"
+        },
+        {
+          "id": "survivant-velen-complication-2",
+          "label": "Complication 2",
+          "text": "Il refuse de bouger.",
+          "type": "pressure"
+        },
+        {
+          "id": "survivant-velen-complication-3",
+          "label": "Complication 3",
+          "text": "Il répète une phrase inquiétante.",
+          "type": "pressure"
+        },
+        {
+          "id": "survivant-velen-complication-4",
+          "label": "Complication 4",
+          "text": "Il met le groupe en retard.",
+          "type": "pressure"
+        },
+        {
+          "id": "survivant-velen-complication-5",
+          "label": "Complication 5",
+          "text": "Survivant Delta-6 ↓.",
+          "type": "pressure"
+        },
+        {
+          "id": "survivant-velen-complication-6",
+          "label": "Complication 6",
+          "text": "Temps avant tempête ↓.",
+          "type": "pressure"
+        },
+        {
+          "id": "survivant-velen-control-1",
+          "label": "Contrôle 1",
+          "text": "Ressource : Survivant Delta-6",
+          "type": "prompt"
+        },
+        {
+          "id": "survivant-velen-control-2",
+          "label": "Contrôle 2",
+          "text": "Ambiance : Tension",
+          "type": "prompt"
+        },
+        {
+          "id": "survivant-velen-control-3",
+          "label": "Contrôle 3",
+          "text": "Préparer Tempête EM",
+          "type": "prompt"
+        },
+        {
+          "id": "survivant-velen-control-4",
+          "label": "Contrôle 4",
+          "text": "Ne pas afficher HOLLOW trop tôt sauf fin de scène forte",
+          "type": "prompt"
+        }
+      ]
+    },
+    {
+      "id": "tempete-em",
+      "sceneId": "tempete-em",
+      "title": "TEMPÊTE ÉLECTROMAGNÉTIQUE",
+      "summary": "Climax de survie, fuite et choix sous pression.",
+      "readAloud": [
+        "Le ciel s’assombrit en quelques secondes.",
+        "Pas comme un orage.",
+        "Comme si quelqu’un avait baissé la lumière du monde.",
+        "Des éclairs silencieux parcourent les nuages.",
+        "Le sable rouge se soulève en nappes épaisses.",
+        "Les radios hurlent une seconde, puis se noient dans le souffle blanc."
+      ],
+      "gmOnlyNotes": [
+        "Une voix ou perception étrange peut apparaître, mais rester fragmentaire.",
+        "Répondre par image ou sensation, pas par explication.",
+        "Ne jamais clarifier ce qui parle ou d’où ça vient."
+      ],
+      "beats": [
+        {
+          "id": "tempete-em-objective-1",
+          "label": "Objectif MJ 1",
+          "text": "Forcer l’extraction.",
+          "type": "setup"
+        },
+        {
+          "id": "tempete-em-objective-2",
+          "label": "Objectif MJ 2",
+          "text": "Empêcher les joueurs de tout sauver sans coût.",
+          "type": "setup"
+        },
+        {
+          "id": "tempete-em-objective-3",
+          "label": "Objectif MJ 3",
+          "text": "Faire baisser plusieurs ressources.",
+          "type": "setup"
+        },
+        {
+          "id": "tempete-em-objective-4",
+          "label": "Objectif MJ 4",
+          "text": "Créer un dernier moment d’anomalie ou de panique.",
+          "type": "setup"
+        },
+        {
+          "id": "tempete-em-visible-1",
+          "label": "Info visible 1",
+          "text": "La visibilité chute.",
+          "type": "note"
+        },
+        {
+          "id": "tempete-em-visible-2",
+          "label": "Info visible 2",
+          "text": "La radio devient instable ou inutilisable.",
+          "type": "note"
+        },
+        {
+          "id": "tempete-em-visible-3",
+          "label": "Info visible 3",
+          "text": "Le rover peut tomber en panne.",
+          "type": "note"
+        },
+        {
+          "id": "tempete-em-visible-4",
+          "label": "Info visible 4",
+          "text": "Les données ou le survivant peuvent être menacés.",
+          "type": "note"
+        },
+        {
+          "id": "tempete-em-complication-1",
+          "label": "Complication 1",
+          "text": "Visibilité : Critique ou Perdue.",
+          "type": "pressure"
+        },
+        {
+          "id": "tempete-em-complication-2",
+          "label": "Complication 2",
+          "text": "Signal Radio : Critique ou Perdu.",
+          "type": "pressure"
+        },
+        {
+          "id": "tempete-em-complication-3",
+          "label": "Complication 3",
+          "text": "Rover : Dégradé ou Critique.",
+          "type": "pressure"
+        },
+        {
+          "id": "tempete-em-complication-4",
+          "label": "Complication 4",
+          "text": "Données corrompues.",
+          "type": "pressure"
+        },
+        {
+          "id": "tempete-em-complication-5",
+          "label": "Complication 5",
+          "text": "PJ isolé.",
+          "type": "pressure"
+        },
+        {
+          "id": "tempete-em-complication-6",
+          "label": "Complication 6",
+          "text": "Hound sur la coque.",
+          "type": "pressure"
+        },
+        {
+          "id": "tempete-em-complication-7",
+          "label": "Complication 7",
+          "text": "Bruit +1 pour un PJ exposé.",
+          "type": "pressure"
+        },
+        {
+          "id": "tempete-em-control-1",
+          "label": "Contrôle 1",
+          "text": "Activer mode Tempête EM global",
+          "type": "prompt"
+        },
+        {
+          "id": "tempete-em-control-2",
+          "label": "Contrôle 2",
+          "text": "Ambiance : Tempête EM",
+          "type": "prompt"
+        },
+        {
+          "id": "tempete-em-control-3",
+          "label": "Contrôle 3",
+          "text": "Ressources : Radio / Visibilité / Rover ↓",
+          "type": "prompt"
+        },
+        {
+          "id": "tempete-em-control-4",
+          "label": "Contrôle 4",
+          "text": "Préparer Extraction",
+          "type": "prompt"
+        }
+      ]
+    },
+    {
+      "id": "extraction",
+      "sceneId": "extraction",
+      "title": "EXTRACTION",
+      "summary": "Retour sous pression avec sacrifice ou coût.",
+      "readAloud": [
+        "Le rover gronde dans le mur rouge.",
+        "Les phares découpent à peine la poussière.",
+        "Chaque secousse ressemble à une erreur de trajectoire.",
+        "Les alarmes se superposent.",
+        "Derrière vous, le site Delta-6 disparaît dans la tempête.",
+        "Ou peut-être qu’il disparaît autrement."
+      ],
+      "gmOnlyNotes": [
+        "L’extraction doit conclure les choix, pas ouvrir une nouvelle sous-mission.",
+        "Si la table ralentit, baisse une ressource ou impose un choix binaire."
+      ],
+      "beats": [
+        {
+          "id": "extraction-objective-1",
+          "label": "Objectif MJ 1",
+          "text": "Faire trancher les priorités.",
+          "type": "setup"
+        },
+        {
+          "id": "extraction-objective-2",
+          "label": "Objectif MJ 2",
+          "text": "Rendre impossible le retour parfait si les joueurs ont tout tenté.",
+          "type": "setup"
+        },
+        {
+          "id": "extraction-objective-3",
+          "label": "Objectif MJ 3",
+          "text": "Donner une dernière complication utile.",
+          "type": "setup"
+        },
+        {
+          "id": "extraction-objective-4",
+          "label": "Objectif MJ 4",
+          "text": "Ramener vers le calme administratif.",
+          "type": "setup"
+        },
+        {
+          "id": "extraction-visible-1",
+          "label": "Info visible 1",
+          "text": "Le retour est dangereux.",
+          "type": "note"
+        },
+        {
+          "id": "extraction-visible-2",
+          "label": "Info visible 2",
+          "text": "Les communications sont instables.",
+          "type": "note"
+        },
+        {
+          "id": "extraction-visible-3",
+          "label": "Info visible 3",
+          "text": "Le rover peut tenir, casser ou revenir endommagé.",
+          "type": "note"
+        },
+        {
+          "id": "extraction-visible-4",
+          "label": "Info visible 4",
+          "text": "Les données / survivant / sécurité du groupe ne sont pas tous garantis.",
+          "type": "note"
+        },
+        {
+          "id": "extraction-complication-1",
+          "label": "Complication 1",
+          "text": "Panne rover.",
+          "type": "pressure"
+        },
+        {
+          "id": "extraction-complication-2",
+          "label": "Complication 2",
+          "text": "Roue bloquée.",
+          "type": "pressure"
+        },
+        {
+          "id": "extraction-complication-3",
+          "label": "Complication 3",
+          "text": "Données menacées.",
+          "type": "pressure"
+        },
+        {
+          "id": "extraction-complication-4",
+          "label": "Complication 4",
+          "text": "Survivant en crise.",
+          "type": "pressure"
+        },
+        {
+          "id": "extraction-complication-5",
+          "label": "Complication 5",
+          "text": "Blessure.",
+          "type": "pressure"
+        },
+        {
+          "id": "extraction-complication-6",
+          "label": "Complication 6",
+          "text": "Dernier contact Hound.",
+          "type": "pressure"
+        },
+        {
+          "id": "extraction-complication-7",
+          "label": "Complication 7",
+          "text": "Radio perdue.",
+          "type": "pressure"
+        },
+        {
+          "id": "extraction-control-1",
+          "label": "Contrôle 1",
+          "text": "Ambiance : Extraction",
+          "type": "prompt"
+        },
+        {
+          "id": "extraction-control-2",
+          "label": "Contrôle 2",
+          "text": "Ressource : Rover / Données / Survivant selon choix",
+          "type": "prompt"
+        },
+        {
+          "id": "extraction-control-3",
+          "label": "Contrôle 3",
+          "text": "Garder rythme rapide",
+          "type": "prompt"
+        },
+        {
+          "id": "extraction-control-4",
+          "label": "Contrôle 4",
+          "text": "Ne pas relancer une longue enquête",
+          "type": "prompt"
+        }
+      ]
+    },
+    {
+      "id": "retour-new-carthage",
+      "sceneId": "retour-new-carthage",
+      "title": "RETOUR — NEW CARTHAGE",
+      "summary": "Retour au contrôle, débrief, calme inquiétant.",
+      "readAloud": [
+        "Les lumières de New Carthage apparaissent enfin dans la poussière.",
+        "Le sas du rover s’ouvre sur des projecteurs blancs.",
+        "Des techniciens courent vers vous.",
+        "Des médecins prennent le relais.",
+        "Des formulaires s’ouvrent sur des tablettes.",
+        "La colonie absorbe l’horreur dans de l’administratif.",
+        "Et c’est presque pire."
+      ],
+      "gmOnlyNotes": [
+        "Le calme doit paraître presque trop propre.",
+        "Aletheia doit rester utile et polie.",
+        "Ne pas confirmer qu’elle cache volontairement quelque chose."
+      ],
+      "beats": [
+        {
+          "id": "retour-new-carthage-objective-1",
+          "label": "Objectif MJ 1",
+          "text": "Faire le bilan sans traîner.",
+          "type": "setup"
+        },
+        {
+          "id": "retour-new-carthage-objective-2",
+          "label": "Objectif MJ 2",
+          "text": "Noter ce qui a été sauvé ou perdu.",
+          "type": "setup"
+        },
+        {
+          "id": "retour-new-carthage-objective-3",
+          "label": "Objectif MJ 3",
+          "text": "Faire intervenir Rowe ou Aletheia si nécessaire.",
+          "type": "setup"
+        },
+        {
+          "id": "retour-new-carthage-objective-4",
+          "label": "Objectif MJ 4",
+          "text": "Installer une méfiance douce.",
+          "type": "setup"
+        },
+        {
+          "id": "retour-new-carthage-visible-1",
+          "label": "Info visible 1",
+          "text": "Rowe veut savoir qui est vivant.",
+          "type": "note"
+        },
+        {
+          "id": "retour-new-carthage-visible-2",
+          "label": "Info visible 2",
+          "text": "L’UESC veut récupérer les données.",
+          "type": "note"
+        },
+        {
+          "id": "retour-new-carthage-visible-3",
+          "label": "Info visible 3",
+          "text": "Les blessés sont pris en charge.",
+          "type": "note"
+        },
+        {
+          "id": "retour-new-carthage-visible-4",
+          "label": "Info visible 4",
+          "text": "Les anomalies sont classées prudemment.",
+          "type": "note"
+        },
+        {
+          "id": "retour-new-carthage-complication-1",
+          "label": "Complication 1",
+          "text": "Aletheia isole ou filtre les données.",
+          "type": "pressure"
+        },
+        {
+          "id": "retour-new-carthage-complication-2",
+          "label": "Complication 2",
+          "text": "Rowe demande un rapport fermé.",
+          "type": "pressure"
+        },
+        {
+          "id": "retour-new-carthage-complication-3",
+          "label": "Complication 3",
+          "text": "Velen est placé en observation.",
+          "type": "pressure"
+        },
+        {
+          "id": "retour-new-carthage-complication-4",
+          "label": "Complication 4",
+          "text": "Un PJ refuse de remettre les données.",
+          "type": "pressure"
+        },
+        {
+          "id": "retour-new-carthage-complication-5",
+          "label": "Complication 5",
+          "text": "La confiance envers l’UESC ou Aletheia baisse.",
+          "type": "pressure"
+        },
+        {
+          "id": "retour-new-carthage-control-1",
+          "label": "Contrôle 1",
+          "text": "Lieu : New Carthage",
+          "type": "prompt"
+        },
+        {
+          "id": "retour-new-carthage-control-2",
+          "label": "Contrôle 2",
+          "text": "Ambiance : Calme, mais tension possible",
+          "type": "prompt"
+        },
+        {
+          "id": "retour-new-carthage-control-3",
+          "label": "Contrôle 3",
+          "text": "Ressource : Données Delta-6 état final",
+          "type": "prompt"
+        },
+        {
+          "id": "retour-new-carthage-control-4",
+          "label": "Contrôle 4",
+          "text": "Préparer Finale Terminal",
+          "type": "prompt"
+        }
+      ]
+    },
+    {
+      "id": "finale-terminal",
+      "sceneId": "finale-terminal",
+      "title": "FINALE — TERMINAL",
+      "summary": "Image finale, mystère, accroche Mission 02.",
+      "readAloud": [
+        "Plus tard.",
+        "Très tard.",
+        "New Carthage dort enfin.",
+        "Les vents frappent les structures modulaires de la colonie.",
+        "Les lumières du Marathon brillent dans le ciel.",
+        "Immenses. Immobiles.",
+        "Puis, dans un terminal de maintenance oublié, une ligne apparaît.",
+        "Sans explication.",
+        "HOLLOW SIGNAL DETECTED",
+        "SOURCE:",
+        "BELOW SURFACE",
+        "Puis l’écran s’éteint."
+      ],
+      "gmOnlyNotes": [
+        "Ne pas expliquer HOLLOW.",
+        "Ne pas teaser verbalement la suite.",
+        "Laisser les joueurs combler le vide eux-mêmes."
+      ],
+      "beats": [
+        {
+          "id": "finale-terminal-objective-1",
+          "label": "Objectif MJ 1",
+          "text": "Finir sur une image froide.",
+          "type": "setup"
+        },
+        {
+          "id": "finale-terminal-objective-2",
+          "label": "Objectif MJ 2",
+          "text": "Ne pas répondre aux questions finales.",
+          "type": "setup"
+        },
+        {
+          "id": "finale-terminal-objective-3",
+          "label": "Objectif MJ 3",
+          "text": "Noter immédiatement les soupçons des joueurs.",
+          "type": "setup"
+        },
+        {
+          "id": "finale-terminal-visible-1",
+          "label": "Info visible 1",
+          "text": "Un terminal affiche HOLLOW SIGNAL DETECTED.",
+          "type": "note"
+        },
+        {
+          "id": "finale-terminal-visible-2",
+          "label": "Info visible 2",
+          "text": "La source indiquée est sous la surface.",
+          "type": "note"
+        },
+        {
+          "id": "finale-terminal-visible-3",
+          "label": "Info visible 3",
+          "text": "Aucune explication n’est donnée.",
+          "type": "note"
+        },
+        {
+          "id": "finale-terminal-complication-1",
+          "label": "Complication 1",
+          "text": "Aucune complication : c’est une scène de clôture.",
+          "type": "pressure"
+        },
+        {
+          "id": "finale-terminal-complication-2",
+          "label": "Complication 2",
+          "text": "Laisser le silence faire le travail.",
+          "type": "pressure"
+        },
+        {
+          "id": "finale-terminal-control-1",
+          "label": "Contrôle 1",
+          "text": "Scène : Finale Terminal",
+          "type": "prompt"
+        },
+        {
+          "id": "finale-terminal-control-2",
+          "label": "Contrôle 2",
+          "text": "Afficher écran final HOLLOW",
+          "type": "prompt"
+        },
+        {
+          "id": "finale-terminal-control-3",
+          "label": "Contrôle 3",
+          "text": "Ambiance : Signal Instable ou silence",
+          "type": "prompt"
+        },
+        {
+          "id": "finale-terminal-control-4",
+          "label": "Contrôle 4",
+          "text": "Puis Écran Noir",
+          "type": "prompt"
+        }
+      ]
+    }
+  ],
+  "playerIntel": [
+    {
+      "id": "cryo-dream-red-door",
+      "sceneId": "reveil-aletheia",
+      "title": "RÊVE CRYO",
+      "type": "cryo_dream",
+      "target": "selected_player",
+      "text": "Tu te souviens d’une porte rouge sous la poussière. Elle n’avait ni poignée, ni mur autour d’elle.",
+      "tone": "uneasy",
+      "visibility": "send_manual_only"
+    },
+    {
+      "id": "cryo-dream-voice-delay",
+      "sceneId": "reveil-aletheia",
+      "title": "RÊVE CRYO",
+      "type": "cryo_dream",
+      "target": "selected_player",
+      "text": "Dans ton rêve, quelqu’un répétait tes phrases avant que tu les penses.",
+      "tone": "uneasy",
+      "visibility": "send_manual_only"
+    },
+    {
+      "id": "cryo-dream-black-arches",
+      "sceneId": "reveil-aletheia",
+      "title": "RÊVE CRYO",
+      "type": "cryo_dream",
+      "target": "selected_player",
+      "text": "Tu as rêvé de grandes arches noires sur une plaine rouge. Tu ne les avais jamais vues.",
+      "tone": "uneasy",
+      "visibility": "send_manual_only"
+    },
+    {
+      "id": "cryo-sensation-cold-lungs",
+      "sceneId": "reveil-aletheia",
+      "title": "SENSATION AU RÉVEIL",
+      "type": "sensation",
+      "target": "all",
+      "text": "Tes poumons brûlent légèrement. Le personnel médical dit que c’est normal après le réveil cryogénique.",
+      "tone": "neutral",
+      "visibility": "send_manual_only"
+    },
+    {
+      "id": "briefing-objective-clear",
+      "sceneId": "briefing-rowe",
+      "title": "OBJECTIF ACTUEL",
+      "type": "objective",
+      "target": "all",
+      "text": "Localiser Delta-6. Récupérer survivants, données et matériel. Revenir avant dégradation météo.",
+      "tone": "procedural",
+      "visibility": "send_manual_only"
+    },
+    {
+      "id": "briefing-uesc-rumors",
+      "sceneId": "briefing-rowe",
+      "title": "NOTE UESC",
+      "type": "uesc_notice",
+      "target": "all",
+      "text": "Les communications non opérationnelles sont déconseillées. New Carthage reste fragile.",
+      "tone": "procedural",
+      "visibility": "send_manual_only"
+    },
+    {
+      "id": "prep-personal-item",
+      "sceneId": "preparation",
+      "title": "QUESTION PERSONNELLE",
+      "type": "personal_prompt",
+      "target": "all",
+      "text": "Quel objet personnel ton personnage vérifie-t-il avant de monter dans le rover ?",
+      "tone": "neutral",
+      "visibility": "send_manual_only"
+    },
+    {
+      "id": "prep-role-engineer",
+      "sceneId": "preparation",
+      "title": "RÉFLEXE TECHNIQUE",
+      "type": "personal_prompt",
+      "target": "role_engineer",
+      "text": "Le rover est fonctionnel, mais un voyant secondaire te semble mal calibré.",
+      "tone": "neutral",
+      "visibility": "send_manual_only"
+    },
+    {
+      "id": "red-plains-environment",
+      "sceneId": "traversee-plaines-rouges",
+      "title": "ENVIRONNEMENT",
+      "type": "environment",
+      "target": "all",
+      "text": "Les plaines rouges donnent une impression d’échelle impossible. New Carthage disparaît vite derrière la poussière.",
+      "tone": "neutral",
+      "visibility": "send_manual_only"
+    },
+    {
+      "id": "red-plains-pilot",
+      "sceneId": "traversee-plaines-rouges",
+      "title": "RÉFLEXE PILOTE",
+      "type": "personal_prompt",
+      "target": "role_pilot",
+      "text": "Le sol est plus irrégulier que prévu. Le rover tient, mais il faudra éviter les accélérations brusques.",
+      "tone": "neutral",
+      "visibility": "send_manual_only"
+    },
+    {
+      "id": "radio-anomaly-personal",
+      "sceneId": "anomalie-radio",
+      "title": "ANOMALIE RADIO",
+      "type": "sensation",
+      "target": "selected_player",
+      "text": "Pendant une seconde, tu es certain d’avoir entendu ta propre voix avant d’avoir parlé.",
+      "tone": "uneasy",
+      "visibility": "send_manual_only"
+    },
+    {
+      "id": "radio-anomaly-all",
+      "sceneId": "anomalie-radio",
+      "title": "CANAL UESC",
+      "type": "environment",
+      "target": "all",
+      "text": "La radio grésille. Puis tout revient à la normale, trop vite.",
+      "tone": "uneasy",
+      "visibility": "send_manual_only"
+    },
+    {
+      "id": "arches-silence",
+      "sceneId": "approche-arches-noires",
+      "title": "ENVIRONNEMENT",
+      "type": "environment",
+      "target": "all",
+      "text": "Près des arches, le vent semble s’éteindre. Même les bruits du rover paraissent plus lointains.",
+      "tone": "uneasy",
+      "visibility": "send_manual_only"
+    },
+    {
+      "id": "arches-science",
+      "sceneId": "approche-arches-noires",
+      "title": "INTUITION SCIENTIFIQUE",
+      "type": "personal_prompt",
+      "target": "role_science",
+      "text": "La forme des arches peut être naturelle. Probablement. Mais leur surface absorbe la lumière d’une manière étrange.",
+      "tone": "uneasy",
+      "visibility": "send_manual_only"
+    },
+    {
+      "id": "delta6-objective",
+      "sceneId": "arrivee-delta6",
+      "title": "OBJECTIF ACTUEL",
+      "type": "objective",
+      "target": "all",
+      "text": "Inspecter le rover Delta-6, sécuriser le périmètre, localiser les survivants éventuels, récupérer les données.",
+      "tone": "procedural",
+      "visibility": "send_manual_only"
+    },
+    {
+      "id": "delta6-security",
+      "sceneId": "arrivee-delta6",
+      "title": "RÉFLEXE SÉCURITÉ",
+      "type": "personal_prompt",
+      "target": "role_security",
+      "text": "Le site est trop ouvert. Trop silencieux. Si quelque chose approche, vous le verrez probablement trop tard.",
+      "tone": "urgent",
+      "visibility": "send_manual_only"
+    },
+    {
+      "id": "scanner-data",
+      "sceneId": "scanner-actif",
+      "title": "DATA PACKAGE DELTA-6",
+      "type": "objective",
+      "target": "all",
+      "text": "Les données sont instables. Les copier prendra du temps. Les abandonner évitera des risques.",
+      "tone": "procedural",
+      "visibility": "send_manual_only"
+    },
+    {
+      "id": "scanner-engineer",
+      "sceneId": "scanner-actif",
+      "title": "DIAGNOSTIC",
+      "type": "personal_prompt",
+      "target": "role_engineer",
+      "text": "Ce n’est pas une corruption classique. Le fichier existe, mais certaines mesures semblent ne rien mesurer.",
+      "tone": "uneasy",
+      "visibility": "send_manual_only"
+    },
+    {
+      "id": "hound-contact",
+      "sceneId": "contact-hound",
+      "title": "CONTACT",
+      "type": "environment",
+      "target": "all",
+      "text": "Mouvement bas dans la poussière. Rapide. Trop bas pour être humain.",
+      "tone": "urgent",
+      "visibility": "send_manual_only"
+    },
+    {
+      "id": "hound-drone",
+      "sceneId": "contact-hound",
+      "title": "SIGNAL DRONE",
+      "type": "personal_prompt",
+      "target": "role_drone",
+      "text": "Ton drone capte un contact une fraction de seconde avant que le signal ne se déforme.",
+      "tone": "urgent",
+      "visibility": "send_manual_only"
+    },
+    {
+      "id": "velen-medical",
+      "sceneId": "survivant-velen",
+      "title": "ÉTAT DU SURVIVANT",
+      "type": "personal_prompt",
+      "target": "role_medical",
+      "text": "Le survivant est en état de choc. Il est transportable, mais une pression excessive peut aggraver son état.",
+      "tone": "urgent",
+      "visibility": "send_manual_only"
+    },
+    {
+      "id": "velen-all",
+      "sceneId": "survivant-velen",
+      "title": "SURVIVANT",
+      "type": "environment",
+      "target": "all",
+      "text": "Il ne semble pas surpris d’être retrouvé. Il évite seulement de regarder les arches.",
+      "tone": "uneasy",
+      "visibility": "send_manual_only"
+    },
+    {
+      "id": "storm-objective",
+      "sceneId": "tempete-em",
+      "title": "ALERTE MÉTÉO",
+      "type": "objective",
+      "target": "all",
+      "text": "Front électromagnétique sur zone. Extraction immédiate recommandée.",
+      "tone": "urgent",
+      "visibility": "send_manual_only"
+    },
+    {
+      "id": "storm-sensation",
+      "sceneId": "tempete-em",
+      "title": "SENSATION",
+      "type": "sensation",
+      "target": "selected_player",
+      "text": "Dans le souffle radio, tu crois entendre une question. Elle disparaît avant d’avoir du sens.",
+      "tone": "uneasy",
+      "visibility": "send_manual_only"
+    },
+    {
+      "id": "extraction-objective",
+      "sceneId": "extraction",
+      "title": "OBJECTIF ACTUEL",
+      "type": "objective",
+      "target": "all",
+      "text": "Quitter le site. Protéger l’équipe. Sauver ce qui peut encore l’être.",
+      "tone": "urgent",
+      "visibility": "send_manual_only"
+    },
+    {
+      "id": "return-uesc",
+      "sceneId": "retour-new-carthage",
+      "title": "PROCÉDURE UESC",
+      "type": "uesc_notice",
+      "target": "all",
+      "text": "Débrief médical et opérationnel obligatoire avant retour en population générale.",
+      "tone": "procedural",
+      "visibility": "send_manual_only"
+    },
+    {
+      "id": "finale-mobile",
+      "sceneId": "finale-terminal",
+      "title": "TERMINAL LOCAL",
+      "type": "environment",
+      "target": "all",
+      "text": "Une ligne apparaît sur un terminal de maintenance, puis disparaît. Personne ne semble l’avoir validée.",
+      "tone": "uneasy",
+      "visibility": "send_manual_only"
+    }
+  ],
+  "map": {
+    "id": "mission01-map",
+    "title": "Mission 01 Tactical Map",
+    "assetId": "mission01-map-image",
+    "imagePath": "/assets/maps/PLATEAU.png",
+    "coordinateSystem": {
+      "kind": "percent"
+    },
+    "miniMapEnabled": true,
+    "largeMapEnabled": true,
+    "defaultVisibleTokenIds": [
+      "mara-voss",
+      "ilyan-sato",
+      "naima-keller",
+      "kael-moreno",
+      "elara-nyx",
+      "dorian-vale",
+      "june-arendt",
+      "tomas-rehn",
+      "rover-uesc"
+    ]
+  },
+  "audio": {
+    "defaultProfileId": "new_carthage",
+    "locationProfiles": {
+      "new_carthage": {
+        "windFilterHz": 240,
+        "windQ": 0.9,
+        "windGain": 0.28,
+        "humGain": 0.86,
+        "radioGain": 0.82,
+        "stormGain": 0.55,
+        "houndsGain": 0.75,
+        "windIntensity": "low",
+        "particles": "low",
+        "radioNoise": "low",
+        "lowFrequencyHum": "medium",
+        "audioWindVolumeMax": 0.12,
+        "audioStormVolumeMax": 0.08,
+        "audioRadioVolumeMax": 0.24,
+        "audioHumVolumeMax": 0.34,
+        "visualWindSpeedMax": 0.42,
+        "visualParticleDensityMax": 44
+      },
+      "red_plains": {
+        "windFilterHz": 520,
+        "windQ": 1.15,
+        "windGain": 1.22,
+        "humGain": 0.58,
+        "radioGain": 1.18,
+        "stormGain": 1.1,
+        "houndsGain": 0.85,
+        "windIntensity": "medium",
+        "particles": "medium",
+        "radioNoise": "medium",
+        "audioWindVolumeMax": 0.48,
+        "audioStormVolumeMax": 0.38,
+        "visualWindSpeedMax": 1.85,
+        "visualParticleDensityMax": 220
+      },
+      "black_arches": {
+        "windFilterHz": 180,
+        "windQ": 0.7,
+        "windGain": 0.08,
+        "humGain": 0.92,
+        "radioGain": 0.82,
+        "stormGain": 1,
+        "houndsGain": 1.32,
+        "windIntensity": "veryLow",
+        "particles": "veryLow",
+        "silence": true,
+        "radioNoise": "subtle",
+        "lowFrequencyHum": "veryLow",
+        "audioWindVolumeMax": 0.025,
+        "audioStormVolumeMax": 0.025,
+        "audioRadioVolumeMax": 0.22,
+        "audioHumVolumeMax": 0.22,
+        "visualWindSpeedMax": 0.14,
+        "visualParticleDensityMax": 28
+      },
+      "delta6": {
+        "windFilterHz": 420,
+        "windQ": 1.9,
+        "windGain": 1,
+        "humGain": 0.68,
+        "radioGain": 1.2,
+        "stormGain": 1.2,
+        "houndsGain": 1.1,
+        "windIntensity": "low",
+        "particles": "low",
+        "scannerHum": "medium",
+        "radioNoise": "medium",
+        "audioWindVolumeMax": 0.24,
+        "audioStormVolumeMax": 0.18,
+        "audioRadioVolumeMax": 0.5,
+        "visualWindSpeedMax": 0.95,
+        "visualParticleDensityMax": 120
+      }
+    },
+    "moodProfiles": {
+      "signal": {
+        "radioNoise": "medium",
+        "emInstability": "subtle"
+      },
+      "scanner": {
+        "scannerHum": "medium",
+        "audioWindVolumeMax": 0.26,
+        "audioStormVolumeMax": 0.18
+      },
+      "extraction": {
+        "windIntensity": "mediumHigh",
+        "particles": "medium",
+        "emInstability": "medium",
+        "audioWindVolumeMax": 0.46,
+        "audioStormVolumeMax": 0.42,
+        "visualWindSpeedMax": 2.2,
+        "visualParticleDensityMax": 260
+      },
+      "storm": {
+        "windIntensity": "high",
+        "particles": "high",
+        "radioNoise": "high",
+        "emInstability": "high",
+        "silence": false,
+        "audioWindVolumeMax": 0.74,
+        "audioStormVolumeMax": 0.74,
+        "audioRadioVolumeMax": 0.92,
+        "visualWindSpeedMax": 3.4,
+        "visualParticleDensityMax": 360
+      }
+    },
+    "sceneOverrides": {
+      "finale-terminal": {
+        "windIntensity": "none",
+        "particles": "none",
+        "silence": true,
+        "radioNoise": "veryLow",
+        "lowFrequencyHum": "subtle",
+        "emInstability": "veryLow",
+        "windGain": 0,
+        "stormGain": 0,
+        "audioWindVolumeMax": 0,
+        "audioStormVolumeMax": 0,
+        "audioRadioVolumeMax": 0.08,
+        "visualWindSpeedMax": 0,
+        "visualParticleDensityMax": 0
+      }
+    },
+    "profiles": [
+      {
+        "id": "new_carthage",
+        "label": "NEW CARTHAGE",
+        "volume": 0.86
+      },
+      {
+        "id": "red_plains",
+        "label": "PLAINES ROUGES",
+        "volume": 1.22
+      },
+      {
+        "id": "black_arches",
+        "label": "ARCHES NOIRES",
+        "volume": 1.32
+      },
+      {
+        "id": "delta6",
+        "label": "SITE DELTA-6",
+        "volume": 1.2
+      }
+    ],
+    "locationProfileMap": {
+      "new_carthage": "new_carthage",
+      "red_plains": "red_plains",
+      "black_arches": "black_arches",
+      "delta6": "delta6"
+    }
+  },
+  "initialSceneId": "depart_new_carthage",
+  "initialLocationId": "new_carthage"
+}

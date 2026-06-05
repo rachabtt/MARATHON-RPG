@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "1.0.0",
+  "metadata": {
+    "id": "mission-02-cold-storage",
+    "title": "COLD STORAGE",
+    "season": "FIRST SOIL",
+    "number": 2,
+    "missionNumber": "02",
+    "locale": "fr-FR",
+    "tags": [
+      "MARATHON",
+      "UESC"
+    ]
+  },
+  "assetsBasePath": "/missions/mission-02-cold-storage/assets",
+  "assets": [],
+  "bootSequence": {
+    "id": "mission02-boot",
+    "enabled": false,
+    "initialPhase": "mission_live"
+  },
+  "locations": [],
+  "scenes": [],
+  "resources": [],
+  "tokens": [],
+  "npcs": [],
+  "aletheia": {
+    "categories": [],
+    "sceneMap": {},
+    "fallbackCategoryIds": []
+  },
+  "aletheiaCategories": [],
+  "aletheiaMessages": [],
+  "gmScript": [],
+  "gmScriptScenes": [],
+  "playerIntel": [],
+  "map": null,
+  "audio": {
+    "profiles": []
+  }
+}

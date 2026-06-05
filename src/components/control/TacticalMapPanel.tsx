@@ -71,16 +71,22 @@ export default function TacticalMapPanel({ tokens = [], mapImageSrc, onUpdateTok
 
       <div className="flex-1 min-h-0 overflow-hidden p-4 flex items-center justify-center">
         <div className="rounded-2xl border border-stone-800/90 bg-black/70 p-3 shadow-inner shadow-black/20 w-full h-full flex items-center justify-center max-h-full max-w-full">
-          {/* Wrapper carré: limitée par la hauteur dispo ET la largeur dispo */}
-          <div 
-            ref={mapContainerRef}
-            className="relative overflow-hidden rounded-xl border border-stone-700/80 bg-stone-950/80 aspect-square h-full max-w-full max-h-full flex-shrink-0 flex items-center justify-center cursor-grab active:cursor-grabbing"
-          >
-            <img
-              src={mapImageSrc}
-              alt="Carte tactique"
-              className="w-full h-full object-contain z-10 pointer-events-none"
-            />
+          {!mapImageSrc ? (
+            <div className="rounded-xl border border-stone-800 bg-stone-950/80 px-4 py-3 text-center font-mono text-xs uppercase tracking-wider text-stone-500">
+              Aucune carte disponible
+            </div>
+          ) : (
+            <>
+              {/* Wrapper carré: limitée par la hauteur dispo ET la largeur dispo */}
+              <div 
+                ref={mapContainerRef}
+                className="relative overflow-hidden rounded-xl border border-stone-700/80 bg-stone-950/80 aspect-square h-full max-w-full max-h-full flex-shrink-0 flex items-center justify-center cursor-grab active:cursor-grabbing"
+              >
+                <img
+                  src={mapImageSrc}
+                  alt="Carte tactique"
+                  className="w-full h-full object-contain z-10 pointer-events-none"
+                />
 
             {/* Tokens overlay (positioned by percent) */}
             {mapTokens.filter(t => t.visibleInControl).map((t) => (
@@ -116,7 +122,9 @@ export default function TacticalMapPanel({ tokens = [], mapImageSrc, onUpdateTok
                 Tokens: {mapTokens.filter(t => t.visibleInControl).length}
               </div>
             )}
-          </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </aside>

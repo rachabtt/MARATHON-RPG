@@ -17,7 +17,6 @@ import {
   type MissionTelemetryState
 } from '../utils/syncState';
 import type { LocationId, LocationInfo } from '../utils/locations';
-import { missionScenes as fallbackMissionScenes } from '../data/missionScenes';
 import { useMission } from '../context/MissionProvider';
 import DirectorGuidePanel from './DirectorGuidePanel';
 import AletheiaTerminalControl from './control/AletheiaTerminalControl';
@@ -118,17 +117,9 @@ export default function HUD({
   const dataPackageVisible = dataPackage?.visible === true;
   const activeHoundAlert = houndAlert && Date.now() - houndAlert.createdAt < houndAlert.durationMs ? houndAlert.id : null;
   const controlScenes = useMemo(() => {
-    if (currentMission.scenes.length > 0) {
-      return [...currentMission.scenes].sort((first, second) => (first.order ?? 0) - (second.order ?? 0));
-    }
-
-    return fallbackMissionScenes.map((scene, index) => ({
-      id: scene.id,
-      label: scene.label,
-      shortLabel: scene.shortLabel,
-      order: index + 1
-    }));
+    return [...(currentMission.scenes ?? [])].sort((first, second) => (first.order ?? 0) - (second.order ?? 0));
   }, [currentMission.scenes]);
+  const missionTitle = `${currentMission.metadata.missionNumber ?? String(currentMission.metadata.number ?? '').padStart(2, '0')} // ${currentMission.metadata.title}`;
 
   const getShortResourceName = (id: string) => {
     switch (id) {
@@ -154,8 +145,8 @@ export default function HUD({
       {/* Header */}
       <div className="bg-stone-900 border border-stone-850 p-3 rounded flex items-center justify-between gap-3 mb-4">
         <div>
-          <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-emerald-400"/> <strong className="uppercase text-white tracking-wider">MISSION 01 // SOL ROUGE</strong></div>
-          <div className="text-xs text-stone-400 mt-1">Site: <strong className="text-orange-400">{locations.find(l=>l.id===activeLocation)?.label}</strong> • Sync: <strong className="font-bold">{networkSyncStatus}</strong></div>
+          <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-emerald-400"/> <strong className="uppercase text-white tracking-wider">{missionTitle}</strong></div>
+          <div className="text-xs text-stone-400 mt-1">Site: <strong className="text-orange-400">{locations.find(l=>l.id===activeLocation)?.label ?? 'AUCUN LIEU'}</strong> • Sync: <strong className="font-bold">{networkSyncStatus}</strong></div>
         </div>
         <div className="flex gap-2">
           <button onClick={() => onResetMission && onResetMission()} className="px-3 py-1 border rounded text-sm">RESET SESSION</button>
@@ -166,7 +157,7 @@ export default function HUD({
 
       {/* Lieux */}
       <div className="space-y-2 mb-4">
-        <div className="text-xs uppercase tracking-wider text-stone-500">Lieux Mission 01</div>
+        <div className="text-xs uppercase tracking-wider text-stone-500">Lieux mission</div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {locations.map((loc) => {
             const active = loc.id === activeLocation;
@@ -177,6 +168,11 @@ export default function HUD({
               </button>
             );
           })}
+          {locations.length === 0 && (
+            <div className="col-span-full rounded border border-stone-850 bg-stone-950/70 p-3 text-xs uppercase tracking-wider text-stone-500">
+              Aucun lieu disponible
+            </div>
+          )}
         </div>
       </div>
 
@@ -302,11 +298,16 @@ export default function HUD({
 
       {/* Scenes */}
       <div className="space-y-2 mb-4">
-        <div className="text-xs uppercase tracking-wider text-stone-500">Scènes M01</div>
+        <div className="text-xs uppercase tracking-wider text-stone-500">Scènes mission</div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {controlScenes.map((scene) => (
             <button key={scene.id} onClick={() => onSceneShortcut(scene.id)} className="px-2 py-1 border rounded text-sm">{scene.label}</button>
           ))}
+          {controlScenes.length === 0 && (
+            <div className="col-span-full rounded border border-stone-850 bg-stone-950/70 p-3 text-xs uppercase tracking-wider text-stone-500">
+              Aucune scène disponible
+            </div>
+          )}
         </div>
       </div>
 
@@ -381,6 +382,11 @@ export default function HUD({
               <div className="text-xs text-stone-400">{res.states[res.index]}</div>
             </button>
           ))}
+          {resources.length === 0 && (
+            <div className="col-span-full rounded border border-stone-850 bg-stone-950/70 p-3 text-xs uppercase tracking-wider text-stone-500">
+              Aucune ressource disponible
+            </div>
+          )}
         </div>
       </div>
 

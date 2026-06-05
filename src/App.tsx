@@ -200,7 +200,14 @@ function useRoute() {
 
 export default function App() {
   const { route, navigate } = useRoute();
-  const { currentMission } = useMission();
+  const {
+    currentMission,
+    currentMissionId,
+    setCurrentMissionId,
+    availableMissions,
+    isMissionLoading,
+    missionLoadError
+  } = useMission();
   const [state, setState] = useState<MissionControlState>(getStoredState);
   
   // Independent local audio and boot states per device context
@@ -335,7 +342,7 @@ export default function App() {
     () => mergeTacticalRuntimeTokens(initialTacticalTokens, state.tacticalTokens),
     [initialTacticalTokens, state.tacticalTokens]
   );
-  const tacticalMapImagePath = currentMission.map?.imagePath ?? '/assets/maps/PLATEAU.png';
+  const tacticalMapImagePath = currentMission.map?.imagePath ?? '';
   const missionBootPhase = state.missionBoot?.phase ?? 'boot_idle';
 
   useEffect(() => {
@@ -2103,7 +2110,7 @@ export default function App() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(110,31,18,0.06)_0%,rgba(0,0,0,0)_100%)] pointer-events-none" />
         
         {/* Header diagnostic panel */}
-        <header className="w-full flex items-center justify-between border-b border-stone-850 pb-3 mb-3 select-none relative z-10 flex-shrink-0">
+        <header className="w-full flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between border-b border-stone-850 pb-3 mb-3 select-none relative z-10 flex-shrink-0">
           <div className="flex items-center gap-3">
             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
             <div>
@@ -2116,7 +2123,28 @@ export default function App() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-start lg:justify-end gap-2">
+            <label className="flex items-center gap-2 rounded border border-stone-800 bg-stone-900 px-2 py-1 font-mono text-[10px] uppercase tracking-[0.16em] text-stone-500">
+              <span>MISSION ACTIVE</span>
+              <select
+                value={currentMissionId}
+                onChange={(event) => setCurrentMissionId(event.target.value)}
+                disabled={availableMissions.length <= 1}
+                title={missionLoadError ? `Fallback manifest TS: ${missionLoadError.message}` : 'Mission active'}
+                className="max-w-[220px] bg-black/50 border border-stone-800 rounded px-2 py-1 text-[10px] text-orange-200 uppercase tracking-[0.12em] outline-none disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {availableMissions.map((mission) => {
+                  const season = mission.metadata.season ? `${mission.metadata.season} // ` : '';
+                  const number = mission.metadata.number ? `M${String(mission.metadata.number).padStart(2, '0')} — ` : '';
+                  return (
+                    <option key={mission.metadata.id} value={mission.metadata.id}>
+                      {season}{number}{mission.metadata.title}
+                    </option>
+                  );
+                })}
+              </select>
+              {isMissionLoading && <span className="text-emerald-400">LOAD</span>}
+            </label>
             <button
               type="button"
               onClick={handleLaunchMission}

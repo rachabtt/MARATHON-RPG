@@ -31,6 +31,15 @@ function getFallbackLocation(fallbackLocations: LocationInfo[], locationId: Loca
     ?? fallbackLocations[0];
 }
 
+function getEmptyMissionLocation(): LocationInfo {
+  return {
+    id: 'delta6',
+    label: 'AUCUN LIEU',
+    subtitle: 'Mission sans lieux configurés',
+    image: ''
+  };
+}
+
 function getLoopVariants(
   location: MissionLocation,
   fallbackLocation: LocationInfo
@@ -51,7 +60,7 @@ export function missionLocationsToLocationInfos(
   fallbackLocations: LocationInfo[]
 ): LocationInfo[] {
   if (missionLocations.length === 0) {
-    return fallbackLocations.map((location) => ({ ...location }));
+    return [];
   }
 
   return missionLocations.map((missionLocation) => {
@@ -78,5 +87,6 @@ export function getMissionLocationById(
   const runtimeLocationId = toRuntimeLocationId(locationId);
   return locations.find((location) => location.id === runtimeLocationId)
     ?? locations.find((location) => location.id === 'delta6')
-    ?? locations[0];
+    ?? locations[0]
+    ?? getEmptyMissionLocation();
 }
