@@ -30,6 +30,8 @@ export interface CinemagraphConfig {
   audioHoundsVolume: number;       // 0.0 to 1.0 (frottements/clics)
   audioRadioSilence: boolean;      // True = silence radio simulé (coupe tout)
   screenBlack: boolean;            // Black screen override
+  emStormActive?: boolean;
+  emStormSeverity?: 'critical' | 'lost';
 }
 
 export interface CinemagraphVisual {
@@ -49,7 +51,18 @@ export interface QuickEffect {
   durationMs: number;
 }
 
-export type TransmissionType = 'rowe' | 'aletheia' | 'velen' | 'delta6_log' | 'unknown_radio' | 'hound';
+export type TransmissionType =
+  | 'rowe'
+  | 'aletheia'
+  | 'velen'
+  | 'delta6_log'
+  | 'unknown_radio'
+  | 'hound'
+  | 'rover_system'
+  | 'scanner_delta6'
+  | 'em_storm'
+  | 'terminal'
+  | 'system';
 
 export type HoundVariant = 'furtif' | 'proche' | 'equipement';
 
@@ -57,9 +70,11 @@ export interface ActiveTransmission {
   id: string;
   beatId?: string;
   type: TransmissionType;
+  profileId?: string;
+  variant?: 'portrait' | 'log' | 'alert' | 'system' | 'full' | 'compact';
   speaker: string;
   sourceRole: string;
-  sourceType: "command" | "ai" | "field" | "log" | "unknown";
+  sourceType: "command" | "ai" | "field" | "log" | "unknown" | "system";
   message: string;
   audioSrc?: string;
   signalQuality: 'clair' | 'dégradé' | 'critique';
@@ -87,6 +102,51 @@ export interface InterventionState {
 }
 
 export type SquadOverlayMode = 'compact' | 'detail';
+
+export type PlayerCharacterId =
+  | "mara_voss"
+  | "ilyan_sato"
+  | "naima_keller"
+  | "kael_moreno"
+  | "elara_nyx"
+  | "dorian_vale"
+  | "june_arendt"
+  | "tomas_rehn";
+
+export type CharacterStatKey = "physique" | "technique" | "mental" | "presence";
+
+export type PlayerCharacterEquipment = {
+  id: string;
+  label: string;
+  category: "standard" | "specialized" | "team";
+  visibleToPlayerDefault: boolean;
+};
+
+export type PlayerCharacterProfile = {
+  id: PlayerCharacterId;
+  name: string;
+  role: string;
+  portraitSrc: string;
+  concept: string;
+  playstyle: string;
+  stats: Record<CharacterStatKey, number>;
+  specializedEquipment: PlayerCharacterEquipment[];
+  standardEquipment: PlayerCharacterEquipment[];
+  talent: {
+    name: string;
+    description: string;
+  };
+  personalHook: string;
+  playerQuestion: string;
+};
+
+export type CharacterEquipmentState = {
+  characterId: PlayerCharacterId;
+  equipment: Record<string, {
+    visible: boolean;
+    used: boolean;
+  }>;
+};
 
 export interface SquadMember {
   id: string;

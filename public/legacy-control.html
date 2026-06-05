@@ -1,0 +1,799 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>MARATHON RPG - Control Legacy</title>
+    <style>
+      html,
+      body {
+        min-height: 100%;
+        margin: 0;
+        background: #080a09;
+        color: #eee7d9;
+        font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+        -webkit-text-size-adjust: 100%;
+      }
+
+      body {
+        border-top: 4px solid #a65426;
+      }
+
+      .topbar {
+        padding: 12px 14px 10px;
+        border-bottom: 1px solid #2d342f;
+        background: #111411;
+        text-transform: uppercase;
+      }
+
+      .topbar h1 {
+        margin: 0;
+        color: #f0e5d4;
+        font-size: 18px;
+        line-height: 1.1;
+        letter-spacing: 0.12em;
+      }
+
+      .topbar .meta {
+        margin-top: 6px;
+        color: #b47b4d;
+        font-size: 11px;
+        letter-spacing: 0.12em;
+      }
+
+      .layout {
+        display: -webkit-flex;
+        display: flex;
+        -webkit-align-items: stretch;
+        align-items: stretch;
+        min-height: calc(100vh - 62px);
+      }
+
+      .pane {
+        -webkit-flex: 1 1 50%;
+        flex: 1 1 50%;
+        box-sizing: border-box;
+        padding: 12px;
+      }
+
+      .pane + .pane {
+        border-left: 1px solid #242b27;
+      }
+
+      .section {
+        margin-bottom: 12px;
+        padding: 10px;
+        border: 1px solid #343d37;
+        background: #101311;
+      }
+
+      .section h2 {
+        margin: 0 0 9px;
+        color: #8dd8ad;
+        font-size: 12px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      .button-row {
+        margin: -4px;
+      }
+
+      button {
+        margin: 4px;
+        padding: 10px 11px;
+        border: 1px solid #4a544d;
+        border-radius: 0;
+        background: #171b18;
+        color: #eee7d9;
+        font-family: inherit;
+        font-size: 12px;
+        line-height: 1.1;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        -webkit-appearance: none;
+        appearance: none;
+      }
+
+      button:active {
+        background: #2a2119;
+      }
+
+      button.active {
+        border-color: #d48348;
+        background: #2a1b12;
+        color: #ffd8a8;
+      }
+
+      button.danger {
+        border-color: #7e332c;
+        color: #f0c0ad;
+      }
+
+      button.green {
+        border-color: #3e7359;
+        color: #b7f1cd;
+      }
+
+      button.full {
+        width: calc(100% - 8px);
+        text-align: left;
+      }
+
+      .scene-button {
+        width: calc(50% - 8px);
+        min-height: 42px;
+        text-align: left;
+      }
+
+      .resource-button {
+        width: calc(50% - 8px);
+        text-align: left;
+      }
+
+      .resource-button span {
+        display: block;
+        margin-top: 5px;
+        color: #d48348;
+        font-size: 10px;
+        letter-spacing: 0.08em;
+      }
+
+      .status-card {
+        margin-bottom: 12px;
+        padding: 10px;
+        border: 1px solid #3f4a43;
+        background: #050706;
+        text-transform: uppercase;
+      }
+
+      .status-card .line {
+        margin: 4px 0;
+        color: #b8c2b8;
+        font-size: 11px;
+        letter-spacing: 0.09em;
+      }
+
+      .status-card strong {
+        color: #f0e5d4;
+      }
+
+      #syncStatus {
+        color: #8dd8ad;
+      }
+
+      @media (max-width: 820px) {
+        .layout {
+          display: block;
+        }
+
+        .pane + .pane {
+          border-left: 0;
+          border-top: 1px solid #242b27;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="topbar">
+      <h1>CONTROL MJ LEGACY</h1>
+      <div class="meta">Mission 01 // SOL ROUGE // iOS 9 fallback</div>
+    </div>
+
+    <div class="layout">
+      <div class="pane">
+        <div class="status-card">
+          <div class="line">SYNC: <strong id="syncStatus">ATTENTE</strong></div>
+          <div class="line">LIEU: <strong id="currentLocation">NEW CARTHAGE</strong></div>
+          <div class="line">AMBIANCE: <strong id="currentMode">CALME</strong></div>
+          <div class="line">SCÈNE: <strong id="currentScene">RÉVEIL — ALETHEIA</strong></div>
+        </div>
+
+        <div class="section">
+          <h2>Lieux</h2>
+          <div class="button-row">
+            <button data-location="new_carthage">New Carthage</button>
+            <button data-location="red_plains">Plaines Rouges</button>
+            <button data-location="black_arches">Arches Noires</button>
+            <button data-location="delta6">Site Delta-6</button>
+            <button data-red-variant="wide">Plaines Large</button>
+            <button data-red-variant="pov">Plaines POV</button>
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>Ambiances</h2>
+          <div class="button-row">
+            <button data-preset="calme">Calme</button>
+            <button data-preset="delta6">Tension</button>
+            <button data-preset="signal">Signal Instable</button>
+            <button data-preset="scanner">Scanner Actif</button>
+            <button data-preset="tempete" class="danger">Tempête EM</button>
+            <button data-preset="extraction" class="danger">Extraction</button>
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>Actions rapides</h2>
+          <div class="button-row">
+            <button id="blackoutButton">Écran Noir</button>
+            <button id="clearBlackoutButton">Afficher Display</button>
+            <button id="audioButton">Audio On/Off</button>
+            <button id="silenceButton">Silence Radio</button>
+            <button id="resetButton" class="danger">Reset Session</button>
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>Données Delta-6</h2>
+          <div class="button-row">
+            <button id="toggleDataButton" class="green">Afficher/Masquer</button>
+            <button data-data="non_secure">Non sécurisées</button>
+            <button data-data="transfer">Transfert</button>
+            <button data-data="partial">Partielles</button>
+            <button data-data="corrupted">Corrompues</button>
+            <button data-data="secured">Sécurisées</button>
+            <button data-data="lost">Perdues</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="pane">
+        <div class="section">
+          <h2>Scènes Mission 01</h2>
+          <div class="button-row" id="sceneButtons"></div>
+        </div>
+
+        <div class="section">
+          <h2>Contact Hound</h2>
+          <div class="button-row">
+            <button data-hound="motion_detected" class="danger">Mouvement détecté</button>
+            <button data-hound="hound_near" class="danger">Hound proche</button>
+            <button data-hound="device_targeted" class="danger">Radio ciblée</button>
+            <button data-hound="pack_approach" class="danger">Meute approche</button>
+            <button id="clearHoundButton">Désactiver Hound</button>
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>Ressources</h2>
+          <div class="button-row" id="resourceButtons"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        var socket = null;
+        var clientId = 'legacy-control-' + new Date().getTime();
+
+        var locationLabels = {
+          new_carthage: 'NEW CARTHAGE',
+          red_plains: 'PLAINES ROUGES',
+          black_arches: 'ARCHES NOIRES',
+          delta6: 'SITE DELTA-6'
+        };
+
+        var modeLabels = {
+          normal: 'CALME',
+          dust: 'TENSION',
+          scanner: 'SCANNER ACTIF',
+          signal: 'SIGNAL INSTABLE',
+          hounds: 'CONTACT HOUND',
+          storm: 'TEMPÊTE EM',
+          extraction: 'EXTRACTION',
+          silence: 'SILENCE RADIO'
+        };
+
+        var resourceDefs = [
+          ['integrity', 'Intégrité rover', ['Stable', 'Dégradé', 'Critique', 'Perdu'], ['emerald', 'amber', 'red', 'stone'], 0],
+          ['energy', 'Énergie rover', ['Stable', 'Dégradé', 'Critique', 'Perdu'], ['emerald', 'amber', 'red', 'stone'], 0],
+          ['signal', 'Signal radio', ['Stable', 'Dégradé', 'Critique', 'Perdu'], ['emerald', 'amber', 'red', 'stone'], 1],
+          ['visibility', 'Visibilité', ['Stable', 'Dégradé', 'Critique', 'Perdu'], ['emerald', 'amber', 'red', 'stone'], 1],
+          ['tempest', 'Temps avant tempête', ['Stable', 'Dégradé', 'Critique', 'Perdu'], ['emerald', 'amber', 'red', 'stone'], 1],
+          ['data', 'Données Delta-6', ['Stable mais non sécurisées', 'Dégradé', 'Critique', 'Perdu'], ['emerald', 'amber', 'red', 'stone'], 0],
+          ['survivor', 'Survivant Delta-6', ['Inconnu', 'Stable', 'Dégradé', 'Critique', 'Perdu'], ['stone', 'emerald', 'amber', 'red', 'stone'], 0],
+          ['calm', 'Calme du groupe', ['Stable', 'Dégradé', 'Critique', 'Perdu'], ['emerald', 'amber', 'red', 'stone'], 0]
+        ];
+
+        var dataResourceIndex = {
+          non_secure: 0,
+          transfer: 1,
+          partial: 1,
+          corrupted: 2,
+          secured: 0,
+          lost: 3
+        };
+
+        var speakers = {
+          rowe: ['COMMANDER ELIAS ROWE', 'COMMANDEMENT UESC', 'command', 'clair', 'portrait'],
+          aletheia: ['ALETHEIA', "IA D'ASSISTANCE COLONIALE", 'ai', 'clair', 'portrait'],
+          velen: ['DR ISAAC VELEN', 'SURVIVANT DELTA-6', 'field', 'critique', 'portrait'],
+          delta6_log: ['DELTA-6 FIELD LOG', 'ARCHIVE AUDIO CORROMPUE', 'log', 'dégradé', 'log'],
+          unknown_radio: ['MAINTENANCE TERMINAL', 'LOCAL SYSTEM OUTPUT', 'unknown', 'critique', 'system'],
+          hound: ['UESC THREAT TELEMETRY', 'CONTACT HOSTILE NON CONFIRMÉ', 'unknown', 'critique', 'alert'],
+          em_storm: ['EM STORM WARNING', 'ENVIRONMENTAL HAZARD', 'system', 'critique', 'alert'],
+          system: ['UESC SYSTEM', 'MISSION TELEMETRY', 'system', 'clair', 'system']
+        };
+
+        var storyBeats = [
+          ['intro_aletheia', 'RÉVEIL — ALETHEIA', 'new_carthage', 'calme', 'aletheia', 'Bienvenue sur Tau Ceti IV. Le réveil s’est déroulé avec succès.'],
+          ['briefing_rowe', 'BRIEFING — ROWE', 'new_carthage', 'delta6', 'rowe', 'Delta-6 ne répond plus depuis six heures. Vous récupérez l’équipe, les données et le rover.'],
+          ['traversee', 'TRAVERSÉE — PLAINES ROUGES', 'red_plains', 'delta6', 'rowe', 'Gardez le canal ouvert. Revenez avant que la météo se ferme.'],
+          ['anomalie_radio', 'ANOMALIE RADIO', 'red_plains', 'signal', 'aletheia', 'Interférence locale détectée. Aucune source hostile confirmée.'],
+          ['approche_arches_noires', 'APPROCHE — ARCHES NOIRES', 'black_arches', 'signal', 'delta6_log', 'Latence radio variable. Échos multiples. Source non confirmée.'],
+          ['arrivee_delta6', 'ARRIVÉE — DELTA-6', 'delta6', 'delta6', 'delta6_log', 'Relevé actif. Données instables. Retour géologique incohérent.'],
+          ['scanner_actif', 'SCANNER ACTIF', 'delta6', 'signal', 'delta6_log', 'Vous entendez ça ? Coupez le scanner. Coupez—'],
+          ['contact_hound', 'CONTACT HOUND', 'delta6', 'hounds', 'hound', 'CONTACT FAUNE // ÉMISSION ACTIVE DÉTECTÉE'],
+          ['survivant_velen', 'SURVIVANT — VELEN', 'delta6', 'signal', 'velen', 'Je veux rentrer. Il faut couper le scanner.'],
+          ['tempete_em', 'TEMPÊTE EM', 'delta6', 'tempete', 'em_storm', 'Signal dégradé. Restez groupés. Votre sécurité est prioritaire.'],
+          ['extraction', 'EXTRACTION', 'red_plains', 'extraction', 'rowe', 'Fenêtre de retour réduite. Rentrez maintenant.'],
+          ['retour_new_carthage', 'RETOUR — NEW CARTHAGE', 'new_carthage', 'delta6', 'aletheia', 'Certaines données récupérées semblent corrompues. Je recommande une mise en quarantaine.'],
+          ['finale_terminal', 'FINALE — TERMINAL', 'new_carthage', 'signal', 'unknown_radio', 'Signal HOLLOW détecté.']
+        ];
+
+        var houndActions = {
+          motion_detected: ['MOUVEMENT DÉTECTÉ', 'HOSTILE MOTION DETECTED', 'warning', 4000],
+          hound_near: ['HOUND PROCHE', 'LOW PROFILE CONTACT // RANGE UNKNOWN', 'warning', 4500],
+          device_targeted: ['DRONE/RADIO CIBLÉ', 'ACTIVE DEVICE TARGETED', 'critical', 4500],
+          pack_approach: ['MEUTE EN APPROCHE', 'MULTIPLE CONTACTS // EM RESPONSE', 'critical', 5000]
+        };
+
+        var state = makeInitialState();
+
+        function el(id) {
+          return document.getElementById(id);
+        }
+
+        function makeResources() {
+          var list = [];
+          var i;
+          for (i = 0; i < resourceDefs.length; i += 1) {
+            list.push({
+              id: resourceDefs[i][0],
+              name: resourceDefs[i][1],
+              states: resourceDefs[i][2],
+              colors: resourceDefs[i][3],
+              index: resourceDefs[i][4]
+            });
+          }
+          return list;
+        }
+
+        function makeInitialState() {
+          return {
+            activeSceneMode: 'normal',
+            activeLocation: 'new_carthage',
+            activeDirectorSceneId: 'intro_aletheia',
+            emStorm: { active: false, severity: 'critical' },
+            missionTelemetry: { signalRadio: 'DÉGRADÉ', visibility: 'DÉGRADÉ', emActivity: 'DÉGRADÉ' },
+            dataPackage: { status: 'non_secure', visible: false, updatedAt: null },
+            houndAlert: null,
+            resources: makeResources(),
+            effects: { dust: 1, glitch: 0, scanner: 0, headlight: 2, hounds: 0, em: 0 },
+            audio: { enabled: false, windVolume: 0.45, radioVolume: 0.15, scannerVolume: 0.35, humVolume: 0.26, stormVolume: 0.10, houndsVolume: 0.0, radioSilence: false },
+            displayOptions: {
+              screenBlack: false,
+              activePresetId: 'delta6',
+              activeTransmission: null,
+              newCarthageLoopVariant: 'workers',
+              newCarthageLoopCounts: { ship_takeoff: 0, easter_egg: 0 },
+              newCarthagePhaseStartedAt: null,
+              newCarthageLastAutoLoopAt: null,
+              newCarthageAutoStep: 0,
+              newCarthageLastManualLoopAt: null,
+              redPlainsVisualVariant: 'wide',
+              redPlainsTransitionStartedAt: null
+            },
+            interventionOptions: { showPortrait: true, showText: true, playAudio: true },
+            squadOverlay: { visible: false, mode: 'compact', members: [] },
+            squad: { selectedIds: [], locked: false },
+            transientEffects: {},
+            quickEffect: null,
+            logs: []
+          };
+        }
+
+        function ensureState() {
+          if (!state.resources) state.resources = makeResources();
+          if (!state.effects) state.effects = { dust: 1, glitch: 0, scanner: 0, headlight: 2, hounds: 0, em: 0 };
+          if (!state.audio) state.audio = { enabled: false, windVolume: 0.45, radioVolume: 0.15, scannerVolume: 0.35, humVolume: 0.26, stormVolume: 0.10, houndsVolume: 0, radioSilence: false };
+          if (!state.displayOptions) state.displayOptions = {};
+          if (!state.interventionOptions) state.interventionOptions = { showPortrait: true, showText: true, playAudio: true };
+          if (!state.squadOverlay) state.squadOverlay = { visible: false, mode: 'compact', members: [] };
+          if (!state.squad) state.squad = { selectedIds: [], locked: false };
+          if (!state.transientEffects) state.transientEffects = {};
+          if (!state.logs) state.logs = [];
+          if (!state.dataPackage) state.dataPackage = { status: 'non_secure', visible: false, updatedAt: null };
+          if (!state.emStorm) state.emStorm = { active: false, severity: 'critical' };
+        }
+
+        function setResourceIndex(resourceId, index) {
+          var i;
+          ensureState();
+          for (i = 0; i < state.resources.length; i += 1) {
+            if (state.resources[i].id === resourceId) {
+              if (index < 0) index = 0;
+              if (index >= state.resources[i].states.length) index = state.resources[i].states.length - 1;
+              state.resources[i].index = index;
+            }
+          }
+        }
+
+        function cycleResource(resourceId) {
+          var i;
+          ensureState();
+          for (i = 0; i < state.resources.length; i += 1) {
+            if (state.resources[i].id === resourceId) {
+              state.resources[i].index = (state.resources[i].index + 1) % state.resources[i].states.length;
+            }
+          }
+          commit();
+        }
+
+        function applyPreset(presetId) {
+          var audioEnabled;
+          var i;
+          ensureState();
+          audioEnabled = state.audio.enabled;
+          state.emStorm = { active: false, severity: 'critical' };
+          state.audio.enabled = audioEnabled;
+          state.audio.radioSilence = false;
+          state.displayOptions.activePresetId = presetId;
+
+          if (presetId === 'calme') {
+            state.activeSceneMode = 'normal';
+            state.effects = { dust: 0, glitch: 0, scanner: 0, headlight: 1, hounds: 0, em: 0 };
+            state.audio.windVolume = 0.15; state.audio.radioVolume = 0.05; state.audio.scannerVolume = 0.10; state.audio.humVolume = 0.13; state.audio.stormVolume = 0; state.audio.houndsVolume = 0;
+            for (i = 0; i < state.resources.length; i += 1) state.resources[i].index = 0;
+          } else if (presetId === 'signal') {
+            state.activeSceneMode = 'signal';
+            state.effects = { dust: 2, glitch: 2, scanner: 1, headlight: 1, hounds: 0, em: 0 };
+            state.audio.windVolume = 0.50; state.audio.radioVolume = 0.75; state.audio.scannerVolume = 0.40; state.audio.humVolume = 0.32; state.audio.stormVolume = 0.30; state.audio.houndsVolume = 0.05;
+            setResourceIndex('signal', 2); setResourceIndex('visibility', 1); setResourceIndex('tempest', 1); setResourceIndex('data', 1); setResourceIndex('calm', 1);
+          } else if (presetId === 'scanner') {
+            state.activeSceneMode = 'scanner';
+            state.effects = { dust: 2, glitch: 1, scanner: 3, headlight: 2, hounds: 0, em: 0 };
+            state.audio.windVolume = 0.45; state.audio.radioVolume = 0.20; state.audio.scannerVolume = 0.80; state.audio.humVolume = 0.45; state.audio.stormVolume = 0.15; state.audio.houndsVolume = 0;
+            setResourceIndex('energy', 1); setResourceIndex('signal', 1); setResourceIndex('visibility', 1); setResourceIndex('tempest', 1);
+          } else if (presetId === 'hounds') {
+            state.activeSceneMode = 'hounds';
+            state.effects = { dust: 2, glitch: 1, scanner: 0, headlight: 2, hounds: 2, em: 0 };
+            state.audio.windVolume = 0.35; state.audio.radioVolume = 0.45; state.audio.scannerVolume = 0.15; state.audio.humVolume = 0.38; state.audio.stormVolume = 0.20; state.audio.houndsVolume = 0.75;
+            setResourceIndex('integrity', 1); setResourceIndex('energy', 1); setResourceIndex('signal', 2); setResourceIndex('visibility', 2); setResourceIndex('calm', 2);
+          } else if (presetId === 'tempete') {
+            state.activeSceneMode = 'storm';
+            state.emStorm = { active: true, severity: 'critical' };
+            state.missionTelemetry = { signalRadio: 'CRITIQUE', visibility: 'CRITIQUE', emActivity: 'CRITIQUE' };
+            state.effects = { dust: 3, glitch: 3, scanner: 0, headlight: 1, hounds: 0, em: 3 };
+            state.audio.windVolume = 0.95; state.audio.radioVolume = 0.90; state.audio.scannerVolume = 0.05; state.audio.humVolume = 0.36; state.audio.stormVolume = 0.95; state.audio.houndsVolume = 0.08;
+            setResourceIndex('signal', 2); setResourceIndex('visibility', 2); setResourceIndex('tempest', 2); setResourceIndex('data', 2); setResourceIndex('calm', 1);
+          } else if (presetId === 'extraction') {
+            state.activeSceneMode = 'extraction';
+            state.effects = { dust: 3, glitch: 2, scanner: 2, headlight: 3, hounds: 2, em: 2 };
+            state.audio.windVolume = 0.80; state.audio.radioVolume = 0.60; state.audio.scannerVolume = 0.50; state.audio.humVolume = 0.42; state.audio.stormVolume = 0.75; state.audio.houndsVolume = 0.45;
+            setResourceIndex('integrity', 2); setResourceIndex('energy', 2); setResourceIndex('signal', 2); setResourceIndex('visibility', 2); setResourceIndex('tempest', 3); setResourceIndex('calm', 3);
+          } else {
+            state.activeSceneMode = 'dust';
+            state.effects = { dust: 1, glitch: 1, scanner: 1, headlight: 2, hounds: 0, em: 0 };
+            state.audio.windVolume = 0.45; state.audio.radioVolume = 0.15; state.audio.scannerVolume = 0.35; state.audio.humVolume = 0.26; state.audio.stormVolume = 0.10; state.audio.houndsVolume = 0;
+            setResourceIndex('signal', 1); setResourceIndex('visibility', 1); setResourceIndex('tempest', 1);
+          }
+        }
+
+        function createTransmission(type, message, beatId) {
+          var profile = speakers[type] || speakers.system;
+          var duration = type === 'delta6_log' ? 9000 : type === 'hound' || type === 'em_storm' ? 4500 : 6200;
+          return {
+            id: type + '-' + new Date().getTime(),
+            beatId: beatId,
+            type: type,
+            profileId: type,
+            variant: profile[4],
+            speaker: profile[0],
+            sourceRole: profile[1],
+            sourceType: profile[2],
+            message: message,
+            signalQuality: profile[3],
+            startedAt: new Date().getTime(),
+            durationMs: duration
+          };
+        }
+
+        function activateScene(beatId) {
+          var beat = null;
+          var i;
+          for (i = 0; i < storyBeats.length; i += 1) {
+            if (storyBeats[i][0] === beatId) beat = storyBeats[i];
+          }
+          if (!beat) return;
+          if (beatId === 'finale_terminal' && !window.confirm('CONFIRMER LANCEMENT DE LA SCÈNE FINALE ?')) return;
+
+          ensureState();
+          state.activeLocation = beat[2];
+          state.displayOptions.screenBlack = false;
+          applyPreset(beat[3]);
+
+          if (beatId === 'traversee') {
+            state.displayOptions.redPlainsVisualVariant = 'wide';
+            state.displayOptions.redPlainsTransitionStartedAt = new Date().getTime();
+          }
+          if (beatId === 'anomalie_radio' || beatId === 'extraction') {
+            state.displayOptions.redPlainsVisualVariant = 'pov';
+            state.displayOptions.redPlainsTransitionStartedAt = new Date().getTime();
+          }
+          if (beatId === 'scanner_actif') {
+            state.dataPackage.visible = true;
+          }
+          if (beatId === 'contact_hound') {
+            triggerHound('hound_near', false);
+          }
+          if (beatId === 'finale_terminal') {
+            state.houndAlert = null;
+            state.quickEffect = null;
+            state.transientEffects.hound = undefined;
+            state.dataPackage.visible = false;
+            state.squadOverlay.visible = false;
+          }
+
+          state.activeDirectorSceneId = beatId;
+          state.displayOptions.activeTransmission = createTransmission(beat[4], beat[5], beatId);
+          commit();
+        }
+
+        function triggerHound(actionId, shouldCommit) {
+          var action = houndActions[actionId] || houndActions.hound_near;
+          ensureState();
+          applyPreset('hounds');
+          state.activeDirectorSceneId = 'contact_hound';
+          state.displayOptions.screenBlack = false;
+          state.houndAlert = {
+            id: actionId,
+            label: action[0],
+            message: action[1],
+            tone: action[2],
+            createdAt: new Date().getTime(),
+            durationMs: action[3]
+          };
+          state.displayOptions.activeTransmission = createTransmission('hound', action[1], 'contact_hound');
+          state.transientEffects.hound = {
+            active: true,
+            variant: 'proche',
+            startedAt: new Date().getTime(),
+            durationMs: 5200
+          };
+          if (shouldCommit !== false) commit();
+        }
+
+        function clearHound() {
+          ensureState();
+          state.houndAlert = null;
+          state.transientEffects.hound = undefined;
+          state.effects.hounds = 0;
+          if (state.activeSceneMode === 'hounds') state.activeSceneMode = 'dust';
+          if (state.displayOptions.activePresetId === 'hounds') state.displayOptions.activePresetId = 'delta6';
+          commit();
+        }
+
+        function setLocation(locationId) {
+          ensureState();
+          state.activeLocation = locationId;
+          state.displayOptions.screenBlack = false;
+          if (locationId === 'red_plains' && !state.displayOptions.redPlainsVisualVariant) {
+            state.displayOptions.redPlainsVisualVariant = 'wide';
+          }
+          commit();
+        }
+
+        function setDataStatus(status) {
+          ensureState();
+          state.dataPackage.status = status;
+          state.dataPackage.visible = true;
+          state.dataPackage.updatedAt = new Date().getTime();
+          setResourceIndex('data', dataResourceIndex[status] || 0);
+          commit();
+        }
+
+        function sendState() {
+          if (!socket || socket.readyState !== 1) return;
+          socket.send(JSON.stringify({ type: 'STATE_UPDATE', state: state, source: clientId }));
+        }
+
+        function commit() {
+          ensureState();
+          render();
+          sendState();
+        }
+
+        function setStatus(text) {
+          el('syncStatus').innerHTML = text;
+        }
+
+        function buttonActive(selector, valueAttr, value) {
+          var buttons = document.querySelectorAll(selector);
+          var i;
+          for (i = 0; i < buttons.length; i += 1) {
+            if (buttons[i].getAttribute(valueAttr) === value) {
+              buttons[i].className = (buttons[i].className.replace(' active', '') + ' active').replace(/^ /, '');
+            } else {
+              buttons[i].className = buttons[i].className.replace(' active', '');
+            }
+          }
+        }
+
+        function sceneLabel(id) {
+          var i;
+          for (i = 0; i < storyBeats.length; i += 1) {
+            if (storyBeats[i][0] === id) return storyBeats[i][1];
+          }
+          return id || 'NON DÉFINIE';
+        }
+
+        function renderResources() {
+          var container = el('resourceButtons');
+          var i;
+          var res;
+          var btn;
+          container.innerHTML = '';
+          ensureState();
+          for (i = 0; i < state.resources.length; i += 1) {
+            res = state.resources[i];
+            btn = document.createElement('button');
+            btn.className = 'resource-button';
+            btn.setAttribute('data-resource-id', res.id);
+            btn.innerHTML = res.name + '<span>' + res.states[res.index] + '</span>';
+            container.appendChild(btn);
+          }
+        }
+
+        function render() {
+          ensureState();
+          el('currentLocation').innerHTML = locationLabels[state.activeLocation] || state.activeLocation;
+          el('currentMode').innerHTML = modeLabels[state.activeSceneMode] || state.activeSceneMode;
+          el('currentScene').innerHTML = sceneLabel(state.activeDirectorSceneId);
+          buttonActive('button[data-location]', 'data-location', state.activeLocation);
+          buttonActive('button[data-preset]', 'data-preset', state.displayOptions.activePresetId);
+          buttonActive('button[data-red-variant]', 'data-red-variant', state.displayOptions.redPlainsVisualVariant || 'wide');
+          buttonActive('button[data-data]', 'data-data', state.dataPackage.status);
+          buttonActive('button[data-scene]', 'data-scene', state.activeDirectorSceneId);
+          renderResources();
+        }
+
+        function buildSceneButtons() {
+          var container = el('sceneButtons');
+          var i;
+          var btn;
+          for (i = 0; i < storyBeats.length; i += 1) {
+            btn = document.createElement('button');
+            btn.className = 'scene-button';
+            if (storyBeats[i][0] === 'finale_terminal') btn.className += ' danger';
+            btn.setAttribute('data-scene', storyBeats[i][0]);
+            btn.innerHTML = storyBeats[i][1];
+            container.appendChild(btn);
+          }
+        }
+
+        function connect() {
+          var host;
+          if (!window.WebSocket) {
+            setStatus('WEBSOCKET NON SUPPORTÉ');
+            return;
+          }
+          host = window.location.hostname || 'localhost';
+
+          try {
+            socket = new WebSocket('ws://' + host + ':3001');
+          } catch (error) {
+            setStatus('ERREUR');
+            window.setTimeout(connect, 2500);
+            return;
+          }
+
+          socket.onopen = function () {
+            setStatus('ACTIVE');
+          };
+
+          socket.onmessage = function (event) {
+            var message;
+            try {
+              message = JSON.parse(String(event.data));
+            } catch (error) {
+              return;
+            }
+            if (message && message.type === 'STATE_UPDATE' && message.state && message.source !== clientId) {
+              state = message.state;
+              render();
+            }
+          };
+
+          socket.onclose = function () {
+            setStatus('RECONNEXION');
+            window.setTimeout(connect, 2500);
+          };
+
+          socket.onerror = function () {
+            setStatus('INSTABLE');
+          };
+        }
+
+        document.addEventListener('click', function (event) {
+          var target = event.target;
+          var locationId;
+          var presetId;
+          var sceneId;
+          var dataStatus;
+          var redVariant;
+          var houndId;
+          var resourceId;
+
+          while (target && target.tagName !== 'BUTTON') {
+            target = target.parentNode;
+          }
+          if (!target) return;
+
+          locationId = target.getAttribute('data-location');
+          presetId = target.getAttribute('data-preset');
+          sceneId = target.getAttribute('data-scene');
+          dataStatus = target.getAttribute('data-data');
+          redVariant = target.getAttribute('data-red-variant');
+          houndId = target.getAttribute('data-hound');
+          resourceId = target.getAttribute('data-resource-id');
+
+          if (locationId) setLocation(locationId);
+          else if (presetId) { applyPreset(presetId); commit(); }
+          else if (sceneId) activateScene(sceneId);
+          else if (dataStatus) setDataStatus(dataStatus);
+          else if (redVariant) { ensureState(); state.activeLocation = 'red_plains'; state.displayOptions.redPlainsVisualVariant = redVariant; state.displayOptions.redPlainsTransitionStartedAt = new Date().getTime(); commit(); }
+          else if (houndId) triggerHound(houndId, true);
+          else if (resourceId) cycleResource(resourceId);
+        }, false);
+
+        el('blackoutButton').onclick = function () {
+          ensureState();
+          state.displayOptions.screenBlack = true;
+          state.displayOptions.activeTransmission = null;
+          state.houndAlert = null;
+          commit();
+        };
+
+        el('clearBlackoutButton').onclick = function () {
+          ensureState();
+          state.displayOptions.screenBlack = false;
+          commit();
+        };
+
+        el('toggleDataButton').onclick = function () {
+          ensureState();
+          state.dataPackage.visible = !state.dataPackage.visible;
+          state.dataPackage.updatedAt = new Date().getTime();
+          commit();
+        };
+
+        el('audioButton').onclick = function () {
+          ensureState();
+          state.audio.enabled = !state.audio.enabled;
+          commit();
+        };
+
+        el('silenceButton').onclick = function () {
+          ensureState();
+          state.audio.radioSilence = !state.audio.radioSilence;
+          if (state.audio.radioSilence) state.activeSceneMode = 'silence';
+          commit();
+        };
+
+        el('resetButton').onclick = function () {
+          if (!window.confirm('RESET SESSION ?')) return;
+          state = makeInitialState();
+          commit();
+        };
+
+        el('clearHoundButton').onclick = clearHound;
+
+        buildSceneButtons();
+        render();
+        connect();
+      }());
+    </script>
+  </body>
+</html>

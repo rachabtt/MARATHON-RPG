@@ -13,7 +13,7 @@ const houndModules = import.meta.glob("../assets/hounds/*.png", {
 }) as Record<string, string>;
 
 export interface CharacterProfile {
-  id: TransmissionType;
+  id: string;
   label: string;
   role: string;
   portrait?: string;
@@ -30,7 +30,7 @@ function houndImage(path: string): string | undefined {
   return houndModules[`../assets/hounds/${path}`];
 }
 
-export const CHARACTER_PROFILES: Record<TransmissionType, CharacterProfile> = {
+export const CHARACTER_PROFILES: Partial<Record<TransmissionType, CharacterProfile>> = {
   rowe: {
     id: "rowe",
     label: "COMMANDER ELIAS ROWE",
@@ -84,7 +84,13 @@ export const CHARACTER_PROFILES: Record<TransmissionType, CharacterProfile> = {
 };
 
 export function getCharacterProfile(id: TransmissionType): CharacterProfile {
-  return CHARACTER_PROFILES[id];
+  return CHARACTER_PROFILES[id] ?? {
+    id,
+    label: id.toUpperCase(),
+    role: "SOURCE SYSTÈME UESC",
+    style: "interface transmission UESC",
+    voiceTone: "neutre",
+  };
 }
 
 export function getMissingCharacterAssets(): string[] {

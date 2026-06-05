@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { getAudioProfile } from './audioProfiles';
+import { getResolvedAudioProfile } from './audioProfiles';
 import type { LocationId } from './locations';
 
 export class SciFiAudioEngine {
@@ -27,6 +27,7 @@ export class SciFiAudioEngine {
   
   // Master gain
   private masterGain: GainNode | null = null;
+  private windTargetGain = 0.04;
   private radioLevel = 0.1;
   private stormLevel = 0.1;
   private houndsLevel = 0;
@@ -153,7 +154,7 @@ export class SciFiAudioEngine {
     
     // Hum gain
     this.humGain = this.ctx.createGain();
-    this.humGain.gain.setValueAtTime(0.11, this.ctx.currentTime);
+    this.humGain.gain.setValueAtTime(0.045, this.ctx.currentTime);
     
     // Connections
     this.humOsc1.connect(this.humFilter);
@@ -181,13 +182,12 @@ export class SciFiAudioEngine {
       // Wind resonance shifts with frequency: higher frequency = slightly narrower band
       const targetQ = 1.5 + Math.random() * 2.0;
       
-      // Slightly swell the sound with the wind sweep
-      const baseGain = 0.05;
-      const targetGain = baseGain + ((targetFreq - 220) / 400) * 0.12;
+      // Slightly swell the sound with the wind sweep without overriding location/preset mix.
+      const targetGain = this.windTargetGain * (0.78 + ((targetFreq - 220) / 400) * 0.42);
       
       this.windFilter.frequency.exponentialRampToValueAtTime(targetFreq, now + duration);
       this.windFilter.Q.linearRampToValueAtTime(targetQ, now + duration);
-      this.windGain.gain.linearRampToValueAtTime(targetGain, now + duration);
+      this.windGain.gain.linearRampToValueAtTime(Math.max(0.0001, targetGain), now + duration);
       
       this.lfoInterval = window.setTimeout(modulate, duration * 1000);
     };
@@ -304,8 +304,44 @@ export class SciFiAudioEngine {
   }
 
   public triggerRadioGlitchBurst() {
-    this.createNoiseBurst(0.45, 0.12, 'bandpass', 1500, 5.5);
-    this.createNoiseBurst(0.22, 0.08, 'highpass', 2600, 2.5);
+    this.createNoiseBurst(0.50, 0.16, 'bandpass', 1500, 5.5);
+    this.createNoiseBurst(0.24, 0.10, 'highpass', 2600, 2.5);
+    this.createNoiseBurst(0.18, 0.07, 'bandpass', 720, 6);
+
+    if (!this.ctx || !this.masterGain || this.ctx.state === 'suspended') return;
+
+    const now = this.ctx.currentTime;
+    const chirp = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    chirp.type = 'square';
+    chirp.frequency.setValueAtTime(1800, now);
+    chirp.frequency.exponentialRampToValueAtTime(260, now + 0.18);
+    gain.gain.setValueAtTime(0.035, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
+    chirp.connect(gain);
+    gain.connect(this.masterGain);
+    chirp.start(now);
+    chirp.stop(now + 0.24);
+  }
+
+  public triggerRadioSilenceDropout() {
+    this.createNoiseBurst(0.18, 0.08, 'highpass', 3200, 1.4);
+    this.createNoiseBurst(0.58, 0.06, 'lowpass', 260, 0.8);
+
+    if (!this.ctx || !this.masterGain || this.ctx.state === 'suspended') return;
+
+    const now = this.ctx.currentTime;
+    const drop = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    drop.type = 'sawtooth';
+    drop.frequency.setValueAtTime(720, now);
+    drop.frequency.exponentialRampToValueAtTime(80, now + 0.28);
+    gain.gain.setValueAtTime(0.05, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.34);
+    drop.connect(gain);
+    gain.connect(this.masterGain);
+    drop.start(now);
+    drop.stop(now + 0.36);
   }
 
   public triggerEmFlash() {
@@ -358,12 +394,19 @@ export class SciFiAudioEngine {
     stormVol: number = 0.1,
     houndsVol: number = 0,
     locationId?: LocationId | string,
-    environmentFilter?: string
+    environmentFilter?: string,
+    sceneId?: string | null,
+    isStormActive: boolean = false
   ) {
     if (!this.ctx) return;
     
     const now = this.ctx.currentTime;
-    const profile = getAudioProfile(locationId);
+    const profile = getResolvedAudioProfile({
+      locationId,
+      moodId: environmentFilter,
+      sceneId,
+      isStormActive,
+    });
     this.radioLevel = radioVol * profile.radioGain;
     this.stormLevel = stormVol * profile.stormGain;
     this.houndsLevel = houndsVol * profile.houndsGain;
@@ -374,11 +417,15 @@ export class SciFiAudioEngine {
       this.windFilter.Q.linearRampToValueAtTime(profile.windQ, now + 0.5);
     }
     if (this.windGain) {
-      const totalWindAndStorm = Math.min(0.74, windVol * 0.20 * profile.windGain + stormVol * 0.30 * profile.stormGain);
+      const totalWindAndStorm = Math.min(
+        profile.audioWindVolumeMax,
+        windVol * 0.20 * profile.windGain + stormVol * 0.30 * profile.stormGain
+      );
+      this.windTargetGain = totalWindAndStorm;
       this.windGain.gain.linearRampToValueAtTime(totalWindAndStorm, now + 0.3);
     }
     if (this.humGain) {
-      const totalHum = Math.min(0.46, humVol * 0.24 * profile.humGain + stormVol * 0.12 + radioVol * 0.04);
+      const totalHum = Math.min(0.24, humVol * 0.12 * profile.humGain + stormVol * 0.06 + radioVol * 0.02);
       this.humGain.gain.linearRampToValueAtTime(totalHum, now + 0.3);
     }
     if (this.stormGain) {

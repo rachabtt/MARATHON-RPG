@@ -1,0 +1,52 @@
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">DATA PACKAGE DELTA-6 - STATUS PARTIAL</title>
+  <desc id="desc">Transparent 16:9 UESC data recovery interface with partially recovered segments and 53 percent integrity.</desc>
+  <defs>
+    <pattern id="scanlines" width="1" height="8" patternUnits="userSpaceOnUse"><path d="M0 0H1V1H0V0Z" fill="#8AFFC1" fill-opacity="0.11"/></pattern>
+    <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2.4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <style>.mono{font-family:"IBM Plex Mono","SFMono-Regular","Consolas","Liberation Mono",monospace}.label{font-size:26px;letter-spacing:4px;fill:#7C8A82}.small{font-size:22px;letter-spacing:3px;fill:#85938C}.micro{font-size:18px;letter-spacing:3px;fill:#59665F}</style>
+  </defs>
+  <g id="frame" class="mono">
+    <path d="M250 174H1512L1672 334V854H410L250 694V174Z" fill="#050706" fill-opacity="0.70" stroke="#59F0A2" stroke-opacity="0.58" stroke-width="2"/>
+    <path d="M288 212H1491L1634 355V816H431L288 673V212Z" stroke="#F0A34A" stroke-opacity="0.30" stroke-width="1.5"/>
+    <path d="M250 174H434M1485 174H1512L1672 334V376M1672 674V854H1488M434 854H410L250 694V654" stroke="#59F0A2" stroke-width="5"/>
+    <rect x="288" y="212" width="1346" height="604" fill="url(#scanlines)" opacity="0.28"/>
+  </g>
+  <g id="header" class="mono">
+    <text x="336" y="286" font-size="52" letter-spacing="6" fill="#E7F9EF">DATA PACKAGE DELTA-6</text>
+    <text x="340" y="330" class="label">UESC // DATA RECOVERY // ARCHIVE NODE</text>
+    <text x="1270" y="284" class="small" text-anchor="end">TAU CETI IV</text>
+    <text x="1270" y="320" class="micro" text-anchor="end">RECOVERY CHANNEL 04-A</text>
+  </g>
+  <g id="status_block" class="mono">
+    <path d="M336 382H946L1004 440V532H336V382Z" fill="#0B1210" fill-opacity="0.74" stroke="#F0A34A" stroke-opacity="0.48" stroke-width="2"/>
+    <text x="372" y="438" class="label">RECOVERY STATE</text>
+    <text x="372" y="500" font-size="44" letter-spacing="5" fill="#F0A34A">STATUS: PARTIAL</text>
+  </g>
+  <g id="integrity_bar" class="mono">
+    <text x="336" y="614" class="label">PACKAGE INTEGRITY</text>
+    <rect x="336" y="642" width="810" height="34" fill="#101411" stroke="#52635B" stroke-width="2"/>
+    <rect x="344" y="650" width="430" height="18" fill="#F0A34A"/>
+    <rect x="804" y="650" width="36" height="18" fill="#59F0A2" fill-opacity="0.45"/>
+    <path d="M552 642V676M734 642V676M916 642V676M1088 642V676" stroke="#233128" stroke-width="2"/>
+    <text x="1174" y="672" font-size="34" letter-spacing="4" fill="#F0A34A">53%</text>
+  </g>
+  <g id="waveform" class="mono">
+    <text x="1112" y="418" class="label">SIGNAL TRACE</text>
+    <path d="M1112 472H1538" stroke="#52635B" stroke-width="2"/>
+    <polyline points="1112,486 1150,462 1188,494 1226,458 1264,486 1302,470 1340,472 1378,462 1416,500 1454,470 1492,488 1538,480" stroke="#59F0A2" stroke-width="4" stroke-linejoin="round" filter="url(#softGlow)"/>
+    <rect x="1112" y="522" width="96" height="16" fill="#59F0A2" fill-opacity="0.62"/>
+    <rect x="1224" y="522" width="54" height="16" fill="#222C28" stroke="#F0A34A" stroke-opacity="0.5"/>
+    <rect x="1296" y="522" width="112" height="16" fill="#F0A34A" fill-opacity="0.52"/>
+    <rect x="1430" y="522" width="108" height="16" fill="#59F0A2" fill-opacity="0.30"/>
+  </g>
+  <g id="metadata" class="mono">
+    <path d="M336 728H1538" stroke="#52635B" stroke-opacity="0.7"/>
+    <text x="336" y="774" class="small">CHECKSUM: PARTIAL</text>
+    <text x="336" y="816" class="small">SEGMENTS: 11 / 20</text>
+    <text x="734" y="774" class="small">ARCHIVE NODE: D6-FIELD</text>
+    <text x="734" y="816" class="small">GAPS: NON-CRITICAL</text>
+    <text x="1190" y="774" class="small">SIGNAL TRACE: FRAGMENTED</text>
+    <text x="1190" y="816" class="small">RECOVERY: CONTINUE</text>
+  </g>
+</svg>

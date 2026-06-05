@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>MARATHON RPG - Display Legacy</title>
+    <style>
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+        background: #020403;
+        color: #e8e0d2;
+        font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+      }
+
+      #app {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        background: #020403;
+      }
+
+      #location {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        background-position: center center;
+        background-size: cover;
+        background-repeat: no-repeat;
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
+      }
+
+      #shade {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.20), rgba(0, 0, 0, 0.42));
+      }
+
+      #scanlines {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        opacity: 0.13;
+        background-image: linear-gradient(rgba(255,255,255,0.08) 50%, rgba(0,0,0,0.18) 50%);
+        background-size: 100% 4px;
+        pointer-events: none;
+      }
+
+      #hud {
+        position: absolute;
+        top: 22px;
+        left: 24px;
+        max-width: 430px;
+        padding: 13px 15px 12px;
+        border: 1px solid rgba(78, 93, 86, 0.72);
+        background: rgba(2, 6, 5, 0.68);
+        box-shadow: 0 0 24px rgba(0, 0, 0, 0.40);
+        text-transform: uppercase;
+      }
+
+      #hud .kicker {
+        margin-bottom: 8px;
+        color: #9aa29a;
+        font-size: 10px;
+        letter-spacing: 0.25em;
+      }
+
+      #hud .location {
+        color: #f1eadf;
+        font-size: 24px;
+        line-height: 1.05;
+        letter-spacing: 0.09em;
+        font-weight: bold;
+      }
+
+      #hud .meta {
+        margin-top: 9px;
+        color: #d3894c;
+        font-size: 11px;
+        letter-spacing: 0.16em;
+      }
+
+      #status {
+        position: absolute;
+        right: 24px;
+        top: 24px;
+        padding: 9px 11px;
+        border: 1px solid rgba(71, 86, 79, 0.65);
+        background: rgba(2, 6, 5, 0.56);
+        color: #7fd7a6;
+        font-size: 10px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+
+      #dataPackage {
+        display: none;
+        position: absolute;
+        right: 28px;
+        bottom: 28px;
+        width: 330px;
+        padding: 16px;
+        border: 1px solid rgba(80, 114, 98, 0.78);
+        background: rgba(3, 8, 7, 0.82);
+        box-shadow: 0 0 30px rgba(0, 0, 0, 0.48);
+        text-transform: uppercase;
+      }
+
+      #dataPackage .title {
+        color: #f1eadf;
+        font-size: 17px;
+        letter-spacing: 0.12em;
+        font-weight: bold;
+      }
+
+      #dataPackage .row {
+        margin-top: 9px;
+        color: #b8c2b8;
+        font-size: 12px;
+        line-height: 1.35;
+        letter-spacing: 0.10em;
+      }
+
+      #dataPackage .value {
+        color: #7fd7a6;
+      }
+
+      #houndAlert {
+        display: none;
+        position: absolute;
+        left: 50%;
+        top: 48%;
+        width: 520px;
+        max-width: 72%;
+        padding: 18px 20px 18px 190px;
+        min-height: 138px;
+        border: 1px solid rgba(198, 91, 54, 0.78);
+        background: rgba(8, 6, 5, 0.86);
+        box-shadow: 0 0 42px rgba(0, 0, 0, 0.62);
+        text-transform: uppercase;
+        -webkit-transform: translate(-50%, -50%);
+        transform: translate(-50%, -50%);
+      }
+
+      #houndAlert img {
+        position: absolute;
+        left: 14px;
+        top: 12px;
+        width: 158px;
+        height: 136px;
+        object-fit: contain;
+        opacity: 0.84;
+      }
+
+      #houndAlert .title {
+        color: #f0dacd;
+        font-size: 25px;
+        line-height: 1.05;
+        letter-spacing: 0.14em;
+        font-weight: bold;
+      }
+
+      #houndAlert .body {
+        margin-top: 13px;
+        color: #d3894c;
+        font-size: 13px;
+        line-height: 1.45;
+        letter-spacing: 0.12em;
+      }
+
+      #terminal {
+        display: none;
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        background: #020403;
+        text-transform: uppercase;
+      }
+
+      #terminal .head {
+        position: absolute;
+        top: 7%;
+        left: 6%;
+        right: 6%;
+        color: #555d57;
+        font-size: 10px;
+        letter-spacing: 0.28em;
+      }
+
+      #terminal .head span {
+        float: right;
+        color: #7d4328;
+      }
+
+      #terminal .center {
+        position: absolute;
+        top: 38%;
+        left: 8%;
+        right: 8%;
+        text-align: center;
+      }
+
+      #terminal .main {
+        color: #d9f4df;
+        font-size: 50px;
+        line-height: 1.05;
+        letter-spacing: 0.18em;
+        font-weight: bold;
+        text-shadow: 0 0 18px rgba(99, 220, 138, 0.24);
+      }
+
+      #terminal .source {
+        margin-top: 34px;
+        color: #9ba29b;
+        font-size: 23px;
+        letter-spacing: 0.22em;
+      }
+
+      #terminal .below {
+        margin-top: 10px;
+        color: #f1eadf;
+        font-size: 38px;
+        letter-spacing: 0.20em;
+        font-weight: bold;
+      }
+
+      #blackout {
+        display: none;
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        background: #000;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      @media (max-width: 900px) {
+        #hud {
+          top: 16px;
+          left: 16px;
+          max-width: 360px;
+        }
+
+        #hud .location {
+          font-size: 20px;
+        }
+
+        #dataPackage {
+          width: 285px;
+          right: 18px;
+          bottom: 18px;
+        }
+
+        #houndAlert {
+          width: 470px;
+          padding-left: 168px;
+        }
+
+        #houndAlert img {
+          width: 140px;
+        }
+
+        #terminal .main {
+          font-size: 38px;
+        }
+
+        #terminal .below {
+          font-size: 30px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div id="location"></div>
+      <div id="shade"></div>
+      <div id="scanlines"></div>
+      <div id="hud">
+        <div class="kicker">UESC // MISSION 01</div>
+        <div class="location" id="locationName">NEW CARTHAGE</div>
+        <div class="meta" id="sceneMode">CALME</div>
+      </div>
+      <div id="status">SYNC: ATTENTE</div>
+      <div id="dataPackage">
+        <div class="title">DATA PACKAGE DELTA-6</div>
+        <div class="row">STATUS: <span class="value" id="dataStatus">NON SÉCURISÉES</span></div>
+        <div class="row">INTEGRITY: <span class="value" id="dataIntegrity">18%</span></div>
+        <div class="row">RECOVERY CHANNEL: <span class="value">D6</span></div>
+        <div class="row">SIGNAL TRACE: <span class="value" id="dataTrace">DEGRADED</span></div>
+      </div>
+      <div id="houndAlert">
+        <img src="/assets/legacy/interventions/hounds.png" alt="">
+        <div class="title" id="houndTitle">CONTACT HOUND</div>
+        <div class="body" id="houndBody">Signature basse détectée. Activité électronique à surveiller.</div>
+      </div>
+      <div id="terminal">
+        <div class="head">TERMINAL DE MAINTENANCE UESC <span>ÉVÉNEMENT NON ENREGISTRÉ</span></div>
+        <div class="center">
+          <div class="main">SIGNAL HOLLOW DÉTECTÉ</div>
+          <div class="source">SOURCE:</div>
+          <div class="below">SOUS LA SURFACE</div>
+        </div>
+      </div>
+      <div id="blackout"></div>
+    </div>
+
+    <script>
+      (function () {
+        var state = {
+          activeLocation: 'new_carthage',
+          activeSceneMode: 'normal',
+          activeDirectorSceneId: 'depart_new_carthage',
+          effects: { hounds: 0 },
+          displayOptions: { screenBlack: false, redPlainsVisualVariant: 'wide' },
+          dataPackage: { status: 'non_secure', visible: false },
+          houndAlert: null
+        };
+
+        var locationImages = {
+          new_carthage: '/assets/legacy/locations/nc-base.png',
+          red_plains: '/assets/legacy/locations/red-plains.png',
+          red_plains_pov: '/assets/legacy/locations/red-plains-pov.png',
+          black_arches: '/assets/legacy/locations/black-arches-pov.png',
+          black_arches_hound: '/assets/legacy/locations/black-arches-pov-hound.png',
+          delta6: '/assets/legacy/locations/delta6.png'
+        };
+
+        var locationLabels = {
+          new_carthage: 'NEW CARTHAGE',
+          red_plains: 'PLAINES ROUGES',
+          black_arches: 'ARCHES NOIRES',
+          delta6: 'SITE DELTA-6'
+        };
+
+        var modeLabels = {
+          normal: 'CALME',
+          dust: 'POUSSIÈRE ACTIVE',
+          scanner: 'SCANNER ACTIF',
+          signal: 'SIGNAL INSTABLE',
+          hounds: 'CONTACT HOUND',
+          storm: 'TEMPÊTE EM',
+          extraction: 'EXTRACTION',
+          silence: 'SILENCE RADIO'
+        };
+
+        var dataMeta = {
+          non_secure: ['NON SÉCURISÉES', '18%', 'DEGRADED'],
+          transfer: ['TRANSFERT EN COURS', '64%', 'ACTIVE'],
+          partial: ['PARTIELLES', '42%', 'DEGRADED'],
+          corrupted: ['CORROMPUES', '12%', 'DEGRADED'],
+          secured: ['SÉCURISÉES', '100%', 'ACTIVE'],
+          lost: ['PERDUES', '0%', 'LOST']
+        };
+
+        var lastHoundId = '';
+        var houndHideTimer = null;
+
+        function el(id) {
+          return document.getElementById(id);
+        }
+
+        function isFinale(current) {
+          var directorId = current.activeDirectorSceneId || '';
+          var transmission = current.displayOptions && current.displayOptions.activeTransmission;
+          var beatId = transmission && transmission.beatId ? transmission.beatId : '';
+          return directorId === 'finale-terminal' || directorId === 'finale_terminal' || beatId === 'finale_terminal';
+        }
+
+        function pickLocationImage(current) {
+          var loc = current.activeLocation || 'new_carthage';
+          var display = current.displayOptions || {};
+          var effects = current.effects || {};
+          var houndActive = current.activeSceneMode === 'hounds' || effects.hounds > 0;
+
+          if (loc === 'red_plains' && display.redPlainsVisualVariant === 'pov') {
+            return locationImages.red_plains_pov;
+          }
+
+          if (loc === 'black_arches' && houndActive) {
+            return locationImages.black_arches_hound;
+          }
+
+          return locationImages[loc] || locationImages.new_carthage;
+        }
+
+        function updateDataPackage(current) {
+          var data = current.dataPackage || {};
+          var loc = current.activeLocation || '';
+          var directorId = current.activeDirectorSceneId || '';
+          var visibleScene = loc === 'delta6' || directorId === 'arrivee_delta6' || directorId === 'scanner_actif' || directorId === 'finale_terminal';
+          var panel = el('dataPackage');
+          var meta = dataMeta[data.status] || dataMeta.non_secure;
+
+          el('dataStatus').innerHTML = meta[0];
+          el('dataIntegrity').innerHTML = meta[1];
+          el('dataTrace').innerHTML = meta[2];
+          panel.style.display = data.visible && visibleScene && !isFinale(current) ? 'block' : 'none';
+        }
+
+        function updateHoundAlert(current) {
+          var alert = current.houndAlert;
+          var box = el('houndAlert');
+
+          if (!alert || alert.id === 'contact_lost') {
+            box.style.display = 'none';
+            lastHoundId = '';
+            return;
+          }
+
+          var alertKey = alert.id + ':' + alert.createdAt;
+
+          if (alertKey !== lastHoundId) {
+            lastHoundId = alertKey;
+            el('houndTitle').innerHTML = alert.label || 'CONTACT HOUND';
+            el('houndBody').innerHTML = alert.message || 'Signature basse détectée. Activité électronique à surveiller.';
+            box.style.display = 'block';
+
+            if (houndHideTimer) {
+              window.clearTimeout(houndHideTimer);
+            }
+            houndHideTimer = window.setTimeout(function () {
+              box.style.display = 'none';
+            }, alert.durationMs || 5200);
+          }
+        }
+
+        function render() {
+          var display = state.displayOptions || {};
+          var finale = isFinale(state);
+          var blackout = display.screenBlack === true;
+          var loc = state.activeLocation || 'new_carthage';
+          var mode = state.activeSceneMode || 'normal';
+
+          el('location').style.backgroundImage = 'url("' + pickLocationImage(state) + '")';
+          el('locationName').innerHTML = locationLabels[loc] || 'ZONE UESC';
+          el('sceneMode').innerHTML = modeLabels[mode] || 'TRANSMISSION';
+          el('terminal').style.display = finale ? 'block' : 'none';
+          el('blackout').style.display = blackout && !finale ? 'block' : 'none';
+          el('hud').style.display = finale || blackout ? 'none' : 'block';
+          el('shade').style.display = finale || blackout ? 'none' : 'block';
+          el('scanlines').style.display = blackout ? 'none' : 'block';
+
+          updateDataPackage(state);
+          updateHoundAlert(state);
+        }
+
+        function setStatus(text) {
+          el('status').innerHTML = text;
+        }
+
+        function connect() {
+          if (!window.WebSocket) {
+            setStatus('SYNC: WEBSOCKET NON SUPPORTÉ');
+            return;
+          }
+
+          var host = window.location.hostname || 'localhost';
+          var socket;
+
+          try {
+            socket = new WebSocket('ws://' + host + ':3001');
+          } catch (error) {
+            setStatus('SYNC: ERREUR');
+            window.setTimeout(connect, 2500);
+            return;
+          }
+
+          socket.onopen = function () {
+            setStatus('SYNC: ACTIVE');
+          };
+
+          socket.onmessage = function (event) {
+            var message;
+            try {
+              message = JSON.parse(String(event.data));
+            } catch (error) {
+              return;
+            }
+
+            if (message && message.type === 'STATE_UPDATE' && message.state) {
+              state = message.state;
+              render();
+            }
+          };
+
+          socket.onclose = function () {
+            setStatus('SYNC: RECONNEXION');
+            window.setTimeout(connect, 2500);
+          };
+
+          socket.onerror = function () {
+            setStatus('SYNC: INSTABLE');
+          };
+        }
+
+        render();
+        connect();
+      }());
+    </script>
+  </body>
+</html>

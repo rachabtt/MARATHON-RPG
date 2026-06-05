@@ -18,6 +18,7 @@ interface CinemagraphProps {
   onOneShotComplete?: () => void;
   onFlickerSound?: () => void;
   onScannerSound?: () => void;
+  embedded?: boolean;
 }
 
 interface Particle {
@@ -31,7 +32,10 @@ interface Particle {
   depth: number;         // For parallax/blur sizing
 }
 
-export default function Cinemagraph({ config, visual, imageUrl, onOneShotComplete, onFlickerSound, onScannerSound }: CinemagraphProps) {
+// Removed global orb/particle overlay: visual noise on all scenes.
+const ENABLE_ROUND_PARTICLE_OVERLAYS = false;
+
+export default function Cinemagraph({ config, visual, imageUrl, onOneShotComplete, onFlickerSound, onScannerSound, embedded }: CinemagraphProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationFrameRef = useRef<number | null>(null);
@@ -53,6 +57,11 @@ export default function Cinemagraph({ config, visual, imageUrl, onOneShotComplet
 
   // 1. Initialize static, repeatable particle attributes
   useEffect(() => {
+    if (!ENABLE_ROUND_PARTICLE_OVERLAYS) {
+      particlesRef.current = [];
+      return;
+    }
+
     const arr: Particle[] = [];
     const count = 300; // Generous particle count for thick atmospheric immersion
     for (let i = 0; i < count; i++) {
@@ -123,93 +132,95 @@ export default function Cinemagraph({ config, visual, imageUrl, onOneShotComplet
       const scaleY = canvas.height / 562.5;
       
       // 3.2 Draw drifting red-orange dust particles
-      const particles = particlesRef.current;
-      
-      // Compute narrative mode parameters for particles
-      let modeSpeedMultiplier = 1.0;
-      let modeDensityMultiplier = 1.0;
-      let particleColorTemplate = 'rgba(164, 69, 50, ALPHA_VAL)'; // default warm rust
-      
-      if (config.environmentFilter === 'dust') {
-        modeSpeedMultiplier = 1.4 * locationEffect.particleSpeed;
-        modeDensityMultiplier = 2.2 * locationEffect.particleDensity;
-        particleColorTemplate = 'rgba(185, 48, 28, ALPHA_VAL)';
-      } else if (config.environmentFilter === 'storm') {
-        modeSpeedMultiplier = 2.8 * locationEffect.particleSpeed;
-        modeDensityMultiplier = 2.6 * locationEffect.particleDensity;
-        particleColorTemplate = 'rgba(145, 38, 22, ALPHA_VAL)';
-      } else if (config.environmentFilter === 'extraction') {
-        modeSpeedMultiplier = 2.0 * locationEffect.particleSpeed;
-        modeDensityMultiplier = 3.0 * locationEffect.particleDensity;
-        particleColorTemplate = 'rgba(205, 55, 35, ALPHA_VAL)';
-      } else if (config.environmentFilter === 'silence') {
-        modeSpeedMultiplier = 0.4;
-        modeDensityMultiplier = 0.3;
-        particleColorTemplate = 'rgba(110, 110, 115, ALPHA_VAL)'; // quiet gray
-      } else if (config.environmentFilter === 'scanner') {
-        modeSpeedMultiplier = 0.95 * locationEffect.particleSpeed;
-        modeDensityMultiplier = 0.9 * locationEffect.particleDensity;
-        particleColorTemplate = 'rgba(152, 60, 44, ALPHA_VAL)';
-      } else if (config.environmentFilter === 'hounds') {
-        modeSpeedMultiplier = 0.8 * locationEffect.particleSpeed;
-        modeDensityMultiplier = 1.15 * locationEffect.particleDensity;
-        particleColorTemplate = 'rgba(130, 48, 35, ALPHA_VAL)';
-      } else {
-        modeSpeedMultiplier *= locationEffect.particleSpeed;
-        modeDensityMultiplier *= locationEffect.particleDensity;
-      }
+      if (ENABLE_ROUND_PARTICLE_OVERLAYS) {
+        const particles = particlesRef.current;
+        
+        // Compute narrative mode parameters for particles
+        let modeSpeedMultiplier = 1.0;
+        let modeDensityMultiplier = 1.0;
+        let particleColorTemplate = 'rgba(164, 69, 50, ALPHA_VAL)'; // default warm rust
+        
+        if (config.environmentFilter === 'dust') {
+          modeSpeedMultiplier = 1.4 * locationEffect.particleSpeed;
+          modeDensityMultiplier = 2.2 * locationEffect.particleDensity;
+          particleColorTemplate = 'rgba(185, 48, 28, ALPHA_VAL)';
+        } else if (config.environmentFilter === 'storm' || config.emStormActive) {
+          modeSpeedMultiplier = (config.emStormSeverity === 'lost' ? 3.0 : 2.4) * locationEffect.particleSpeed;
+          modeDensityMultiplier = (config.emStormSeverity === 'lost' ? 2.8 : 2.35) * locationEffect.particleDensity;
+          particleColorTemplate = 'rgba(145, 38, 22, ALPHA_VAL)';
+        } else if (config.environmentFilter === 'extraction') {
+          modeSpeedMultiplier = 2.0 * locationEffect.particleSpeed;
+          modeDensityMultiplier = 3.0 * locationEffect.particleDensity;
+          particleColorTemplate = 'rgba(205, 55, 35, ALPHA_VAL)';
+        } else if (config.environmentFilter === 'silence') {
+          modeSpeedMultiplier = 0.4;
+          modeDensityMultiplier = 0.3;
+          particleColorTemplate = 'rgba(110, 110, 115, ALPHA_VAL)'; // quiet gray
+        } else if (config.environmentFilter === 'scanner') {
+          modeSpeedMultiplier = 0.95 * locationEffect.particleSpeed;
+          modeDensityMultiplier = 0.9 * locationEffect.particleDensity;
+          particleColorTemplate = 'rgba(152, 60, 44, ALPHA_VAL)';
+        } else if (config.environmentFilter === 'hounds') {
+          modeSpeedMultiplier = 0.8 * locationEffect.particleSpeed;
+          modeDensityMultiplier = 1.15 * locationEffect.particleDensity;
+          particleColorTemplate = 'rgba(130, 48, 35, ALPHA_VAL)';
+        } else {
+          modeSpeedMultiplier *= locationEffect.particleSpeed;
+          modeDensityMultiplier *= locationEffect.particleDensity;
+        }
 
-      particles.forEach((p) => {
-        // Evaluate age of particle within its lifespan cycle:
-        // By using continuous math with modulo, we guarantee the exact same coordinate positions at the loop boundaries!
-        const particleTime = (loopTimeSec + p.phaseOffset) % p.duration;
-        const speed = config.windSpeed * p.speedFactor * 65.0 * modeSpeedMultiplier; // wind drift rate in pixels-equivalent
-        
-        // Progress downwind
-        let currentX = p.startX + particleTime * speed;
-        let currentY = p.startY + particleTime * speed * Math.sin(locationEffect.particleDrift + p.driftAngle * 0.25);
-        
-        // Wrap coordinates seamlessly
-        if (currentX > 1100) {
-          currentX = (currentX - 1200);
-        }
-        if (currentY > 600) {
-          currentY = currentY - 600;
-        }
-        
-        // Compute alpha fade-in / fade-out to prevent popping
-        let alpha = 0;
-        const progress = particleTime / p.duration;
-        if (progress < 0.25) {
-          alpha = progress / 0.25; // fade in
-        } else if (progress > 0.75) {
-          alpha = (1.0 - progress) / 0.25; // fade out
-        } else {
-          alpha = 1.0;
-        }
-        
-        // Adjust alpha by depth and configuration density multiplier
-        const alphaScale = p.depth * 0.45;
-        const densityMultiplier = Math.min(config.dustDensity / 120.0, 2.5) * modeDensityMultiplier;
-        const finalAlpha = alpha * alphaScale * densityMultiplier;
-        ctx.fillStyle = particleColorTemplate.replace('ALPHA_VAL', finalAlpha.toFixed(3));
-        
-        // Distant vs Foreground bokeh blur
-        const drawRadius = p.size * p.depth * scaleX;
-        ctx.beginPath();
-        if (p.depth > 0.75) {
-          // Foreground particles blurred, floating faster
-          ctx.arc(currentX * scaleX, currentY * scaleY, drawRadius * 1.5, 0, Math.PI * 2);
-          ctx.shadowColor = 'rgba(156, 63, 45, 0.4)';
-          ctx.shadowBlur = 4;
-        } else {
-          ctx.arc(currentX * scaleX, currentY * scaleY, drawRadius, 0, Math.PI * 2);
-          ctx.shadowBlur = 0;
-        }
-        ctx.fill();
-        ctx.closePath();
-      });
-      ctx.shadowBlur = 0; // Reset canvas shadows
+        particles.forEach((p) => {
+          // Evaluate age of particle within its lifespan cycle:
+          // By using continuous math with modulo, we guarantee the exact same coordinate positions at the loop boundaries!
+          const particleTime = (loopTimeSec + p.phaseOffset) % p.duration;
+          const speed = config.windSpeed * p.speedFactor * 65.0 * modeSpeedMultiplier; // wind drift rate in pixels-equivalent
+          
+          // Progress downwind
+          let currentX = p.startX + particleTime * speed;
+          let currentY = p.startY + particleTime * speed * Math.sin(locationEffect.particleDrift + p.driftAngle * 0.25);
+          
+          // Wrap coordinates seamlessly
+          if (currentX > 1100) {
+            currentX = (currentX - 1200);
+          }
+          if (currentY > 600) {
+            currentY = currentY - 600;
+          }
+          
+          // Compute alpha fade-in / fade-out to prevent popping
+          let alpha = 0;
+          const progress = particleTime / p.duration;
+          if (progress < 0.25) {
+            alpha = progress / 0.25; // fade in
+          } else if (progress > 0.75) {
+            alpha = (1.0 - progress) / 0.25; // fade out
+          } else {
+            alpha = 1.0;
+          }
+          
+          // Adjust alpha by depth and configuration density multiplier
+          const alphaScale = p.depth * 0.45;
+          const densityMultiplier = Math.min(config.dustDensity / 120.0, 2.5) * modeDensityMultiplier;
+          const finalAlpha = alpha * alphaScale * densityMultiplier;
+          ctx.fillStyle = particleColorTemplate.replace('ALPHA_VAL', finalAlpha.toFixed(3));
+          
+          // Distant vs Foreground bokeh blur
+          const drawRadius = p.size * p.depth * scaleX;
+          ctx.beginPath();
+          if (p.depth > 0.75) {
+            // Foreground particles blurred, floating faster
+            ctx.arc(currentX * scaleX, currentY * scaleY, drawRadius * 1.5, 0, Math.PI * 2);
+            ctx.shadowColor = 'rgba(156, 63, 45, 0.4)';
+            ctx.shadowBlur = 4;
+          } else {
+            ctx.arc(currentX * scaleX, currentY * scaleY, drawRadius, 0, Math.PI * 2);
+            ctx.shadowBlur = 0;
+          }
+          ctx.fill();
+          ctx.closePath();
+        });
+        ctx.shadowBlur = 0; // Reset canvas shadows
+      }
       
       // 3.3 Trigger periodic sound effects on loop boundaries
       // Scanner sound triggers when the scanning dome brightness is maximum (peaks of oscillator)
@@ -298,6 +309,8 @@ export default function Cinemagraph({ config, visual, imageUrl, onOneShotComplet
   const isSignalMode = config.environmentFilter === 'signal';
   const isHoundsMode = config.environmentFilter === 'hounds';
   const isTempete = config.environmentFilter === 'storm';
+  const isEmStormActive = config.emStormActive === true || isTempete;
+  const isEmStormLost = config.emStormSeverity === 'lost';
   const isExtraction = config.environmentFilter === 'extraction';
   const isSilenceMode = config.environmentFilter === 'silence';
   const locationEffect = getLocationEffectProfile(config.activeLocation, config);
@@ -376,9 +389,9 @@ export default function Cinemagraph({ config, visual, imageUrl, onOneShotComplet
     ((ticker % 11000 < 120) && (ticker % 11000 > 0))
   );
 
-  if (isTempete) {
-    // Add rapid ambient sky lightening discharges
-    flashActive = flashActive || (Math.random() < 0.05 && ticker % 1600 < 180) || (Math.random() < 0.01);
+  if (isEmStormActive) {
+    const slowStormPulse = ticker % 7200;
+    flashActive = flashActive || (slowStormPulse > 120 && slowStormPulse < 240);
   } else if (isExtraction) {
     flashActive = flashActive || (Math.random() < 0.02 && ticker % 2400 < 120);
   } else if (isSilenceMode) {
@@ -390,9 +403,9 @@ export default function Cinemagraph({ config, visual, imageUrl, onOneShotComplet
   if (isHoundsMode) {
     // Weaker, tense flickers as Hounds distort field or draw power
     modeLightsFactor = 0.55 + 0.25 * Math.sin(timeSec * 45.0);
-  } else if (isTempete) {
-    // Highly unstable in electrostatic gale
-    modeLightsFactor = Math.random() < 0.08 ? 0.05 : 0.70 + 0.3 * Math.sin(timeSec * 35.0);
+  } else if (isEmStormActive) {
+    // Unstable in electrostatic gale, but kept below strobe intensity.
+    modeLightsFactor = 0.58 + 0.18 * Math.sin(timeSec * 4.5);
   } else if (isExtraction) {
     // Projectors pushed to maximum load of Rover power arrays, but highly erratic
     modeLightsFactor = 1.5 * (Math.random() < 0.05 ? 0.2 : 0.85 + 0.15 * Math.sin(timeSec * 15.0));
@@ -433,14 +446,18 @@ export default function Cinemagraph({ config, visual, imageUrl, onOneShotComplet
     setImageLoadFailed(false);
   }, [src]);
 
+  const containerClass = embedded
+    ? 'relative w-full h-48 overflow-hidden rounded-md bg-stone-900'
+    : 'fixed inset-0 w-screen h-screen overflow-hidden bg-stone-950 select-none';
+
   return (
     <div 
       id="cinemagraph-viewport"
       ref={containerRef}
-      className="fixed inset-0 w-screen h-screen overflow-hidden bg-stone-950 select-none"
+      className={containerClass}
       style={{ 
         filter: getFilterStyle(), 
-        transform: `translate(${glitchX + Math.sin(timeSec * 18) * locationEffect.cameraShake}px, ${glitchY}px) scale(${glitchScale})`,
+        transform: embedded ? undefined : `translate(${glitchX + Math.sin(timeSec * 18) * locationEffect.cameraShake}px, ${glitchY}px) scale(${glitchScale})`,
         transition: transitionRules,
         transitionProperty: isGlitchFrame ? 'none' : 'filter 0.8s ease-in-out, transform 0.15s ease-out'
       }}
@@ -467,6 +484,7 @@ export default function Cinemagraph({ config, visual, imageUrl, onOneShotComplet
             muted
             playsInline
             loop={vLoop}
+            preload="auto"
             onEnded={() => {
               if (vOneShot && onOneShotComplete) onOneShotComplete();
             }}
@@ -509,14 +527,28 @@ export default function Cinemagraph({ config, visual, imageUrl, onOneShotComplet
         </div>
       )}
 
-      {config.activeLocation === 'new_carthage' && (
-        <div className="absolute inset-x-0 top-0 h-1/2 pointer-events-none z-10 bg-[radial-gradient(circle_at_22%_12%,rgba(255,180,85,0.15),transparent_26%),radial-gradient(circle_at_78%_18%,rgba(255,160,70,0.09),transparent_30%)]" />
+      {config.activeLocation === 'black_arches' && (
+        <div className="absolute inset-0 pointer-events-none z-10 bg-[radial-gradient(circle_at_52%_52%,transparent_28%,rgba(0,0,0,0.24)_100%)] mix-blend-multiply" />
       )}
 
-      {config.activeLocation === 'black_arches' && (
+      {isEmStormActive && (
         <>
-          <div className="absolute inset-0 pointer-events-none z-10 bg-[radial-gradient(circle_at_50%_16%,rgba(190,118,78,0.16),transparent_38%)] mix-blend-screen" />
-          <div className="absolute inset-0 pointer-events-none z-10 bg-[radial-gradient(circle_at_52%_52%,transparent_28%,rgba(0,0,0,0.24)_100%)] mix-blend-multiply" />
+          <div
+            className="absolute inset-0 pointer-events-none z-12 mix-blend-multiply"
+            style={{ background: 'linear-gradient(120deg, rgba(65, 18, 12, 0.22), rgba(0, 0, 0, 0.14), rgba(118, 37, 18, 0.18))' }}
+          />
+          <div
+            className="absolute inset-0 pointer-events-none z-16"
+            style={{ background: `radial-gradient(circle, transparent 48%, rgba(0,0,0,${isEmStormLost ? 0.25 : 0.20}) 100%)` }}
+          />
+          <div
+            className="absolute inset-0 pointer-events-none z-21 bg-[linear-gradient(rgba(255,120,72,0.10)_50%,rgba(0,0,0,0.18)_50%)] bg-[size:100%_5px]"
+            style={{ opacity: isEmStormLost ? 0.28 : 0.22 }}
+          />
+          <div
+            className="absolute inset-x-0 bottom-0 h-2/3 pointer-events-none z-18 bg-gradient-to-t from-red-950/35 via-orange-950/15 to-transparent"
+            style={{ opacity: isEmStormLost ? 0.35 : 0.24 }}
+          />
         </>
       )}
 
@@ -679,8 +711,8 @@ export default function Cinemagraph({ config, visual, imageUrl, onOneShotComplet
       )}
 
       {/* Double-layered scanlines for CTR and Scanner filters */}
-      {(isScannerMode || isSignalMode || isTempete || locationEffect.scanlineOpacity > 0.2) && (
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.18)_50%)] bg-[size:100%_4px] pointer-events-none z-20" style={{ opacity: Math.min(0.86, locationEffect.scanlineOpacity + (isRadioBurst ? 0.28 : 0)) }} />
+      {(isScannerMode || isSignalMode || isEmStormActive || locationEffect.scanlineOpacity > 0.2) && (
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.18)_50%)] bg-[size:100%_4px] pointer-events-none z-20" style={{ opacity: Math.min(0.58, locationEffect.scanlineOpacity + (isRadioBurst ? 0.18 : 0) + (isEmStormActive ? 0.08 : 0)) }} />
       )}
 
       {/* Retro Horizontal scanline jitter overlay for intense glitch fields */}
@@ -748,7 +780,9 @@ export default function Cinemagraph({ config, visual, imageUrl, onOneShotComplet
                   className="mix-blend-screen"
                   opacity={config.activeLocation === 'black_arches' ? 0.20 : 0.36}
                 />
-                <circle cx={source.x} cy={source.y} r={isPoussiereMode || isTempete ? 34 : 18} fill={index % 2 === 0 ? 'url(#headlight-glow-1)' : 'url(#headlight-glow-2)'} />
+                {ENABLE_ROUND_PARTICLE_OVERLAYS && (
+                  <circle cx={source.x} cy={source.y} r={isPoussiereMode || isEmStormActive ? 34 : 18} fill={index % 2 === 0 ? 'url(#headlight-glow-1)' : 'url(#headlight-glow-2)'} />
+                )}
               </g>
             ))}
           </g>
@@ -770,6 +804,7 @@ export default function Cinemagraph({ config, visual, imageUrl, onOneShotComplet
         )}
 
         {/* ==================== B. AUTOMATED SCIENCE TOWER BEACONS ==================== */}
+        {config.activeLocation === 'delta6' && (
         <g>
           {/* Main scanning dome glow - pulses red/cyan/amber */}
           <circle 
@@ -806,9 +841,10 @@ export default function Cinemagraph({ config, visual, imageUrl, onOneShotComplet
           />
           <circle cx={scannerX - 47} cy={scannerY + 135} r="1.5" fill={isSilenceMode ? '#333' : '#ffa0a0'} />
         </g>
+        )}
 
         {/* Geological active scanner green waves and cargo sweeping target */}
-        {isScannerMode && (
+        {isScannerMode && config.activeLocation === 'delta6' && (
           <g stroke="rgba(16, 185, 129, 0.55)" fill="none" strokeWidth="1.2">
             {/* Sweeping concentric concentric lines radiating down from scanner tower */}
             <circle cx={scannerX} cy={scannerY} r={`${(timeSec * 115) % 180}`} style={{ opacity: 1.0 - ((timeSec * 115) % 180) / 180 }} />
@@ -828,8 +864,8 @@ export default function Cinemagraph({ config, visual, imageUrl, onOneShotComplet
         )}
 
         {/* High Voltage EM electrostatic discharges over transmitter cables */}
-        {isTempete && (ticker % 1100 < 150) && (Math.random() < 0.72) && (
-          <g stroke="#67e8f9" strokeWidth="1.5" fill="none" filter="drop-shadow(0 0 4px #06b6d4) drop-shadow(0 0 1px #a5f3fc)">
+        {isEmStormActive && (ticker % 5200 < 140) && (Math.random() < 0.28) && (
+          <g stroke="#67e8f9" strokeWidth="1.2" fill="none" filter="drop-shadow(0 0 3px #06b6d4) drop-shadow(0 0 1px #a5f3fc)">
             {/* Static spark connecting far right antenna 952,80 to 840,280 */}
             <path d={getLightningPath(radioX, radioY, scannerX + 110, scannerY + 30)} opacity={0.88} />
             {/* Static spark on rover antenna */}
@@ -878,41 +914,6 @@ export default function Cinemagraph({ config, visual, imageUrl, onOneShotComplet
         }}
       />
 
-      {/* Delta-6 localized scanner pulse overlay */}
-      {config.activeLocation === 'delta6' && (
-        <div className="pointer-events-none z-18">
-          <div style={{
-            position: 'absolute',
-            left: `${anchors.scannerPulse.x * 100}%`,
-            top: `${anchors.scannerPulse.y * 100}%`,
-            transform: 'translate(-50%, -50%)',
-            width: '7vw',
-            height: '28vh',
-            borderRadius: '9999px',
-            filter: 'blur(18px)',
-            background: 'radial-gradient(circle at 40% 30%, rgba(176,255,255,0.32), rgba(0,183,255,0.04) 45%, rgba(0,0,0,0) 70%)',
-            mixBlendMode: 'screen',
-            opacity: 0.12,
-            pointerEvents: 'none',
-            animation: 'm01-scanner-pulse 2.6s ease-in-out infinite'
-          }} />
-          <div style={{
-            position: 'absolute',
-            left: `${anchors.scannerPulse.x * 100}%`,
-            top: `${(anchors.scannerPulse.y * 100) + 6}%`,
-            transform: 'translate(-50%, -50%)',
-            width: '4vw',
-            height: '4vw',
-            borderRadius: '9999px',
-            background: 'radial-gradient(circle, rgba(200,255,255,0.28), rgba(120,220,255,0.06))',
-            mixBlendMode: 'screen',
-            opacity: 0.18,
-            pointerEvents: 'none',
-            filter: 'blur(8px)'
-          }} />
-        </div>
-      )}
-
       {locationEffect.ghostingOpacity > 0 && !imageLoadFailed && (
         <img
           src={imageUrl}
@@ -945,38 +946,31 @@ export default function Cinemagraph({ config, visual, imageUrl, onOneShotComplet
       <div className="absolute bottom-0 left-0 w-full h-[6%] bg-black/90 pointer-events-none border-t border-stone-900 flex justify-between items-center px-4 z-30">
         <span className="font-mono text-[9px] tracking-widest flex items-center gap-1">
           {isSilenceMode ? (
-            <span className="text-red-500 flex items-center gap-1.5 font-bold">
-              <span className="inline-block w-1.5 h-1.5 bg-red-600 rounded-full animate-ping" />
+            <span className="text-red-500 font-bold">
               LIAISON INTERROMPUE // PERTE DE PROTOCOLE TR
             </span>
           ) : isExtraction ? (
-            <span className="text-red-600 flex items-center gap-1.5 font-bold animate-pulse">
-              <span className="inline-block w-1.5 h-1.5 bg-red-600 rounded-full animate-ping" />
+            <span className="text-red-600 font-bold">
               SYSTEM STATE: EMERGENCY EXTRACTION PROTOCOL 01
             </span>
           ) : isTempete ? (
-            <span className="text-cyan-400 flex items-center gap-1.5 animate-pulse">
-              <span className="inline-block w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse" />
+            <span className="text-cyan-400">
               SYSTEM STATE: electrostatic overload // electrostatic storm
             </span>
           ) : isHoundsMode ? (
-            <span className="text-red-400 flex items-center gap-1.5 animate-pulse">
-              <span className="inline-block w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
+            <span className="text-red-400">
               SYSTEM STATE: peripheral biologic shadow markers
             </span>
           ) : isSignalMode ? (
-            <span className="text-amber-500 flex items-center gap-1.5 animate-pulse">
-              <span className="inline-block w-1.5 h-1.5 bg-amber-500 rounded-full" />
+            <span className="text-amber-500">
               SYSTEM STATE: uncalibrated signal aberration
             </span>
           ) : isScannerMode ? (
-            <span className="text-emerald-400 flex items-center gap-1.5">
-              <span className="inline-block w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+            <span className="text-emerald-400">
               SYSTEM STATE: active radar scanner // surveying lithosphere
             </span>
           ) : (
-            <span className="text-emerald-500/80 flex items-center gap-1">
-              <span className="inline-block w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+            <span className="text-emerald-500/80">
               SYSTEM STATE: PASSIVE SENTINEL NOMINAL
             </span>
           )}

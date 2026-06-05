@@ -1,5 +1,6 @@
 import type { LocationId } from "../utils/locations";
 import type { HoundVariant } from "../types";
+import houndsCutout from "../assets/interventions/hounds.png";
 
 interface HoundOverlayProps {
   effect?: {
@@ -32,9 +33,26 @@ export default function HoundOverlay({ effect, locationId }: HoundOverlayProps) 
   };
 
   const shape = variantClasses[effect.variant] || variantClasses.distant_silhouette;
+  const cutoutShape = {
+    distant_silhouette: "left-[1%] bottom-[6%] w-[min(46vw,620px)]",
+    low_shadow: "left-[8%] bottom-[5%] w-[min(50vw,680px)]",
+    equipment_reflection: "right-[2%] bottom-[8%] w-[min(42vw,560px)]"
+  }[effect.variant] || "left-[6%] bottom-[6%] w-[min(46vw,620px)]";
 
   return (
     <div className="pointer-events-none absolute inset-0 z-30 overflow-hidden">
+      <img
+        src={houndsCutout}
+        alt=""
+        aria-hidden="true"
+        className={`absolute ${cutoutShape} max-w-none select-none object-contain mix-blend-multiply`}
+        style={{
+          opacity: Math.min(0.34, baseOpacity * fade * 0.72),
+          filter: `grayscale(1) contrast(1.35) brightness(0.38) blur(${Math.max(1.5, blurPx * 0.32)}px)`,
+          transform: `translateY(${(1 - fade) * 10}px) scale(${scale + 0.1})`,
+          transformOrigin: "bottom center"
+        }}
+      />
       <div
         className={`absolute ${shape} rounded-3xl bg-black/0`} 
         style={{ opacity: baseOpacity * fade, filter: `blur(${blurPx}px)`, transform: `scale(${scale})` }}

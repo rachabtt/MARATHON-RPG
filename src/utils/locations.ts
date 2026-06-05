@@ -2,13 +2,14 @@ import ncBaseImage from "../assets/locations/nc-base.png";
 import delta6Image from "../assets/locations/delta6.png";
 import redPlainsImage from "../assets/locations/red-plains.png";
 import redPlainsPovImage from "../assets/locations/red-plains-pov.png";
+import redPlainsWideLoop from "../assets/locations/loops/red-plains-wide-loop.mp4";
 import blackArchesPovImage from "../assets/locations/black-arches-pov.png";
 import blackArchesPovHoundImage from "../assets/locations/black-arches-pov-hound.png";
 
 import type { CinemagraphConfig } from "../types";
 
 // Discover available loop videos in the loops folder without failing when some are absent
-const loopModules = import.meta.glob('../assets/locations/loops/*.{mp4,webm}', { eager: true, as: 'url' }) as Record<string,string>;
+const loopModules = import.meta.glob('../assets/locations/loops/*.{mp4,webm}', { eager: true, query: '?url', import: 'default' }) as Record<string,string>;
 const LOOP_BY_NAME: Record<string,string> = {};
 Object.keys(loopModules).forEach((p) => {
   const name = p.split('/').pop() || p;
@@ -26,6 +27,7 @@ export interface LocationInfo {
   label: string;
   subtitle: string;
   image: string;
+  wideVideo?: string;
   povImage?: string;
   houndImage?: string;
   loops?: {
@@ -54,6 +56,7 @@ export const LOCATIONS: LocationInfo[] = [
     label: "PLAINES ROUGES",
     subtitle: "Transit rover / route Delta-6",
     image: redPlainsImage,
+    wideVideo: redPlainsWideLoop,
     povImage: redPlainsPovImage
   },
   {
@@ -68,6 +71,7 @@ export const LOCATIONS: LocationInfo[] = [
     label: "SITE DELTA-6",
     subtitle: "Site géologique abandonné",
     image: delta6Image,
+    wideVideo: LOOP_BY_NAME['delta6-loop.mp4'],
   },
 ];
 
@@ -112,8 +116,10 @@ export function resolveLocationVisual(location: LocationInfo, config: Cinemagrap
       return result;
     }
     if (override === 'wide') {
-      result.src = location.image;
+      result.src = location.wideVideo ?? location.image;
+      result.type = location.wideVideo ? 'video' : 'image';
       result.variant = 'wide';
+      result.loop = Boolean(location.wideVideo);
       return result;
     }
     const usePov = ['dust', 'signal', 'storm', 'extraction'].includes(String(config.environmentFilter));
@@ -122,12 +128,18 @@ export function resolveLocationVisual(location: LocationInfo, config: Cinemagrap
       result.variant = 'pov';
       return result;
     }
+    result.src = location.wideVideo ?? location.image;
+    result.type = location.wideVideo ? 'video' : 'image';
     result.variant = 'wide';
+    result.loop = Boolean(location.wideVideo);
     return result;
   }
 
-  // Delta-6 is static image with subtle pulse handled elsewhere
   if (location.id === 'delta6') {
+    result.src = location.wideVideo ?? location.image;
+    result.type = location.wideVideo ? 'video' : 'image';
+    result.variant = location.wideVideo ? 'loop' : 'base';
+    result.loop = Boolean(location.wideVideo);
     return result;
   }
 

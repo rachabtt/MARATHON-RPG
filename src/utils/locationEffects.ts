@@ -22,7 +22,7 @@ export interface LocationEffectProfile {
 
 const BASE_PROFILE: LocationEffectProfile = {
   filter: "contrast(1.02) saturate(1.02)",
-  haze: "radial-gradient(circle, rgba(148, 51, 34, 0.14) 0%, rgba(64, 35, 28, 0.20) 100%)",
+  haze: "linear-gradient(115deg, rgba(148, 51, 34, 0.10), rgba(64, 35, 28, 0.18) 55%, rgba(0, 0, 0, 0.10))",
   hazeOpacity: 0.16,
   particleSpeed: 1,
   particleDensity: 1,
@@ -59,11 +59,11 @@ export function getLocationEffectProfile(
   const locationProfile: Record<LocationId, Partial<LocationEffectProfile>> = {
     new_carthage: {
       filter: "brightness(1.08) contrast(1.04) saturate(0.86) sepia(0.06)",
-      haze: "radial-gradient(circle at 42% 18%, rgba(255, 180, 90, 0.12), rgba(25, 28, 26, 0.22) 72%)",
+      haze: "linear-gradient(180deg, rgba(255, 180, 90, 0.08), rgba(25, 28, 26, 0.18) 68%, rgba(0, 0, 0, 0.08))",
       hazeOpacity: 0.12,
-      particleSpeed: 0.58,
-      particleDensity: 0.55,
-      particleDrift: 0.03,
+      particleSpeed: 0.30,
+      particleDensity: 0.32,
+      particleDrift: 0.012,
       vignetteOpacity: 0.14,
       scanlineOpacity: 0.18,
       lightStability: 1.18,
@@ -83,20 +83,20 @@ export function getLocationEffectProfile(
     },
     black_arches: {
       filter: "brightness(0.88) contrast(1.22) saturate(0.86) sepia(0.06)",
-      haze: "radial-gradient(circle at 50% 16%, rgba(176, 108, 70, 0.18), rgba(38, 34, 31, 0.16) 44%, rgba(0, 0, 0, 0.30) 100%)",
-      hazeOpacity: 0.18,
-      particleSpeed: 0.82,
-      particleDensity: 0.95,
-      particleDrift: 0.11,
-      vignetteOpacity: 0.26,
-      scanlineOpacity: 0.26,
-      ghostingOpacity: 0.10,
-      lightStability: 0.90,
-      radioBias: 1.35,
+      haze: "linear-gradient(180deg, rgba(104, 81, 68, 0.08), rgba(18, 18, 18, 0.18) 48%, rgba(0, 0, 0, 0.34) 100%)",
+      hazeOpacity: 0.10,
+      particleSpeed: 0.10,
+      particleDensity: 0.22,
+      particleDrift: 0.006,
+      vignetteOpacity: 0.32,
+      scanlineOpacity: 0.22,
+      ghostingOpacity: 0.14,
+      lightStability: 0.82,
+      radioBias: 0.88,
     },
     delta6: {
       filter: "brightness(0.96) contrast(1.12) saturate(1.05) sepia(0.04)",
-      haze: "radial-gradient(circle at 60% 45%, rgba(156, 63, 45, 0.20), rgba(28, 23, 20, 0.36) 100%)",
+      haze: "linear-gradient(125deg, rgba(156, 63, 45, 0.14), rgba(28, 23, 20, 0.30) 58%, rgba(0, 0, 0, 0.14))",
       hazeOpacity: 0.24,
       particleSpeed: 1.05,
       particleDensity: 1.18,
@@ -171,7 +171,21 @@ export function getLocationEffectProfile(
   const amb = ambienceProfile[ambience];
   const merged = mergeProfile(loc, amb);
   merged.filter = `${loc.filter ?? BASE_PROFILE.filter} ${amb.filter ?? ""}`.trim();
+  if (locationId === "new_carthage" && ambience !== "tempete" && ambience !== "extraction") {
+    merged.particleSpeed = Math.min(merged.particleSpeed, ambience === "signal" ? 0.42 : 0.32);
+    merged.particleDensity = Math.min(merged.particleDensity, ambience === "signal" ? 0.44 : 0.34);
+    merged.cameraShake = Math.min(merged.cameraShake, 0.14);
+    merged.hazeOpacity = Math.min(merged.hazeOpacity, 0.16);
+  }
   if (locationId === "black_arches") {
+    if (ambience !== "tempete" && ambience !== "extraction") {
+      merged.particleSpeed = Math.min(merged.particleSpeed, ambience === "signal" ? 0.18 : 0.12);
+      merged.particleDensity = Math.min(merged.particleDensity, ambience === "signal" ? 0.30 : 0.24);
+      merged.cameraShake = Math.min(merged.cameraShake, ambience === "signal" ? 0.18 : 0.08);
+      merged.radioBias = Math.min(merged.radioBias, 0.95);
+    } else {
+      merged.radioBias = Math.max(merged.radioBias, 1.0);
+    }
     merged.vignetteOpacity = Math.min(merged.vignetteOpacity, ambience === "signal" || ambience === "hounds" ? 0.34 : 0.28);
     merged.hazeOpacity = Math.min(merged.hazeOpacity, ambience === "tempete" || ambience === "extraction" ? 0.36 : 0.25);
     merged.ghostingOpacity = Math.max(merged.ghostingOpacity, ambience === "signal" ? 0.22 : ambience === "tension" ? 0.14 : 0.1);

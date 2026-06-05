@@ -13,8 +13,8 @@ export default function SquadOverlay({ overlay }: SquadOverlayProps) {
 
   return (
     <div className="squad-overlay absolute z-30 pointer-events-none">
-      <div className="mb-2 text-[10px] uppercase tracking-[0.24em] text-stone-400 font-mono">ESCOUADE PJ</div>
-      <div className="flex flex-col gap-2 w-[clamp(260px,22vw,360px)] max-h-[72vh] overflow-auto" style={{ paddingRight: 8 }}>
+      <div className="mb-2 text-[11px] uppercase tracking-[0.24em] text-stone-400 font-mono">ESCOUADE PJ</div>
+      <div className="flex flex-col gap-2.5 w-[clamp(320px,24vw,460px)] max-h-[76vh] overflow-auto" style={{ paddingRight: 12, paddingLeft: 4, paddingBottom: 12 }}>
         {visibleMembers.map((member) => (
           <div key={member.id} className="min-w-0">
             <PlayerCard member={member} mode={overlay.mode} />

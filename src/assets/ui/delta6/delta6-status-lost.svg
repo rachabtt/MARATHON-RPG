@@ -1,0 +1,48 @@
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">DATA PACKAGE DELTA-6 - STATUS LOST</title>
+  <desc id="desc">Transparent 16:9 UESC data recovery interface with failed recovery state and 5 percent integrity.</desc>
+  <defs>
+    <pattern id="scanlines" width="1" height="8" patternUnits="userSpaceOnUse"><path d="M0 0H1V1H0V0Z" fill="#7B8580" fill-opacity="0.10"/></pattern>
+    <style>.mono{font-family:"IBM Plex Mono","SFMono-Regular","Consolas","Liberation Mono",monospace}.label{font-size:26px;letter-spacing:4px;fill:#6F7672}.small{font-size:22px;letter-spacing:3px;fill:#747B77}.micro{font-size:18px;letter-spacing:3px;fill:#505753}</style>
+  </defs>
+  <g id="frame" class="mono">
+    <path d="M250 176H1518L1670 328V856H402L250 704V176Z" fill="#050606" fill-opacity="0.72" stroke="#747B77" stroke-opacity="0.56" stroke-width="2"/>
+    <path d="M288 214H1498L1632 348V818H422L288 684V214Z" stroke="#D35438" stroke-opacity="0.30" stroke-width="1.5"/>
+    <path d="M250 176H438M1488 176H1518L1670 328V382M1670 650V856H1488M438 856H402L250 704V650" stroke="#747B77" stroke-width="5"/>
+    <rect x="288" y="214" width="1344" height="604" fill="url(#scanlines)" opacity="0.30"/>
+  </g>
+  <g id="header" class="mono" opacity="0.82">
+    <text x="336" y="286" font-size="52" letter-spacing="6" fill="#D8DED9">DATA PACKAGE DELTA-6</text>
+    <text x="340" y="330" class="label">UESC // DATA RECOVERY // ARCHIVE NODE</text>
+    <text x="1274" y="284" class="small" text-anchor="end">TAU CETI IV</text>
+    <text x="1274" y="320" class="micro" text-anchor="end">RECOVERY CHANNEL 04-A</text>
+  </g>
+  <g id="status_block" class="mono">
+    <path d="M336 382H880L938 440V532H336V382Z" fill="#080808" fill-opacity="0.80" stroke="#747B77" stroke-opacity="0.62" stroke-width="2"/>
+    <text x="372" y="438" class="label">RECOVERY STATE</text>
+    <text x="372" y="500" font-size="44" letter-spacing="5" fill="#D35438">STATUS: LOST</text>
+  </g>
+  <g id="integrity_bar" class="mono">
+    <text x="336" y="614" class="label">PACKAGE INTEGRITY</text>
+    <rect x="336" y="642" width="810" height="34" fill="#0E1010" stroke="#505753" stroke-width="2"/>
+    <rect x="344" y="650" width="42" height="18" fill="#D35438" fill-opacity="0.72"/>
+    <path d="M552 642V676M734 642V676M916 642V676M1088 642V676" stroke="#232827" stroke-width="2"/>
+    <text x="1174" y="672" font-size="34" letter-spacing="4" fill="#D35438">05%</text>
+  </g>
+  <g id="waveform" class="mono" opacity="0.82">
+    <text x="1112" y="418" class="label">SIGNAL TRACE</text>
+    <path d="M1112 472H1538" stroke="#505753" stroke-width="2"/>
+    <polyline points="1112,492 1168,492 1224,490 1280,492 1336,492 1392,491 1448,492 1538,492" stroke="#747B77" stroke-width="4" stroke-linejoin="round"/>
+    <rect x="1112" y="522" width="64" height="16" fill="#D35438" fill-opacity="0.45"/>
+    <rect x="1198" y="522" width="340" height="16" fill="#111313" stroke="#505753"/>
+  </g>
+  <g id="metadata" class="mono">
+    <path d="M336 728H1538" stroke="#505753" stroke-opacity="0.72"/>
+    <text x="336" y="774" class="small">CHECKSUM: FAIL</text>
+    <text x="336" y="816" class="small">BUFFER: LOST</text>
+    <text x="734" y="774" class="small">ARCHIVE NODE: NO REPLY</text>
+    <text x="734" y="816" class="small">SIGNAL TRACE: NULL</text>
+    <text x="1190" y="774" class="small">PACKAGE: NO RECOVERY</text>
+    <text x="1190" y="816" class="small">ACTION: MANUAL LOG</text>
+  </g>
+</svg>

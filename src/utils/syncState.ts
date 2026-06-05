@@ -3,10 +3,30 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { ActiveTransmission, CinemagraphConfig, QuickEffect, SquadOverlayState, TelemetryLog } from '../types';
+import type {
+  ActiveTransmission,
+  CharacterEquipmentState,
+  CinemagraphConfig,
+  PlayerCharacterId,
+  QuickEffect,
+  SquadOverlayState,
+  TelemetryLog,
+  TransientEffectsState
+} from '../types';
 import type { LocationId } from './locations';
+import { getResolvedAudioProfile } from './audioProfiles';
 import { getLocationEffectProfile } from './locationEffects';
 import { DEFAULT_SQUAD_OVERLAY } from './playerCharacters';
+import { createInitialPlayerEquipmentState } from '../data/playerCharacters';
+import {
+  DELTA6_DATA_PACKAGE_STATES,
+  getDelta6DataPackageState,
+  type Delta6DataStatus
+} from '../data/delta6DataPackage';
+import type { HoundActionId, HoundActionTone } from '../data/houndActions';
+import { MISSION01_TACTICAL_TOKENS } from '../data/mission01Tokens';
+import type { PlayerIntelTarget, PlayerIntelType } from '../data/scenePlayerIntel';
+import type { TacticalMapToken } from '../types/tacticalMap';
 
 export interface ResourceState {
   id: string;
@@ -16,9 +36,192 @@ export interface ResourceState {
   index: number;
 }
 
+export type EmStormSeverity = 'critical' | 'lost';
+export type MissionTelemetryValue = 'STABLE' | 'DÉGRADÉ' | 'CRITIQUE' | 'PERDU';
+export type DataPackageStatus = Delta6DataStatus;
+
+export interface MissionTelemetryState {
+  signalRadio: MissionTelemetryValue;
+  visibility: MissionTelemetryValue;
+  emActivity: MissionTelemetryValue;
+}
+
+export interface DataPackageState {
+  status: DataPackageStatus;
+  visible: boolean;
+  updatedAt: number | null;
+}
+
+export type MissionBootPhase = "boot_idle" | "boot_launching" | "intro_playing" | "mission_live";
+
+export type MissionBootState = {
+  phase: MissionBootPhase;
+  launchedAt: number | null;
+  introStartedAt: number | null;
+  introCompletedAt: number | null;
+};
+
+export type PlayerIntelRecipient = "all" | PlayerCharacterId;
+
+export type PlayerIntelDelivery = {
+  id: string;
+  intelId: string;
+  sceneId: string;
+  title: string;
+  type: PlayerIntelType;
+  target: PlayerIntelTarget;
+  text: string;
+  tone: "neutral" | "uneasy" | "procedural" | "urgent";
+  recipients: PlayerIntelRecipient[];
+  sentAt: number;
+};
+
+export interface HoundAlertState {
+  id: HoundActionId;
+  label: string;
+  message: string;
+  tone: HoundActionTone;
+  createdAt: number;
+  durationMs: number;
+}
+
+export type AletheiaTerminalMessageSource = 'custom' | 'preset' | 'system';
+
+export interface AletheiaTerminalMessage {
+  id: string;
+  text: string;
+  createdAt: number;
+  source: AletheiaTerminalMessageSource;
+}
+
+export interface AletheiaTerminalState {
+  active: boolean;
+  messages: AletheiaTerminalMessage[];
+  glitchUntil?: number | null;
+  noSignal: boolean;
+}
+
+export interface DataPackageStatusMeta {
+  id: DataPackageStatus;
+  label: string;
+  displayStatus: string;
+  integrity: number;
+  signalTrace: 'DEGRADED' | 'ACTIVE' | 'LOST';
+  resourceIndex: number;
+}
+
+export const DATA_PACKAGE_STATUS_META: DataPackageStatusMeta[] = ([
+  'non_secure',
+  'transfer',
+  'partial',
+  'corrupted',
+  'secured',
+  'lost'
+] as DataPackageStatus[]).map((id) => {
+  const state = DELTA6_DATA_PACKAGE_STATES[id];
+  return {
+    id,
+    label: state.label,
+    displayStatus: state.statusLabel.replace(/^STATUS: /, ''),
+    integrity: state.integrity,
+    signalTrace: state.signalTrace,
+    resourceIndex: state.resourceIndex
+  };
+});
+
+const KNOWN_DATA_PACKAGE_STATUSES = Object.keys(DELTA6_DATA_PACKAGE_STATES) as DataPackageStatus[];
+const KNOWN_MISSION_BOOT_PHASES: MissionBootPhase[] = ['boot_idle', 'boot_launching', 'intro_playing', 'mission_live'];
+
+function createInitialMissionBootState(): MissionBootState {
+  return {
+    phase: 'boot_idle',
+    launchedAt: null,
+    introStartedAt: null,
+    introCompletedAt: null
+  };
+}
+
+function hydrateMissionBootState(value: unknown): MissionBootState {
+  if (!value || typeof value !== 'object') {
+    return createInitialMissionBootState();
+  }
+
+  const candidate = value as Partial<MissionBootState>;
+  const phase = KNOWN_MISSION_BOOT_PHASES.includes(candidate.phase as MissionBootPhase)
+    ? candidate.phase as MissionBootPhase
+    : 'boot_idle';
+
+  return {
+    phase,
+    launchedAt: typeof candidate.launchedAt === 'number' ? candidate.launchedAt : null,
+    introStartedAt: typeof candidate.introStartedAt === 'number' ? candidate.introStartedAt : null,
+    introCompletedAt: typeof candidate.introCompletedAt === 'number' ? candidate.introCompletedAt : null
+  };
+}
+
+function hydratePlayerIntelDeliveries(value: unknown): PlayerIntelDelivery[] {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .filter((delivery): delivery is Partial<PlayerIntelDelivery> => Boolean(delivery) && typeof delivery === 'object')
+    .filter((delivery) => (
+      typeof delivery.id === 'string' &&
+      typeof delivery.intelId === 'string' &&
+      typeof delivery.sceneId === 'string' &&
+      typeof delivery.title === 'string' &&
+      typeof delivery.type === 'string' &&
+      typeof delivery.target === 'string' &&
+      typeof delivery.text === 'string' &&
+      typeof delivery.tone === 'string' &&
+      Array.isArray(delivery.recipients) &&
+      typeof delivery.sentAt === 'number'
+    ))
+    .map((delivery) => ({
+      id: delivery.id!,
+      intelId: delivery.intelId!,
+      sceneId: delivery.sceneId!,
+      title: delivery.title!,
+      type: delivery.type as PlayerIntelType,
+      target: delivery.target as PlayerIntelTarget,
+      text: delivery.text!,
+      tone: delivery.tone as PlayerIntelDelivery['tone'],
+      recipients: delivery.recipients!.filter((recipient): recipient is PlayerIntelRecipient => (
+        recipient === 'all' || typeof recipient === 'string'
+      )),
+      sentAt: delivery.sentAt!
+    }))
+    .slice(-20);
+}
+
+export function isDataPackageStatus(value: unknown): value is DataPackageStatus {
+  return typeof value === 'string' && KNOWN_DATA_PACKAGE_STATUSES.includes(value as DataPackageStatus);
+}
+
+export function getDataPackageMeta(status: DataPackageStatus | undefined): DataPackageStatusMeta {
+  const state = getDelta6DataPackageState(status);
+  return {
+    id: status ?? 'non_secure',
+    label: state.label,
+    displayStatus: state.statusLabel.replace(/^STATUS: /, ''),
+    integrity: state.integrity,
+    signalTrace: state.signalTrace,
+    resourceIndex: state.resourceIndex
+  };
+}
+
 export interface MissionControlState {
   activeSceneMode: 'normal' | 'dust' | 'scanner' | 'signal' | 'hounds' | 'storm' | 'extraction' | 'silence';
   activeLocation: LocationId;
+  activeDirectorSceneId?: string | null;
+  emStorm?: {
+    active: boolean;
+    severity: EmStormSeverity;
+  };
+  missionTelemetry?: MissionTelemetryState;
+  missionBoot: MissionBootState;
+  dataPackage?: DataPackageState;
+  houndAlert?: HoundAlertState | null;
+  aletheiaTerminal: AletheiaTerminalState;
   resources: ResourceState[];
   effects: {
     dust: number;      // 0, 1, 2, 3
@@ -40,6 +243,7 @@ export interface MissionControlState {
   };
   displayOptions: {
     screenBlack: boolean;
+    playerTacticalMapVisible?: boolean;
     activePresetId: string;
     activeTransmission: ActiveTransmission | null;
     newCarthageLoopVariant?: "base" | "workers" | "rover_pass" | "ship_takeoff" | "easter_egg";
@@ -65,6 +269,10 @@ export interface MissionControlState {
     selectedIds: string[];
     locked: boolean;
   };
+  playerEquipmentState: Record<PlayerCharacterId, CharacterEquipmentState>;
+  playerSelectionResetAt: number;
+  playerIntelDeliveries: PlayerIntelDelivery[];
+  tacticalTokens: TacticalMapToken[];
   transientEffects: TransientEffectsState;
   quickEffect: QuickEffect | null;
   logs: TelemetryLog[];
@@ -131,7 +339,30 @@ export const INITIAL_RESOURCES: ResourceState[] = [
 
 export const INITIAL_MISSION_STATE: MissionControlState = {
   activeSceneMode: 'normal',
-  activeLocation: 'delta6',
+  activeLocation: 'new_carthage',
+  activeDirectorSceneId: 'depart_new_carthage',
+  emStorm: {
+    active: false,
+    severity: 'critical'
+  },
+  missionTelemetry: {
+    signalRadio: 'DÉGRADÉ',
+    visibility: 'DÉGRADÉ',
+    emActivity: 'DÉGRADÉ'
+  },
+  missionBoot: createInitialMissionBootState(),
+  dataPackage: {
+    status: 'non_secure',
+    visible: false,
+    updatedAt: null
+  },
+  houndAlert: null,
+  aletheiaTerminal: {
+    active: false,
+    messages: [],
+    glitchUntil: null,
+    noSignal: false
+  },
   resources: INITIAL_RESOURCES,
   effects: {
     dust: 1,
@@ -153,6 +384,7 @@ export const INITIAL_MISSION_STATE: MissionControlState = {
   },
   displayOptions: {
     screenBlack: false,
+    playerTacticalMapVisible: false,
     activePresetId: 'delta6',
     activeTransmission: null,
     newCarthageLoopVariant: 'workers',
@@ -176,10 +408,232 @@ export const INITIAL_MISSION_STATE: MissionControlState = {
     selectedIds: [],
     locked: false
   },
+  playerEquipmentState: createInitialPlayerEquipmentState(),
+  playerSelectionResetAt: 0,
+  playerIntelDeliveries: [],
+  tacticalTokens: MISSION01_TACTICAL_TOKENS.map((token) => ({ ...token })),
   transientEffects: {},
   quickEffect: null,
   logs: []
 };
+
+function hydrateTacticalTokens(value: unknown): TacticalMapToken[] {
+  const savedTokens = Array.isArray(value) ? value : [];
+  const savedById = new Map(
+    savedTokens
+      .filter((token): token is Partial<TacticalMapToken> => Boolean(token) && typeof token === 'object' && typeof (token as Partial<TacticalMapToken>).id === 'string')
+      .map((token) => [token.id, token])
+  );
+
+  return MISSION01_TACTICAL_TOKENS.map((defaultToken) => {
+    const saved = savedById.get(defaultToken.id);
+    if (!saved) return { ...defaultToken };
+
+    return {
+      ...defaultToken,
+      ...saved,
+      x: typeof saved.x === 'number' ? Math.max(0, Math.min(100, saved.x)) : defaultToken.x,
+      y: typeof saved.y === 'number' ? Math.max(0, Math.min(100, saved.y)) : defaultToken.y,
+      visibleToPlayers: typeof saved.visibleToPlayers === 'boolean' ? saved.visibleToPlayers : defaultToken.visibleToPlayers,
+      manualVisibilityOverride: typeof saved.manualVisibilityOverride === 'boolean' ? saved.manualVisibilityOverride : false,
+      visibleInControl: typeof saved.visibleInControl === 'boolean' ? saved.visibleInControl : defaultToken.visibleInControl,
+      inVehicle: saved.type === 'pj' && typeof saved.inVehicle === 'boolean' ? saved.inVehicle : false
+    };
+  });
+}
+
+function hydratePlayerEquipmentState(value: unknown): Record<PlayerCharacterId, CharacterEquipmentState> {
+  const initialState = createInitialPlayerEquipmentState();
+  const savedState = value && typeof value === 'object'
+    ? value as Partial<Record<PlayerCharacterId, Partial<CharacterEquipmentState>>>
+    : {};
+
+  return Object.values(initialState).reduce((state, initialCharacterState) => {
+    const savedCharacterState = savedState[initialCharacterState.characterId];
+    const savedEquipment = savedCharacterState?.equipment && typeof savedCharacterState.equipment === 'object'
+      ? savedCharacterState.equipment
+      : {};
+
+    const equipment = Object.entries(initialCharacterState.equipment).reduce<CharacterEquipmentState['equipment']>(
+      (equipmentState, [equipmentId, initialEquipmentState]) => {
+        const savedItemState = savedEquipment[equipmentId];
+        const visible = typeof savedItemState?.visible === 'boolean'
+          ? savedItemState.visible
+          : initialEquipmentState.visible;
+        const used = typeof savedItemState?.used === 'boolean'
+          ? savedItemState.used
+          : initialEquipmentState.used;
+
+        return {
+          ...equipmentState,
+          [equipmentId]: { visible, used }
+        };
+      },
+      {}
+    );
+
+    return {
+      ...state,
+      [initialCharacterState.characterId]: {
+        characterId: initialCharacterState.characterId,
+        equipment
+      }
+    };
+  }, {} as Record<PlayerCharacterId, CharacterEquipmentState>);
+}
+
+function setResourceIndex(resources: ResourceState[], resourceId: string, index: number): ResourceState[] {
+  return resources.map((resource) =>
+    resource.id === resourceId
+      ? { ...resource, index: Math.max(0, Math.min(resource.states.length - 1, index)) }
+      : resource
+  );
+}
+
+function setStormResourceLevels(resources: ResourceState[], severity: EmStormSeverity): ResourceState[] {
+  const stormIndex = severity === 'lost' ? 3 : 2;
+  return setResourceIndex(
+    setResourceIndex(
+      setResourceIndex(resources, 'signal', stormIndex),
+      'visibility',
+      stormIndex
+    ),
+    'tempest',
+    2
+  );
+}
+
+function setStormExitResourceLevels(resources: ResourceState[]): ResourceState[] {
+  return setResourceIndex(
+    setResourceIndex(
+      setResourceIndex(resources, 'signal', 1),
+      'visibility',
+      1
+    ),
+    'tempest',
+    1
+  );
+}
+
+export function getStormTelemetry(severity: EmStormSeverity): MissionTelemetryState {
+  return {
+    signalRadio: severity === 'lost' ? 'PERDU' : 'CRITIQUE',
+    visibility: severity === 'lost' ? 'PERDU' : 'CRITIQUE',
+    emActivity: 'CRITIQUE'
+  };
+}
+
+export function getStormExitTelemetry(): MissionTelemetryState {
+  return {
+    signalRadio: 'DÉGRADÉ',
+    visibility: 'DÉGRADÉ',
+    emActivity: 'DÉGRADÉ'
+  };
+}
+
+export function activateEmStorm(state: MissionControlState, severity: EmStormSeverity = 'critical'): MissionControlState {
+  return {
+    ...state,
+    activeSceneMode: 'storm',
+    emStorm: {
+      active: true,
+      severity
+    },
+    missionTelemetry: getStormTelemetry(severity),
+    resources: setStormResourceLevels(state.resources, severity),
+    effects: {
+      ...state.effects,
+      dust: Math.max(state.effects.dust, 3),
+      glitch: Math.max(state.effects.glitch, 2),
+      em: 3
+    },
+    audio: {
+      ...state.audio,
+      radioVolume: Math.max(state.audio.radioVolume, 0.75),
+      stormVolume: Math.max(state.audio.stormVolume, 0.82)
+    },
+    displayOptions: {
+      ...state.displayOptions,
+      activePresetId: 'tempete',
+      redPlainsVisualVariant: state.activeLocation === 'red_plains' ? 'pov' : state.displayOptions.redPlainsVisualVariant,
+      redPlainsTransitionStartedAt: state.activeLocation === 'red_plains' ? Date.now() : state.displayOptions.redPlainsTransitionStartedAt
+    }
+  };
+}
+
+export function setEmStormSeverity(state: MissionControlState, severity: EmStormSeverity): MissionControlState {
+  if (!state.emStorm?.active) {
+    return {
+      ...state,
+      emStorm: {
+        active: false,
+        severity
+      }
+    };
+  }
+
+  return {
+    ...state,
+    emStorm: {
+      active: true,
+      severity
+    },
+    missionTelemetry: getStormTelemetry(severity),
+    resources: setStormResourceLevels(state.resources, severity)
+  };
+}
+
+export function setDataPackageStatus(state: MissionControlState, status: DataPackageStatus): MissionControlState {
+  const meta = getDataPackageMeta(status);
+  return {
+    ...state,
+    dataPackage: {
+      status,
+      visible: true,
+      updatedAt: Date.now()
+    },
+    resources: setResourceIndex(state.resources, 'data', meta.resourceIndex)
+  };
+}
+
+export function setDataPackageVisible(state: MissionControlState, visible: boolean): MissionControlState {
+  return {
+    ...state,
+    dataPackage: {
+      status: state.dataPackage?.status ?? 'non_secure',
+      visible,
+      updatedAt: state.dataPackage?.updatedAt ?? null
+    }
+  };
+}
+
+export function exitEmStorm(state: MissionControlState): MissionControlState {
+  return {
+    ...state,
+    activeSceneMode: 'normal',
+    emStorm: {
+      active: false,
+      severity: 'critical'
+    },
+    missionTelemetry: getStormExitTelemetry(),
+    resources: setStormExitResourceLevels(state.resources),
+    effects: {
+      ...state.effects,
+      dust: Math.min(state.effects.dust, 1),
+      glitch: Math.min(state.effects.glitch, 1),
+      em: 1
+    },
+    audio: {
+      ...state.audio,
+      radioVolume: Math.min(state.audio.radioVolume, 0.35),
+      stormVolume: Math.min(state.audio.stormVolume, 0.20)
+    },
+    displayOptions: {
+      ...state.displayOptions,
+      activePresetId: 'calme'
+    }
+  };
+}
 
 const STORAGE_KEY = 'm01_jdr_sol_rouge_mission_v7';
 const SYNC_CHANNEL_NAME = 'uesc_sol_rouge_sync_channel';
@@ -192,7 +646,58 @@ export function getStoredState(): MissionControlState {
       const parsed = JSON.parse(raw);
       if (parsed && parsed.resources && parsed.effects && parsed.audio) {
         if (!parsed.activeLocation) {
-          parsed.activeLocation = 'delta6';
+          parsed.activeLocation = 'new_carthage';
+        }
+        if (!parsed.emStorm) {
+          parsed.emStorm = { active: false, severity: 'critical' };
+        } else if (parsed.emStorm.severity !== 'critical' && parsed.emStorm.severity !== 'lost') {
+          parsed.emStorm.severity = 'critical';
+        }
+        if (!parsed.missionTelemetry) {
+          parsed.missionTelemetry = getStormExitTelemetry();
+        } else {
+          parsed.missionTelemetry.signalRadio ??= 'DÉGRADÉ';
+          parsed.missionTelemetry.visibility ??= 'DÉGRADÉ';
+          parsed.missionTelemetry.emActivity ??= 'DÉGRADÉ';
+        }
+        parsed.missionBoot = hydrateMissionBootState(parsed.missionBoot);
+        if (!parsed.dataPackage) {
+          parsed.dataPackage = { status: 'non_secure', visible: false, updatedAt: null };
+        } else {
+          const knownStatus = DATA_PACKAGE_STATUS_META.some((meta) => meta.id === parsed.dataPackage.status);
+          parsed.dataPackage.status = knownStatus ? parsed.dataPackage.status : 'non_secure';
+          parsed.dataPackage.visible = Boolean(parsed.dataPackage.visible);
+          parsed.dataPackage.updatedAt ??= null;
+        }
+        if (!('houndAlert' in parsed)) {
+          parsed.houndAlert = null;
+        }
+        if (!parsed.aletheiaTerminal) {
+          parsed.aletheiaTerminal = {
+            active: false,
+            messages: [],
+            glitchUntil: null,
+            noSignal: false
+          };
+        } else {
+          parsed.aletheiaTerminal.active = Boolean(parsed.aletheiaTerminal.active);
+          parsed.aletheiaTerminal.messages = Array.isArray(parsed.aletheiaTerminal.messages)
+            ? parsed.aletheiaTerminal.messages
+                .filter((message: unknown) => {
+                  if (!message || typeof message !== 'object') return false;
+                  const candidate = message as Partial<AletheiaTerminalMessage>;
+                  return typeof candidate.text === 'string' && typeof candidate.createdAt === 'number';
+                })
+                .map((message: Partial<AletheiaTerminalMessage>, index: number) => ({
+                  id: typeof message.id === 'string' ? message.id : `aletheia-migrated-${index}`,
+                  text: message.text ?? '',
+                  createdAt: message.createdAt ?? Date.now(),
+                  source: message.source === 'preset' || message.source === 'system' ? message.source : 'custom'
+                }))
+                .slice(-5)
+            : [];
+          parsed.aletheiaTerminal.glitchUntil ??= null;
+          parsed.aletheiaTerminal.noSignal = Boolean(parsed.aletheiaTerminal.noSignal);
         }
         if (!('houndsVolume' in parsed.audio)) {
           parsed.audio.houndsVolume = 0;
@@ -205,6 +710,9 @@ export function getStoredState(): MissionControlState {
           } else {
             parsed.displayOptions.activeTransmission.sourceRole ??= 'TRANSMISSION UESC';
             parsed.displayOptions.activeTransmission.sourceType ??= 'field';
+          }
+          if (!('playerTacticalMapVisible' in parsed.displayOptions)) {
+            parsed.displayOptions.playerTacticalMapVisible = false;
           }
 
           // Migration for newCarthage loop options and red plains
@@ -229,6 +737,9 @@ export function getStoredState(): MissionControlState {
           if (!('redPlainsTransitionStartedAt' in parsed.displayOptions)) {
             parsed.displayOptions.redPlainsTransitionStartedAt = null;
           }
+          if (!('activeDirectorSceneId' in parsed) || !parsed.activeDirectorSceneId) {
+            parsed.activeDirectorSceneId = 'depart_new_carthage';
+          }
         if (!('interventionOptions' in parsed)) {
           parsed.interventionOptions = {
             showPortrait: true,
@@ -242,6 +753,12 @@ export function getStoredState(): MissionControlState {
         if (!('squad' in parsed)) {
           parsed.squad = { selectedIds: [], locked: false };
         }
+        parsed.playerEquipmentState = hydratePlayerEquipmentState(parsed.playerEquipmentState);
+        if (typeof parsed.playerSelectionResetAt !== 'number') {
+          parsed.playerSelectionResetAt = 0;
+        }
+        parsed.playerIntelDeliveries = hydratePlayerIntelDeliveries(parsed.playerIntelDeliveries);
+        parsed.tacticalTokens = hydrateTacticalTokens(parsed.tacticalTokens);
         if (!('transientEffects' in parsed)) {
           parsed.transientEffects = {};
         }
@@ -305,6 +822,8 @@ export function subscribeToStateBroadcast(callback: (state: MissionControlState)
 
 // ─── DERIVE VISUAL CONFIG ON-THE-FLY ───
 export function deriveConfigFromState(state: MissionControlState): CinemagraphConfig {
+  const emStormActive = state.emStorm?.active === true;
+  const emStormSeverity = state.emStorm?.severity ?? 'critical';
   const resourceIndex = (id: string) => state.resources.find(resource => resource.id === id)?.index ?? 0;
   const signalStress = Math.max(0, resourceIndex('signal') - 1);
   const visibilityStress = Math.max(0, resourceIndex('visibility') - 1);
@@ -318,12 +837,18 @@ export function deriveConfigFromState(state: MissionControlState): CinemagraphCo
     : state.effects.dust === 2 ? 180 : 300;
 
   dustVal = Math.min(340, dustVal + visibilityStress * 35 + tempestStress * 22);
+  if (emStormActive) {
+    dustVal = Math.min(360, dustVal + (emStormSeverity === 'lost' ? 90 : 55));
+  }
 
   let glitchVal = state.effects.glitch === 0 ? 0.0 
     : state.effects.glitch === 1 ? 0.25 
     : state.effects.glitch === 2 ? 0.60 : 0.95;
 
   glitchVal = Math.min(0.98, glitchVal + signalStress * 0.12 + tempestStress * 0.08);
+  if (emStormActive) {
+    glitchVal = Math.min(0.92, glitchVal + (emStormSeverity === 'lost' ? 0.28 : 0.18));
+  }
 
   const scannerVal = state.effects.scanner === 0 ? 0.2 
     : state.effects.scanner === 1 ? 1.0 
@@ -346,7 +871,7 @@ export function deriveConfigFromState(state: MissionControlState): CinemagraphCo
     : state.effects.em === 2 ? 1.8 : 2.5;
 
   let windSpd = 1.0;
-  if (state.activeSceneMode === 'storm') {
+  if (state.activeSceneMode === 'storm' || emStormActive) {
     windSpd = 2.8;
   } else if (state.activeSceneMode === 'extraction') {
     windSpd = 2.4;
@@ -372,28 +897,38 @@ export function deriveConfigFromState(state: MissionControlState): CinemagraphCo
     audioHumVolume: state.audio.humVolume,
     telemetryActive: true,
     visualRadioGlitch: glitchVal,
-    visualEmFlashes: emVal || tempestStress > 1,
+    visualEmFlashes: emVal || tempestStress > 1 || emStormActive,
     visualHoundShadows: houndsVal,
     visualAletheiaOverlay: state.effects.hounds > 1,
     audioRadioVolume: Math.min(1, state.audio.radioVolume + signalStress * 0.12),
     audioScannerVolume: state.audio.scannerVolume,
-    audioStormVolume: Math.min(1, state.audio.stormVolume + tempestStress * 0.12 + roverStress * 0.04),
+    audioStormVolume: Math.min(1, state.audio.stormVolume + tempestStress * 0.12 + roverStress * 0.04 + (emStormActive ? 0.18 : 0)),
     audioHoundsVolume: Math.min(1, state.audio.houndsVolume + (houndsVal ? 0.22 : 0) + groupStress * 0.04),
     audioRadioSilence: state.audio.radioSilence,
-    screenBlack: state.displayOptions.screenBlack
+    screenBlack: state.displayOptions.screenBlack,
+    emStormActive,
+    emStormSeverity
   };
 
+  const resolvedAudioProfile = getResolvedAudioProfile({
+    locationId: state.activeLocation,
+    moodId: state.activeSceneMode,
+    sceneId: state.activeDirectorSceneId,
+    isStormActive: emStormActive,
+  });
   const locationProfile = getLocationEffectProfile(state.activeLocation, baseConfig);
 
   return {
     ...baseConfig,
-    dustDensity: Math.min(360, baseConfig.dustDensity * locationProfile.particleDensity),
-    windSpeed: Math.min(3.4, baseConfig.windSpeed * locationProfile.particleSpeed),
+    dustDensity: Math.min(resolvedAudioProfile.visualParticleDensityMax, baseConfig.dustDensity * locationProfile.particleDensity),
+    windSpeed: Math.min(resolvedAudioProfile.visualWindSpeedMax, baseConfig.windSpeed * locationProfile.particleSpeed),
     flickerRate: Math.min(3.6, baseConfig.flickerRate / Math.max(0.45, locationProfile.lightStability)),
     scannerPulseSpeed: Math.min(4.2, baseConfig.scannerPulseSpeed * locationProfile.scannerBias),
     visualRadioGlitch: Math.min(0.98, baseConfig.visualRadioGlitch * locationProfile.radioBias),
-    audioRadioVolume: Math.min(1, baseConfig.audioRadioVolume * locationProfile.radioBias),
-    audioStormVolume: Math.min(1, baseConfig.audioStormVolume * locationProfile.stormBias)
+    audioWindVolume: Math.min(resolvedAudioProfile.audioWindVolumeMax, baseConfig.audioWindVolume),
+    audioHumVolume: Math.min(resolvedAudioProfile.audioHumVolumeMax, baseConfig.audioHumVolume),
+    audioRadioVolume: Math.min(resolvedAudioProfile.audioRadioVolumeMax, baseConfig.audioRadioVolume * locationProfile.radioBias),
+    audioStormVolume: Math.min(resolvedAudioProfile.audioStormVolumeMax, baseConfig.audioStormVolume * locationProfile.stormBias)
   };
 }
 
@@ -613,7 +1148,7 @@ export function applyPreset(state: MissionControlState, presetId: string): Missi
       case 'tempete_em':
         if (res.id === 'integrity' || res.id === 'calm') return { ...res, index: 1 };
         if (res.id === 'energy' || res.id === 'tempest' || res.id === 'data') return { ...res, index: 2 };
-        if (res.id === 'signal' || res.id === 'visibility') return { ...res, index: 3 };
+        if (res.id === 'signal' || res.id === 'visibility') return { ...res, index: 2 };
         if (res.id === 'survivor') return { ...res, index: 4 };
         return { ...res, index: 0 };
       case 'extraction':
@@ -629,7 +1164,7 @@ export function applyPreset(state: MissionControlState, presetId: string): Missi
     return res;
   });
 
-  return {
+  const nextState: MissionControlState = {
     ...state,
     activeSceneMode: mode,
     resources: newResources,
@@ -657,6 +1192,33 @@ export function applyPreset(state: MissionControlState, presetId: string): Missi
     },
     quickEffect: presetId === 'calme' ? null : state.quickEffect
   };
+
+  if (presetId === 'tempete' || presetId === 'tempete_em') {
+    return activateEmStorm(nextState, 'critical');
+  }
+
+  if (state.emStorm?.active) {
+    const severity = state.emStorm.severity;
+    return {
+      ...nextState,
+      emStorm: { active: true, severity },
+      missionTelemetry: getStormTelemetry(severity),
+      resources: setStormResourceLevels(nextState.resources, severity),
+      effects: {
+        ...nextState.effects,
+        dust: Math.max(nextState.effects.dust, 3),
+        glitch: Math.max(nextState.effects.glitch, 2),
+        em: 3
+      },
+      audio: {
+        ...nextState.audio,
+        radioVolume: Math.max(nextState.audio.radioVolume, 0.75),
+        stormVolume: Math.max(nextState.audio.stormVolume, 0.82)
+      }
+    };
+  }
+
+  return nextState;
 }
 
 export function setResourceState(state: MissionControlState, resourceId: string, stateNameOrIndex: string | number): MissionControlState {
@@ -758,9 +1320,22 @@ export function blackoutDisplay(state: MissionControlState, forceBlack: boolean 
 export function resetToBase(state: MissionControlState): MissionControlState {
   return {
     ...INITIAL_MISSION_STATE,
+    activeLocation: 'new_carthage',
+    activeDirectorSceneId: 'depart_new_carthage',
+    missionBoot: createInitialMissionBootState(),
+    playerEquipmentState: createInitialPlayerEquipmentState(),
+    playerSelectionResetAt: Date.now(),
+    playerIntelDeliveries: [],
     audio: {
       ...INITIAL_MISSION_STATE.audio,
-      enabled: state.audio.enabled
+      enabled: state.audio.enabled,
+      radioSilence: false
+    },
+    displayOptions: {
+      ...INITIAL_MISSION_STATE.displayOptions,
+      screenBlack: false,
+      activeTransmission: null,
+      newCarthageLoopVariant: 'workers'
     }
   };
 }

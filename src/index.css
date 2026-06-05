@@ -42,12 +42,122 @@ body {
 :root {
   /* base font-size clamps between mobile and large screens */
   font-size: clamp(13px, 1.9vw, 16px);
+  --display-ui-scale: 1;
+  --display-font-scale: 1;
+}
+
+.z-background {
+  z-index: 0;
+}
+
+.z-hud {
+  z-index: 30;
+}
+
+.z-aletheia-terminal {
+  z-index: 40;
+}
+
+.z-uesc-log {
+  z-index: 65;
+}
+
+.z-npc-card {
+  z-index: 70;
+}
+
+.z-player-map {
+  z-index: 85;
+}
+
+.z-final-overlay {
+  z-index: 100;
+}
+
+.display-screen {
+  --display-ui-scale: 1.05;
+  --display-font-scale: 1.05;
+  font-size: calc(1rem * var(--display-font-scale));
 }
 
 /* Squad overlay placement moved to CSS so it can respond to small viewports */
 .squad-overlay {
   left: clamp(12px, 2.5vw, 24px);
-  top: 18vh;
+  top: 24vh;
+}
+
+.display-status-overlay {
+  left: clamp(12px, 2.5vw, 24px);
+  top: 8%;
+}
+
+.display-tactical-minimap {
+  right: clamp(12px, 2vw, 32px);
+  top: clamp(52px, 8vh, 72px);
+}
+
+.aletheia-terminal-glitch {
+  animation: aletheia-terminal-glitch 160ms steps(2, end) infinite;
+}
+
+.transmission-message-text {
+  --transmission-message-max-height: 10em;
+  font-size: clamp(12px, 0.85vw, 16px);
+  line-height: 1.38;
+  max-height: var(--transmission-message-max-height);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overflow-wrap: break-word;
+  white-space: normal;
+  word-break: normal;
+  scrollbar-color: rgba(120, 113, 108, 0.35) transparent;
+  scrollbar-width: thin;
+}
+
+.transmission-message-text::-webkit-scrollbar {
+  width: 4px;
+}
+
+.transmission-message-text::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.transmission-message-text::-webkit-scrollbar-thumb {
+  background: rgba(120, 113, 108, 0.28);
+  border-radius: 999px;
+}
+
+.transmission-message-text--full {
+  --transmission-message-max-height: 11em;
+  font-size: clamp(12px, 0.9vw, 16px);
+  line-height: 1.38;
+}
+
+.transmission-message-text--compact {
+  --transmission-message-max-height: 8em;
+  font-size: clamp(11px, 0.8vw, 14px);
+  line-height: 1.36;
+}
+
+.transmission-message-text--alert {
+  --transmission-message-max-height: 7em;
+  font-size: clamp(11px, 0.75vw, 13px);
+  line-height: 1.36;
+}
+
+@keyframes aletheia-terminal-glitch {
+  0% {
+    transform: translate(0, 0);
+    filter: brightness(1);
+  }
+  50% {
+    transform: translate(1px, -1px);
+    filter: brightness(1.15) saturate(0.85);
+  }
+  100% {
+    transform: translate(-1px, 1px);
+    filter: brightness(0.95);
+  }
 }
 
 /* HUD compacting for very small screens */
@@ -56,9 +166,22 @@ body {
 }
 
 @media (max-width: 420px) {
+  .display-screen {
+    --display-ui-scale: 1;
+    --display-font-scale: 1;
+  }
   .squad-overlay {
     left: 8px;
     top: 12vh;
+  }
+  .display-status-overlay {
+    left: 8px;
+    top: 10px;
+  }
+  .display-tactical-minimap {
+    right: 8px;
+    top: 8px;
+    width: min(42vw, 170px);
   }
   .app-hud {
     padding: 0.5rem !important;

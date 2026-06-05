@@ -2,12 +2,30 @@
  * HUD (MJ control) — simplified and reordered for Mission 01 workflow
  */
 import { useState } from 'react';
-import CharacterPortraitCrop from './CharacterPortraitCrop';
-import { Zap, Waves, Plus, VolumeX, Power } from 'lucide-react';
-import { CinemagraphConfig, InterventionOptions, SquadOverlayState, SquadMember } from '../types';
-import { ResourceState } from '../utils/syncState';
+import { VolumeX, Power } from 'lucide-react';
+import { CinemagraphConfig } from '../types';
+import {
+  type AletheiaTerminalMessageSource,
+  type AletheiaTerminalState,
+  DATA_PACKAGE_STATUS_META,
+  getDataPackageMeta,
+  ResourceState,
+  type DataPackageState,
+  type DataPackageStatus,
+  type EmStormSeverity,
+  type HoundAlertState,
+  type MissionTelemetryState
+} from '../utils/syncState';
 import { LOCATIONS, type LocationId } from '../utils/locations';
 import { STORY_BEATS } from '../utils/storyBeats';
+import DirectorGuidePanel from './DirectorGuidePanel';
+import AletheiaTerminalControl from './control/AletheiaTerminalControl';
+import PlayerIntelControlPanel from './control/PlayerIntelControlPanel';
+import { type HoundActionId } from '../data/houndActions';
+import type { ScenePlayerIntel } from '../data/scenePlayerIntel';
+import type { PlayerIntelDelivery, PlayerIntelRecipient } from '../utils/syncState';
+
+const SHOW_DIRECTOR_GUIDE_PANEL = false;
 
 interface HUDProps {
   config: CinemagraphConfig;
@@ -17,26 +35,38 @@ interface HUDProps {
   onChangeResources: (newResources: ResourceState[]) => void;
   activePresetId: string;
   onChangePresetId: (id: string) => void;
+  emStorm?: {
+    active: boolean;
+    severity: EmStormSeverity;
+  };
+  missionTelemetry?: MissionTelemetryState;
+  onActivateEmStorm?: () => void;
+  onSetEmStormSeverity?: (severity: EmStormSeverity) => void;
+  onExitEmStorm?: () => void;
+  dataPackage?: DataPackageState;
+  onSetDataPackageStatus?: (status: DataPackageStatus) => void;
+  onToggleDataPackageVisibility?: () => void;
   activeLocation: LocationId;
   onChangeLocation: (location: LocationId) => void;
   networkSyncStatus: string;
-  onQuickAction: (actionId: string) => void;
-  onTransmission: (type: string) => void;
-  interventionOptions: InterventionOptions;
-  onToggleInterventionOption: (key: keyof InterventionOptions) => void;
-  onClearTransmission: () => void;
-  squadOverlay: SquadOverlayState;
-  onToggleSquadOverlay: () => void;
-  onSetSquadOverlayMode: (mode: SquadOverlayState['mode']) => void;
-  onUpdateSquadMember: (memberId: string, changes: Partial<SquadMember>) => void;
-  onUpdateSquadTracker?: (memberId: string, trackerKey: 'stress'|'bruit'|'blessures', delta: number) => void;
-  onMoveSquadMember: (memberId: string, direction: -1 | 1) => void;
+  onHoundAction?: (actionId: HoundActionId) => void;
+  houndAlert?: HoundAlertState | null;
   onResetMission?: () => void;
-  onModifySquad?: () => void;
   onSceneShortcut: (sceneId: string) => void;
+  activeDirectorSceneId?: string | null;
+  onChangeDirectorSceneId?: (sceneId: string) => void;
+  selectedSquadIds: string[];
+  sentPlayerIntelDeliveries: PlayerIntelDelivery[];
+  onSendPlayerIntel: (intel: ScenePlayerIntel, recipients: PlayerIntelRecipient[]) => void;
+  onClearPlayerIntel: () => void;
   newCarthageLoopVariant?: 'base' | 'workers' | 'rover_pass' | 'ship_takeoff' | 'easter_egg';
   newCarthageLoopCounts?: { ship_takeoff: number; easter_egg: number };
   onChangeNewCarthageLoopVariant?: (variant: 'base' | 'workers' | 'rover_pass' | 'ship_takeoff' | 'easter_egg') => void;
+  aletheiaTerminal: AletheiaTerminalState;
+  onSendAletheiaMessage: (text: string, source?: AletheiaTerminalMessageSource) => void;
+  onClearAletheiaTerminal: () => void;
+  onGlitchAletheiaSignal: () => void;
+  onToggleAletheiaNoSignal: () => void;
 }
 
 export default function HUD({
@@ -47,26 +77,42 @@ export default function HUD({
   onChangeResources,
   activePresetId,
   onChangePresetId,
+  emStorm,
+  missionTelemetry,
+  onActivateEmStorm,
+  onSetEmStormSeverity,
+  onExitEmStorm,
+  dataPackage,
+  onSetDataPackageStatus,
+  onToggleDataPackageVisibility,
   activeLocation,
   onChangeLocation,
   networkSyncStatus,
-  onQuickAction,
-  onTransmission,
-  interventionOptions,
-  onToggleInterventionOption,
-  onClearTransmission,
-  squadOverlay,
-  onToggleSquadOverlay,
-  onSetSquadOverlayMode,
-  onUpdateSquadMember,
-  onUpdateSquadTracker,
-  onMoveSquadMember,
+  onHoundAction,
+  houndAlert,
   onResetMission,
-  onModifySquad,
-  onSceneShortcut
-  , newCarthageLoopVariant, newCarthageLoopCounts, onChangeNewCarthageLoopVariant
+  onSceneShortcut,
+  activeDirectorSceneId,
+  onChangeDirectorSceneId,
+  selectedSquadIds,
+  sentPlayerIntelDeliveries,
+  onSendPlayerIntel,
+  onClearPlayerIntel,
+  newCarthageLoopVariant,
+  newCarthageLoopCounts,
+  onChangeNewCarthageLoopVariant,
+  aletheiaTerminal,
+  onSendAletheiaMessage,
+  onClearAletheiaTerminal,
+  onGlitchAletheiaSignal,
+  onToggleAletheiaNoSignal
 }: HUDProps) {
   const [locStatus, setLocStatus] = useState<Record<string,'loading'|'loaded'|'error'>>({});
+  const stormActive = emStorm?.active === true;
+  const stormSeverity = emStorm?.severity ?? 'critical';
+  const dataPackageMeta = getDataPackageMeta(dataPackage?.status);
+  const dataPackageVisible = dataPackage?.visible === true;
+  const activeHoundAlert = houndAlert && Date.now() - houndAlert.createdAt < houndAlert.durationMs ? houndAlert.id : null;
 
   const getShortResourceName = (id: string) => {
     switch (id) {
@@ -80,17 +126,6 @@ export default function HUD({
       case 'calm': return 'Groupe';
       default: return id;
     }
-  };
-
-  const computeAutoStatus = (trackers?: { stress?: number; bruit?: number; blessures?: number }) => {
-    const s = trackers?.stress ?? 0;
-    const b = trackers?.bruit ?? 0;
-    const bl = trackers?.blessures ?? 0;
-    if (bl >= 3) return 'CRITIQUE';
-    if (bl >= 1) return 'BLESSÉ';
-    if (s >= 5) return 'STRESS MAX';
-    if (b >= 5) return 'BRUIT MAX';
-    return 'OK';
   };
 
   const updateSetting = <K extends keyof CinemagraphConfig>(key: K, value: CinemagraphConfig[K]) => {
@@ -111,65 +146,6 @@ export default function HUD({
           <button onClick={() => updateSetting('audioRadioSilence', !config.audioRadioSilence)} className={`px-3 py-1 border rounded ${config.audioRadioSilence ? 'bg-red-700/70 border-red-600 text-white' : ''}`}> <VolumeX className="w-4 h-4 inline"/> {config.audioRadioSilence ? 'SILENCE RADIO ON' : 'SILENCE RADIO'}</button>
           <button onClick={() => updateSetting('screenBlack', !config.screenBlack)} className={`px-3 py-1 border rounded ${config.screenBlack ? 'bg-red-700/70 border-red-600 text-white' : ''}`}> <Power className="w-4 h-4 inline"/> {config.screenBlack ? 'ÉCRAN NOIR ON' : 'ÉCRAN NOIR'}</button>
         </div>
-      </div>
-
-      {/* Escouade (first) */}
-      <div className="space-y-2 mb-4">
-        <div className="flex items-center justify-between">
-          <div className="text-sm uppercase tracking-wider font-mono text-stone-400">Escouade PJ</div>
-          <div className="flex gap-2">
-            <button onClick={onToggleSquadOverlay} className="px-3 py-1 border rounded">{squadOverlay.visible ? 'Masquer Escouade' : 'Afficher Escouade'}</button>
-            <button onClick={() => onModifySquad && onModifySquad()} className="px-3 py-1 border rounded">Rechoisir Escouade</button>
-          </div>
-        </div>
-
-        {squadOverlay.members.length > 0 && (
-          <div className="flex flex-col gap-2">
-            {squadOverlay.members.slice(0,3).map((m) => (
-              <div key={m.id} className="p-3 bg-stone-900 border rounded flex items-center justify-between">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="h-12 w-12 rounded overflow-hidden bg-stone-800 flex items-center justify-center">
-                      <CharacterPortraitCrop src={(m as any).portrait} alt={m.name} size={48} cropSettings={(m as any).portraitCrop} />
-                    </div>
-                  <div className="min-w-0">
-                    <div className="text-sm font-semibold leading-tight whitespace-normal break-words">{m.name}</div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex flex-col items-center text-xs text-stone-300">
-                    <Zap className="w-4 h-4 text-amber-400" />
-                    <div className="text-[10px] text-stone-400 uppercase">STRESS</div>
-                    <div className="mt-1 flex items-center gap-1">
-                      <button onClick={() => onUpdateSquadTracker && onUpdateSquadTracker(m.id, 'stress', -1)} className="px-2 py-1 border rounded">-</button>
-                      <div className="px-2">{((m as any).trackers?.stress)||0}</div>
-                      <button onClick={() => onUpdateSquadTracker && onUpdateSquadTracker(m.id, 'stress', 1)} className="px-2 py-1 border rounded">+</button>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col items-center text-xs text-stone-300">
-                    <Waves className="w-4 h-4 text-sky-400" />
-                    <div className="text-[10px] text-stone-400 uppercase">BRUIT</div>
-                    <div className="mt-1 flex items-center gap-1">
-                      <button onClick={() => onUpdateSquadTracker && onUpdateSquadTracker(m.id, 'bruit', -1)} className="px-2 py-1 border rounded">-</button>
-                      <div className="px-2">{((m as any).trackers?.bruit)||0}</div>
-                      <button onClick={() => onUpdateSquadTracker && onUpdateSquadTracker(m.id, 'bruit', 1)} className="px-2 py-1 border rounded">+</button>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col items-center text-xs text-stone-300">
-                    <Plus className="w-4 h-4 text-orange-400" />
-                    <div className="text-[10px] text-stone-400 uppercase">BLESSURES</div>
-                    <div className="mt-1 flex items-center gap-1">
-                      <button onClick={() => onUpdateSquadTracker && onUpdateSquadTracker(m.id, 'blessures', -1)} className="px-2 py-1 border rounded">-</button>
-                      <div className="px-2">{((m as any).trackers?.blessures)||0}</div>
-                      <button onClick={() => onUpdateSquadTracker && onUpdateSquadTracker(m.id, 'blessures', 1)} className="px-2 py-1 border rounded">+</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* Lieux */}
@@ -198,8 +174,8 @@ export default function HUD({
             {(() => {
               const shipCount = newCarthageLoopCounts?.ship_takeoff || 0;
               return (
-                <button disabled={shipCount >= 2} onClick={() => onChangeNewCarthageLoopVariant && onChangeNewCarthageLoopVariant('ship_takeoff')} className={`px-2 py-1 border rounded text-sm ${newCarthageLoopVariant==='ship_takeoff' ? 'bg-orange-950/10 border-orange-500':''} ${shipCount>=2 ? 'opacity-50 cursor-not-allowed':''}`}>
-                  SHIP TAKEOFF {shipCount>0 && (<span className="ml-2 text-[11px]">{shipCount}/2</span>)}{shipCount>=2 && (<span className="ml-2 text-[11px]">MAX</span>)}
+                <button onClick={() => onChangeNewCarthageLoopVariant && onChangeNewCarthageLoopVariant('ship_takeoff')} className={`px-2 py-1 border rounded text-sm ${newCarthageLoopVariant==='ship_takeoff' ? 'bg-orange-950/10 border-orange-500':''}`}>
+                  SHIP TAKEOFF {shipCount>0 && (<span className="ml-2 text-[11px]">AUTO {shipCount}/2</span>)}
                 </button>
               );
             })()}
@@ -207,8 +183,8 @@ export default function HUD({
             {(() => {
               const eggCount = newCarthageLoopCounts?.easter_egg || 0;
               return (
-                <button disabled={eggCount >= 2} onClick={() => onChangeNewCarthageLoopVariant && onChangeNewCarthageLoopVariant('easter_egg')} className={`px-2 py-1 border rounded text-sm ${newCarthageLoopVariant==='easter_egg' ? 'bg-orange-950/10 border-orange-500':''} ${eggCount>=2 ? 'opacity-50 cursor-not-allowed':''}`}>
-                  EASTER EGG {eggCount>0 && (<span className="ml-2 text-[11px]">{eggCount}/2</span>)}{eggCount>=2 && (<span className="ml-2 text-[11px]">MAX</span>)}
+                <button onClick={() => onChangeNewCarthageLoopVariant && onChangeNewCarthageLoopVariant('easter_egg')} className={`px-2 py-1 border rounded text-sm ${newCarthageLoopVariant==='easter_egg' ? 'bg-orange-950/10 border-orange-500':''}`}>
+                  EASTER EGG {eggCount>0 && (<span className="ml-2 text-[11px]">AUTO {eggCount}/2</span>)}
                 </button>
               );
             })()}
@@ -238,9 +214,73 @@ export default function HUD({
             { id: 'signal', label: 'SIGNAL INSTABLE' },
             { id: 'tempete', label: 'TEMPÊTE EM' },
             { id: 'extraction', label: 'EXTRACTION' }
-          ].map((a) => (
-            <button key={a.id} onClick={() => onChangePresetId(a.id)} className="px-2 py-1 border rounded text-sm">{a.label}</button>
-          ))}
+          ].map((a) => {
+            const active = a.id === 'tempete' ? stormActive : activePresetId === a.id;
+            return (
+              <button
+                key={a.id}
+                onClick={() => a.id === 'tempete' ? onActivateEmStorm?.() : onChangePresetId(a.id)}
+                className={`px-2 py-1 border rounded text-sm ${active ? 'bg-orange-950/40 border-orange-500 text-orange-100' : ''} ${a.id === 'tempete' && stormActive ? 'bg-red-950/70 border-orange-500 text-orange-100 shadow-[0_0_18px_rgba(194,65,12,0.22)]' : ''}`}
+              >
+                {a.id === 'tempete' && stormActive ? 'TEMPÊTE EM ACTIVE' : a.label}
+              </button>
+            );
+          })}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => onSetEmStormSeverity?.('critical')}
+            className={`px-2 py-1 border rounded text-xs ${stormActive && stormSeverity === 'critical' ? 'bg-red-950/60 border-red-500 text-red-100' : 'text-stone-400 border-stone-800'}`}
+          >
+            CRITIQUE
+          </button>
+          <button
+            onClick={() => onSetEmStormSeverity?.('lost')}
+            className={`px-2 py-1 border rounded text-xs ${stormActive && stormSeverity === 'lost' ? 'bg-red-900/80 border-red-400 text-white' : 'text-stone-400 border-stone-800'}`}
+          >
+            PERDU
+          </button>
+          {stormActive && (
+            <button
+              onClick={() => onExitEmStorm?.()}
+              className="px-2 py-1 border rounded text-xs border-stone-700 bg-stone-900 text-stone-200"
+            >
+              SORTIE TEMPÊTE
+            </button>
+          )}
+        </div>
+        <div className="grid grid-cols-3 gap-2 text-[10px] uppercase tracking-wider">
+          <div className="border border-stone-850 bg-stone-950/60 rounded p-2">
+            <div className="text-stone-500">Signal radio</div>
+            <div className={`${missionTelemetry?.signalRadio === 'PERDU' || missionTelemetry?.signalRadio === 'CRITIQUE' ? 'text-red-400' : 'text-amber-400'} font-bold`}>{missionTelemetry?.signalRadio ?? 'DÉGRADÉ'}</div>
+          </div>
+          <div className="border border-stone-850 bg-stone-950/60 rounded p-2">
+            <div className="text-stone-500">Visibilité</div>
+            <div className={`${missionTelemetry?.visibility === 'PERDU' || missionTelemetry?.visibility === 'CRITIQUE' ? 'text-red-400' : 'text-amber-400'} font-bold`}>{missionTelemetry?.visibility ?? 'DÉGRADÉ'}</div>
+          </div>
+          <div className="border border-stone-850 bg-stone-950/60 rounded p-2">
+            <div className="text-stone-500">Activité EM</div>
+            <div className={`${missionTelemetry?.emActivity === 'CRITIQUE' ? 'text-red-400' : 'text-amber-400'} font-bold`}>{missionTelemetry?.emActivity ?? 'DÉGRADÉ'}</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-2 mb-4">
+        <div className="text-xs uppercase tracking-wider text-stone-500">Menaces / Incidents</div>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => onHoundAction?.('hound_near')}
+            className={`px-2 py-1 border rounded text-sm ${activeHoundAlert ? 'bg-orange-950/35 border-orange-500 text-orange-100' : ''}`}
+          >
+            CONTACT HOUND
+          </button>
+          <button
+            onClick={() => onHoundAction?.('contact_lost')}
+            disabled={!activeHoundAlert}
+            className={`px-2 py-1 border rounded text-sm ${activeHoundAlert ? 'border-stone-600 text-stone-200 hover:border-red-500 hover:text-red-200' : 'border-stone-800 text-stone-600 cursor-not-allowed'}`}
+          >
+            FIN CONTACT
+          </button>
         </div>
       </div>
 
@@ -248,16 +288,73 @@ export default function HUD({
       <div className="space-y-2 mb-4">
         <div className="text-xs uppercase tracking-wider text-stone-500">Scènes M01</div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {STORY_BEATS.map((beat) => (
+          {STORY_BEATS.filter((beat) => beat.id !== 'contact_hound').map((beat) => (
             <button key={beat.id} onClick={() => onSceneShortcut(beat.id)} className="px-2 py-1 border rounded text-sm">{beat.label}</button>
           ))}
+        </div>
+      </div>
+
+      <PlayerIntelControlPanel
+        activeSceneId={activeDirectorSceneId}
+        selectedSquadIds={selectedSquadIds}
+        sentIntelDeliveries={sentPlayerIntelDeliveries}
+        onSendIntel={onSendPlayerIntel}
+        onClearSentIntel={onClearPlayerIntel}
+      />
+
+      <AletheiaTerminalControl
+        terminal={aletheiaTerminal}
+        activeSceneId={activeDirectorSceneId}
+        onSendMessage={onSendAletheiaMessage}
+        onClearTerminal={onClearAletheiaTerminal}
+        onGlitchSignal={onGlitchAletheiaSignal}
+        onToggleNoSignal={onToggleAletheiaNoSignal}
+      />
+
+        {/* CONDUITE MJ — director guidance (control only) */}
+      {SHOW_DIRECTOR_GUIDE_PANEL && (
+        <div className="space-y-2 mb-4">
+          <DirectorGuidePanel sceneId={activeDirectorSceneId} onChangeSceneId={onChangeDirectorSceneId} />
+        </div>
+      )}
+
+      {/* Données Delta-6 */}
+      <div className="space-y-2 mb-4 border border-stone-850 bg-stone-950/70 rounded p-3">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <div className="text-xs uppercase tracking-wider text-stone-500">Données Delta-6</div>
+            <div className="text-[11px] uppercase tracking-wider text-stone-300 mt-1">
+              {dataPackageMeta.label} // Integrity {dataPackageMeta.integrity}% // Signal {dataPackageMeta.signalTrace}
+            </div>
+          </div>
+          <button
+            onClick={() => onToggleDataPackageVisibility?.()}
+            className={`px-2 py-1 border rounded text-xs shrink-0 ${dataPackageVisible ? 'bg-emerald-950/30 border-emerald-500 text-emerald-200' : 'border-stone-700 text-stone-300'}`}
+          >
+            {dataPackageVisible ? 'Masquer Data Package' : 'Afficher Data Package'}
+          </button>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {DATA_PACKAGE_STATUS_META.map((status) => {
+            const active = status.id === dataPackageMeta.id;
+            return (
+              <button
+                key={status.id}
+                onClick={() => onSetDataPackageStatus?.(status.id)}
+                className={`px-2 py-2 border rounded text-left text-xs uppercase tracking-wide ${active ? 'bg-orange-950/25 border-orange-500 text-orange-100' : 'border-stone-800 text-stone-400'}`}
+              >
+                <span className="block font-bold">{status.label}</span>
+                <span className="block mt-1 text-[10px] text-stone-500">{status.integrity}% // {status.signalTrace}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {/* Ressources */}
       <div className="space-y-2 mb-4">
         <div className="text-xs uppercase tracking-wider text-stone-500">Ressources</div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {resources.map((res) => (
             <button key={res.id} onClick={() => {
               const next = res.index + 1 >= res.states.length ? 0 : res.index + 1;
@@ -268,18 +365,6 @@ export default function HUD({
               <div className="text-xs text-stone-400">{res.states[res.index]}</div>
             </button>
           ))}
-        </div>
-      </div>
-
-      {/* Actions rapides */}
-      <div className="space-y-2 mb-4">
-        <div className="text-xs uppercase tracking-wider text-stone-500">Actions rapides</div>
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-          <button onClick={() => onQuickAction('glitch_radio')} className="px-2 py-1 border rounded">Glitch Radio</button>
-          <button onClick={() => onQuickAction('flash_em')} className="px-2 py-1 border rounded">Flash EM</button>
-          <button onClick={() => onQuickAction('ombre_hound')} className="px-2 py-1 border rounded">CONTACT HOUND</button>
-          <button onClick={() => onQuickAction('intervention')} className="px-2 py-1 border rounded">Intervention</button>
-          <button onClick={() => onQuickAction('reset_calme')} className="px-2 py-1 border rounded">Reset Calme</button>
         </div>
       </div>
 
