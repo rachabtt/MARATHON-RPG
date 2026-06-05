@@ -93,11 +93,18 @@ export interface MissionScene {
 
 export interface MissionLocation {
   id: string;
+  runtimeLocationId?: string;
   label: string;
   shortLabel?: string;
   description?: string;
   role?: string;
   playerVisible?: boolean;
+  displayBackground?: string;
+  imagePath?: string;
+  videoLoop?: string;
+  povImagePath?: string;
+  houndImagePath?: string;
+  loopVariants?: Record<string, string>;
   assetIds?: {
     image?: string;
     povImage?: string;
@@ -111,7 +118,9 @@ export interface MissionLocation {
 export interface MissionResource {
   id: string;
   label: string;
+  displayLabel?: string;
   description?: string;
+  initialState?: string;
   initialStateId: string;
   visibleToPlayers?: boolean;
   displayOrder?: number;
@@ -240,6 +249,9 @@ export interface MissionMapConfig {
 export interface MissionAudioConfig {
   defaultProfileId?: string;
   masterVolume?: number;
+  locationProfiles?: Record<string, Partial<MissionAudioRuntimeProfile>>;
+  moodProfiles?: Record<string, Partial<MissionAudioRuntimeProfile>>;
+  sceneOverrides?: Record<string, Partial<MissionAudioRuntimeProfile>>;
   profiles: Array<{
     id: string;
     label: string;
@@ -252,12 +264,43 @@ export interface MissionAudioConfig {
   locationProfileMap?: Record<string, string>;
 }
 
+export interface MissionAudioRuntimeProfile {
+  windFilterHz: number;
+  windQ: number;
+  windGain: number;
+  humGain: number;
+  radioGain: number;
+  stormGain: number;
+  houndsGain: number;
+  windIntensity: string;
+  particles: string;
+  silence: boolean;
+  radioNoise: string;
+  lowFrequencyHum: string;
+  scannerHum: string;
+  emInstability: string;
+  audioWindVolumeMax: number;
+  audioStormVolumeMax: number;
+  audioRadioVolumeMax: number;
+  audioHumVolumeMax: number;
+  visualWindSpeedMax: number;
+  visualParticleDensityMax: number;
+}
+
 export interface MissionBootSequence {
   id: string;
   enabled: boolean;
+  title?: string;
+  subtitle?: string;
   initialPhase: MissionBootPhase;
   holdPercent?: number;
+  bootLines?: string[];
   loadingLines?: string[];
+  loadingLabel?: string;
+  videoPath?: string;
+  audioPath?: string;
+  durationMs?: number;
+  nextSceneId?: string;
   introVideoAssetId?: string;
   startSceneId?: string;
   startLocationId?: string;

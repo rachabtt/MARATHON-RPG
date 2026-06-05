@@ -23,14 +23,21 @@ import { scenePlayerIntel } from '../../data/scenePlayerIntel';
 import { transmissionProfiles } from '../../data/transmissionProfiles';
 import { LOCATIONS } from '../../utils/locations';
 import { getAudioProfile } from '../../utils/audioProfiles';
-import { INITIAL_RESOURCES } from '../../utils/syncState';
 
 function getLocationIdFromSceneLocation(location: string): string {
   const normalized = location.toLowerCase();
-  if (normalized.includes('plaines')) return 'red_plains';
-  if (normalized.includes('arches')) return 'black_arches';
-  if (normalized.includes('delta-6') || normalized.includes('delta6')) return 'delta6';
-  return 'new_carthage';
+  if (normalized.includes('plaines')) return 'red-plains';
+  if (normalized.includes('arches')) return 'black-arches';
+  if (normalized.includes('delta-6') || normalized.includes('delta6')) return 'delta6-site';
+  return 'new-carthage';
+}
+
+function getMissionLocationId(runtimeLocationId: string): string {
+  if (runtimeLocationId === 'new_carthage') return 'new-carthage';
+  if (runtimeLocationId === 'red_plains') return 'red-plains';
+  if (runtimeLocationId === 'black_arches') return 'black-arches';
+  if (runtimeLocationId === 'delta6') return 'delta6-site';
+  return runtimeLocationId;
 }
 
 function mapTokenType(type: string): MissionTokenType {
@@ -72,12 +79,22 @@ function mapTone(tone: string | undefined): MissionTone {
 }
 
 const manifestLocations: MissionLocation[] = LOCATIONS.map((location) => ({
-  id: location.id,
+  id: getMissionLocationId(location.id),
+  runtimeLocationId: location.id,
   label: location.label,
   shortLabel: location.label,
   description: location.subtitle,
   role: location.subtitle,
   playerVisible: true,
+  displayBackground: location.image,
+  imagePath: location.image,
+  videoLoop: location.wideVideo,
+  povImagePath: location.povImage,
+  houndImagePath: location.houndImage,
+  loopVariants: location.loops
+    ? Object.fromEntries(Object.entries(location.loops).filter(([, value]) => Boolean(value)))
+    : undefined,
+  defaultAudioProfileId: location.id,
   assetIds: {
     image: `${location.id}-image`,
     povImage: location.povImage ? `${location.id}-pov-image` : undefined,
@@ -188,25 +205,90 @@ const manifestScenes: MissionScene[] = missionScenes.map((scene, index) => ({
   }
 }));
 
-const manifestResources: MissionResource[] = INITIAL_RESOURCES.map((resource, resourceIndex) => ({
-  id: resource.id,
-  label: resource.name,
-  initialStateId: `state-${resource.index}`,
-  visibleToPlayers: true,
-  displayOrder: resourceIndex + 1,
-  states: resource.states.map((label, stateIndex) => ({
-    id: `state-${stateIndex}`,
-    label,
-    severity: stateIndex === 0
-      ? 'stable'
-      : stateIndex === 1
-        ? 'degraded'
-        : stateIndex === 2
-          ? 'critical'
-          : 'lost',
-    color: resource.colors[stateIndex]
-  }))
-}));
+const standardResourceStates: MissionResource['states'] = [
+  { id: 'stable', label: 'Stable', severity: 'stable', color: 'emerald' },
+  { id: 'degraded', label: 'Dégradé', severity: 'degraded', color: 'amber' },
+  { id: 'critical', label: 'Critique', severity: 'critical', color: 'red' },
+  { id: 'lost', label: 'Perdu', severity: 'lost', color: 'stone' }
+];
+
+const manifestResources: MissionResource[] = [
+  {
+    id: 'rover-uesc',
+    label: 'Intégrité rover',
+    initialStateId: 'stable',
+    visibleToPlayers: true,
+    displayOrder: 1,
+    states: standardResourceStates
+  },
+  {
+    id: 'rover-delta6',
+    label: 'Énergie rover',
+    initialStateId: 'stable',
+    visibleToPlayers: true,
+    displayOrder: 2,
+    states: standardResourceStates
+  },
+  {
+    id: 'signal-radio',
+    label: 'Signal radio',
+    initialStateId: 'degraded',
+    visibleToPlayers: true,
+    displayOrder: 3,
+    states: standardResourceStates
+  },
+  {
+    id: 'visibilite',
+    label: 'Visibilité',
+    initialStateId: 'degraded',
+    visibleToPlayers: true,
+    displayOrder: 4,
+    states: standardResourceStates
+  },
+  {
+    id: 'activite-em',
+    label: 'Temps avant tempête',
+    initialStateId: 'degraded',
+    visibleToPlayers: true,
+    displayOrder: 5,
+    states: standardResourceStates
+  },
+  {
+    id: 'donnees-delta6',
+    label: 'Données Delta-6',
+    initialStateId: 'non_secure',
+    visibleToPlayers: true,
+    displayOrder: 6,
+    states: [
+      { id: 'non_secure', label: 'Stable mais non sécurisées', severity: 'stable', color: 'emerald' },
+      { id: 'degraded', label: 'Dégradé', severity: 'degraded', color: 'amber' },
+      { id: 'critical', label: 'Critique', severity: 'critical', color: 'red' },
+      { id: 'lost', label: 'Perdu', severity: 'lost', color: 'stone' }
+    ]
+  },
+  {
+    id: 'survivant-delta6',
+    label: 'Survivant Delta-6',
+    initialStateId: 'unknown',
+    visibleToPlayers: true,
+    displayOrder: 7,
+    states: [
+      { id: 'unknown', label: 'Inconnu', severity: 'lost', color: 'stone' },
+      { id: 'stable', label: 'Stable', severity: 'stable', color: 'emerald' },
+      { id: 'degraded', label: 'Dégradé', severity: 'degraded', color: 'amber' },
+      { id: 'critical', label: 'Critique', severity: 'critical', color: 'red' },
+      { id: 'lost', label: 'Perdu', severity: 'lost', color: 'stone' }
+    ]
+  },
+  {
+    id: 'calme-groupe',
+    label: 'Calme du groupe',
+    initialStateId: 'stable',
+    visibleToPlayers: true,
+    displayOrder: 8,
+    states: standardResourceStates
+  }
+];
 
 const manifestTokens: MissionToken[] = MISSION01_TACTICAL_TOKENS.map((token) => ({
   id: token.id,
@@ -315,6 +397,106 @@ const manifestMap: MissionMapConfig = {
 
 const manifestAudio: MissionAudioConfig = {
   defaultProfileId: 'new_carthage',
+  locationProfiles: {
+    new_carthage: {
+      ...getAudioProfile('new_carthage'),
+      windIntensity: 'low',
+      particles: 'low',
+      radioNoise: 'low',
+      lowFrequencyHum: 'medium',
+      audioWindVolumeMax: 0.12,
+      audioStormVolumeMax: 0.08,
+      audioRadioVolumeMax: 0.24,
+      audioHumVolumeMax: 0.34,
+      visualWindSpeedMax: 0.42,
+      visualParticleDensityMax: 44
+    },
+    red_plains: {
+      ...getAudioProfile('red_plains'),
+      windIntensity: 'medium',
+      particles: 'medium',
+      radioNoise: 'medium',
+      audioWindVolumeMax: 0.48,
+      audioStormVolumeMax: 0.38,
+      visualWindSpeedMax: 1.85,
+      visualParticleDensityMax: 220
+    },
+    black_arches: {
+      ...getAudioProfile('black_arches'),
+      windIntensity: 'veryLow',
+      particles: 'veryLow',
+      silence: true,
+      radioNoise: 'subtle',
+      lowFrequencyHum: 'veryLow',
+      audioWindVolumeMax: 0.025,
+      audioStormVolumeMax: 0.025,
+      audioRadioVolumeMax: 0.22,
+      audioHumVolumeMax: 0.22,
+      visualWindSpeedMax: 0.14,
+      visualParticleDensityMax: 28
+    },
+    delta6: {
+      ...getAudioProfile('delta6'),
+      windIntensity: 'low',
+      particles: 'low',
+      scannerHum: 'medium',
+      radioNoise: 'medium',
+      audioWindVolumeMax: 0.24,
+      audioStormVolumeMax: 0.18,
+      audioRadioVolumeMax: 0.50,
+      visualWindSpeedMax: 0.95,
+      visualParticleDensityMax: 120
+    }
+  },
+  moodProfiles: {
+    signal: {
+      radioNoise: 'medium',
+      emInstability: 'subtle'
+    },
+    scanner: {
+      scannerHum: 'medium',
+      audioWindVolumeMax: 0.26,
+      audioStormVolumeMax: 0.18
+    },
+    extraction: {
+      windIntensity: 'mediumHigh',
+      particles: 'medium',
+      emInstability: 'medium',
+      audioWindVolumeMax: 0.46,
+      audioStormVolumeMax: 0.42,
+      visualWindSpeedMax: 2.2,
+      visualParticleDensityMax: 260
+    },
+    storm: {
+      windIntensity: 'high',
+      particles: 'high',
+      radioNoise: 'high',
+      emInstability: 'high',
+      silence: false,
+      audioWindVolumeMax: 0.74,
+      audioStormVolumeMax: 0.74,
+      audioRadioVolumeMax: 0.92,
+      visualWindSpeedMax: 3.4,
+      visualParticleDensityMax: 360
+    }
+  },
+  sceneOverrides: {
+    'finale-terminal': {
+      windIntensity: 'none',
+      particles: 'none',
+      silence: true,
+      radioNoise: 'veryLow',
+      lowFrequencyHum: 'subtle',
+      emInstability: 'veryLow',
+      windGain: 0,
+      stormGain: 0,
+      audioWindVolumeMax: 0,
+      audioStormVolumeMax: 0,
+      audioRadioVolumeMax: 0.08,
+      visualWindSpeedMax: 0,
+      visualParticleDensityMax: 0
+    }
+  },
   profiles: LOCATIONS.map((location) => {
     const profile = getAudioProfile(location.id);
     return {
@@ -342,9 +524,22 @@ export const mission01Manifest: MissionManifest = {
   bootSequence: {
     id: 'mission01-boot',
     enabled: true,
+    title: 'MISSION 01 — SOL ROUGE',
+    subtitle: 'UESC FIELD OPERATIONS // NEW CARTHAGE',
     initialPhase: 'boot_idle',
     holdPercent: 52,
+    bootLines: [
+      'UESC COLONIAL SYSTEMS ONLINE',
+      'ALETHEIA NODE HANDSHAKE',
+      'FIELD DISPLAY LINK ESTABLISHED',
+      'CREW STATUS: ACTIVE',
+      'MISSION PACKAGE: SOL ROUGE',
+      'WARNING: LOCAL EM ACTIVITY UNSTABLE'
+    ],
+    loadingLabel: 'INITIALISATION TERRAIN',
     introVideoAssetId: 'boot-video',
+    videoPath: '/missions/mission-01-sol-rouge/assets/boot/BOOT.mp4',
+    nextSceneId: 'reveil-aletheia',
     startSceneId: 'depart_new_carthage',
     startLocationId: 'new_carthage'
   },

@@ -4,6 +4,7 @@
  */
 
 import { getResolvedAudioProfile } from './audioProfiles';
+import type { MissionAudioConfig } from '../types/missionSchema';
 import type { LocationId } from './locations';
 
 export class SciFiAudioEngine {
@@ -396,7 +397,8 @@ export class SciFiAudioEngine {
     locationId?: LocationId | string,
     environmentFilter?: string,
     sceneId?: string | null,
-    isStormActive: boolean = false
+    isStormActive: boolean = false,
+    missionAudio?: MissionAudioConfig
   ) {
     if (!this.ctx) return;
     
@@ -406,6 +408,7 @@ export class SciFiAudioEngine {
       moodId: environmentFilter,
       sceneId,
       isStormActive,
+      missionAudio,
     });
     this.radioLevel = radioVol * profile.radioGain;
     this.stormLevel = stormVol * profile.stormGain;

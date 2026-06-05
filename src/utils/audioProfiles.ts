@@ -1,4 +1,5 @@
 import type { LocationId } from "./locations";
+import type { MissionAudioConfig } from "../types/missionSchema";
 
 export interface AudioProfile {
   windFilterHz: number;
@@ -37,6 +38,7 @@ export type ResolvedAudioProfileInput = {
   moodId?: string | null;
   sceneId?: string | null;
   isStormActive?: boolean;
+  missionAudio?: MissionAudioConfig;
 };
 
 function normalizeLocationId(locationId?: LocationId | string | null): string {
@@ -57,6 +59,17 @@ function normalizeSceneId(sceneId?: string | null): string | undefined {
   const normalized = sceneId.replace(/_/g, "-");
   if (normalized === "finale-terminal" || normalized === "final-terminal") return "finale-terminal";
   return normalized;
+}
+
+function getMissionAudioProfileOverride(
+  missionAudio: MissionAudioConfig | undefined,
+  source: "location" | "mood" | "scene",
+  id: string | undefined
+): Partial<ResolvedAudioProfile> {
+  if (!missionAudio || !id) return {};
+  if (source === "location") return (missionAudio.locationProfiles?.[id] ?? {}) as Partial<ResolvedAudioProfile>;
+  if (source === "mood") return (missionAudio.moodProfiles?.[id] ?? {}) as Partial<ResolvedAudioProfile>;
+  return (missionAudio.sceneOverrides?.[id] ?? {}) as Partial<ResolvedAudioProfile>;
 }
 
 export function getAudioProfile(locationId: LocationId | string | undefined): AudioProfile {
@@ -110,6 +123,7 @@ export function getResolvedAudioProfile({
   moodId,
   sceneId,
   isStormActive = false,
+  missionAudio,
 }: ResolvedAudioProfileInput): ResolvedAudioProfile {
   const normalizedLocationId = normalizeLocationId(locationId);
   const normalizedMoodId = normalizeMoodId(moodId);
@@ -247,6 +261,50 @@ export function getResolvedAudioProfile({
       audioRadioVolumeMax: 0.92,
       visualWindSpeedMax: 3.4,
       visualParticleDensityMax: 360,
+    };
+  }
+
+  resolved = {
+    ...resolved,
+    ...getMissionAudioProfileOverride(missionAudio, "location", normalizedLocationId),
+    ...getMissionAudioProfileOverride(missionAudio, "mood", normalizedMoodId),
+    ...getMissionAudioProfileOverride(missionAudio, "scene", normalizedSceneId),
+  };
+
+  if (normalizedMoodId === "signal") {
+    const signalWindCaps: Record<string, { audio: number; visual: number; particles: number; storm: number }> = {
+      new_carthage: { audio: 0.08, visual: 0.32, particles: 34, storm: 0.03 },
+      red_plains: { audio: 0.32, visual: 1.35, particles: 170, storm: 0.16 },
+      black_arches: { audio: 0.02, visual: 0.12, particles: 24, storm: 0.015 },
+      delta6: { audio: 0.20, visual: 0.85, particles: 110, storm: 0.12 },
+    };
+    const cap = signalWindCaps[normalizedLocationId] ?? signalWindCaps.delta6;
+
+    resolved = {
+      ...resolved,
+      radioNoise: normalizedLocationId === "black_arches" ? "subtle" : "medium",
+      emInstability: "subtle",
+      audioWindVolumeMax: Math.min(resolved.audioWindVolumeMax, cap.audio),
+      visualWindSpeedMax: Math.min(resolved.visualWindSpeedMax, cap.visual),
+      visualParticleDensityMax: Math.min(resolved.visualParticleDensityMax, cap.particles),
+      audioRadioVolumeMax: Math.min(resolved.audioRadioVolumeMax, normalizedLocationId === "black_arches" ? 0.20 : 0.50),
+      audioStormVolumeMax: Math.min(resolved.audioStormVolumeMax, cap.storm),
+    };
+  }
+
+  if (normalizedMoodId === "storm" || isStormActive) {
+    resolved = {
+      ...resolved,
+      windIntensity: "high",
+      particles: "high",
+      radioNoise: "high",
+      emInstability: "high",
+      silence: false,
+      audioWindVolumeMax: Math.max(resolved.audioWindVolumeMax, 0.74),
+      audioStormVolumeMax: Math.max(resolved.audioStormVolumeMax, 0.74),
+      audioRadioVolumeMax: Math.max(resolved.audioRadioVolumeMax, 0.92),
+      visualWindSpeedMax: Math.max(resolved.visualWindSpeedMax, 3.4),
+      visualParticleDensityMax: Math.max(resolved.visualParticleDensityMax, 360),
     };
   }
 

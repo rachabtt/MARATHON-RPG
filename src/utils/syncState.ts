@@ -25,7 +25,7 @@ import {
   type Delta6DataStatus
 } from '../data/delta6DataPackage';
 import type { HoundActionId, HoundActionTone } from '../data/houndActions';
-import type { MissionPlayerIntel, MissionPlayerIntelTarget } from '../types/missionSchema';
+import type { MissionAudioConfig, MissionPlayerIntel, MissionPlayerIntelTarget } from '../types/missionSchema';
 import type { TacticalMapToken } from '../types/tacticalMap';
 
 export interface ResourceState {
@@ -278,65 +278,6 @@ export interface MissionControlState {
   logs: TelemetryLog[];
 }
 
-export const INITIAL_RESOURCES: ResourceState[] = [
-  {
-    id: 'integrity',
-    name: "Intégrité rover",
-    states: ["Stable", "Dégradé", "Critique", "Perdu"],
-    colors: ["emerald", "amber", "red", "stone"],
-    index: 0
-  },
-  {
-    id: 'energy',
-    name: "Énergie rover",
-    states: ["Stable", "Dégradé", "Critique", "Perdu"],
-    colors: ["emerald", "amber", "red", "stone"],
-    index: 0
-  },
-  {
-    id: 'signal',
-    name: "Signal radio",
-    states: ["Stable", "Dégradé", "Critique", "Perdu"],
-    colors: ["emerald", "amber", "red", "stone"],
-    index: 1
-  },
-  {
-    id: 'visibility',
-    name: "Visibilité",
-    states: ["Stable", "Dégradé", "Critique", "Perdu"],
-    colors: ["emerald", "amber", "red", "stone"],
-    index: 1
-  },
-  {
-    id: 'tempest',
-    name: "Temps avant tempête",
-    states: ["Stable", "Dégradé", "Critique", "Perdu"],
-    colors: ["emerald", "amber", "red", "stone"],
-    index: 1
-  },
-  {
-    id: 'data',
-    name: "Données Delta-6",
-    states: ["Stable mais non sécurisées", "Dégradé", "Critique", "Perdu"],
-    colors: ["emerald", "amber", "red", "stone"],
-    index: 0
-  },
-  {
-    id: 'survivor',
-    name: "Survivant Delta-6",
-    states: ["Inconnu", "Stable", "Dégradé", "Critique", "Perdu"],
-    colors: ["stone", "emerald", "amber", "red", "stone"],
-    index: 0
-  },
-  {
-    id: 'calm',
-    name: "Calme du groupe",
-    states: ["Stable", "Dégradé", "Critique", "Perdu"],
-    colors: ["emerald", "amber", "red", "stone"],
-    index: 0
-  }
-];
-
 export const INITIAL_MISSION_STATE: MissionControlState = {
   activeSceneMode: 'normal',
   activeLocation: 'new_carthage',
@@ -363,7 +304,7 @@ export const INITIAL_MISSION_STATE: MissionControlState = {
     glitchUntil: null,
     noSignal: false
   },
-  resources: INITIAL_RESOURCES,
+  resources: [],
   effects: {
     dust: 1,
     glitch: 0,
@@ -800,7 +741,7 @@ export function subscribeToStateBroadcast(callback: (state: MissionControlState)
 }
 
 // ─── DERIVE VISUAL CONFIG ON-THE-FLY ───
-export function deriveConfigFromState(state: MissionControlState): CinemagraphConfig {
+export function deriveConfigFromState(state: MissionControlState, missionAudio?: MissionAudioConfig): CinemagraphConfig {
   const emStormActive = state.emStorm?.active === true;
   const emStormSeverity = state.emStorm?.severity ?? 'critical';
   const resourceIndex = (id: string) => state.resources.find(resource => resource.id === id)?.index ?? 0;
@@ -894,6 +835,7 @@ export function deriveConfigFromState(state: MissionControlState): CinemagraphCo
     moodId: state.activeSceneMode,
     sceneId: state.activeDirectorSceneId,
     isStormActive: emStormActive,
+    missionAudio,
   });
   const locationProfile = getLocationEffectProfile(state.activeLocation, baseConfig);
 

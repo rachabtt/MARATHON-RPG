@@ -40,7 +40,7 @@ import {
   type PlayerIntelDelivery,
   type PlayerIntelRecipient
 } from './utils/syncState';
-import { getLocationById, LOCATIONS, resolveLocationVisual, type LocationId } from './utils/locations';
+import { LOCATIONS, resolveLocationVisual, type LocationId } from './utils/locations';
 import { getResolvedAudioProfile } from './utils/audioProfiles';
 import { getLocationEffectProfile } from './utils/locationEffects';
 import {
@@ -50,10 +50,10 @@ import {
   type NetworkSyncStatus
 } from './utils/networkSync';
 import { createMissionTransmission } from './utils/transmissions';
-import { getStoryBeat, type StoryAmbience } from './utils/storyBeats';
+import { getStoryBeat, STORY_BEATS, type StoryAmbience } from './utils/storyBeats';
 import { getHoundAction, type HoundActionId } from './data/houndActions';
 import { getMissionSceneById } from './data/missionScenes';
-import type { MissionPlayerIntel } from './types/missionSchema';
+import type { MissionPlayerIntel, MissionScene } from './types/missionSchema';
 import { getGmScriptSceneIdForStoryBeat } from './data/mission01GmScript';
 import { createScenePopupTransmission } from './data/scenePopups';
 import { applyTokenSceneVisibility } from './utils/tokenSceneVisibility';
@@ -61,6 +61,15 @@ import {
   mergeTacticalRuntimeTokens,
   missionTokensToTacticalMapTokens
 } from './utils/missionTacticalMap';
+import {
+  mergeMissionRuntimeResources,
+  missionResourcesToResourceStates
+} from './utils/missionResources';
+import {
+  getMissionLocationById,
+  missionLocationsToLocationInfos,
+  toRuntimeLocationId
+} from './utils/missionLocations';
 import { getHoundVisualProfile } from './utils/houndProfile';
 import HoundOverlay from './components/HoundOverlay';
 import SquadOverlay from './components/SquadOverlay';
@@ -95,6 +104,32 @@ function toPlayerIntelDeliveryTone(tone: MissionPlayerIntel['tone']): PlayerInte
   }
 
   return 'neutral';
+}
+
+function getMissionSceneFromManifest(scenes: MissionScene[], sceneId?: string | null): MissionScene | undefined {
+  if (!sceneId) return undefined;
+  const directScene = scenes.find((scene) => scene.id === sceneId);
+  if (directScene) return directScene;
+
+  const canonicalSceneId = getMissionSceneById(sceneId)?.id;
+  return canonicalSceneId ? scenes.find((scene) => scene.id === canonicalSceneId) : undefined;
+}
+
+function getStoryBeatForMissionScene(sceneId: string) {
+  const directBeat = getStoryBeat(sceneId);
+  if (directBeat) return directBeat;
+
+  const canonicalSceneId = getMissionSceneById(sceneId)?.id ?? sceneId;
+  return STORY_BEATS.find((beat) => (getMissionSceneById(beat.id)?.id ?? beat.id) === canonicalSceneId);
+}
+
+function getPresetIdForMissionScene(scene: MissionScene | undefined): string {
+  const ambienceId = scene?.ambienceId?.toLowerCase() ?? '';
+  if (ambienceId.includes('tempête') || ambienceId.includes('tempete')) return 'tempete';
+  if (ambienceId.includes('extraction')) return 'extraction';
+  if (ambienceId.includes('signal')) return 'signal';
+  if (ambienceId.includes('tension')) return 'delta6';
+  return 'calme';
 }
 
 function clampTacticalPercent(value: number): number {
@@ -181,6 +216,10 @@ export default function App() {
   const audioEngineRef = useRef<SciFiAudioEngine | null>(null);
   const lastQuickEffectIdRef = useRef<string>('');
   const lastTransmissionIdRef = useRef<string>('');
+  const missionLocations = useMemo(
+    () => missionLocationsToLocationInfos(currentMission.locations ?? [], LOCATIONS),
+    [currentMission.locations]
+  );
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -209,7 +248,7 @@ export default function App() {
   useEffect(() => {
     audioEngineRef.current = new SciFiAudioEngine();
     // Preload images and videos where available (non-fatal if video absent)
-    LOCATIONS.forEach((location) => {
+    missionLocations.forEach((location) => {
       const img = new Image();
       img.src = location.image;
       if (location.povImage) {
@@ -238,7 +277,7 @@ export default function App() {
         audioEngineRef.current.destroy();
       }
     };
-  }, []);
+  }, [missionLocations]);
 
   // Multi-tab synchronization listener supporting standard LocalStorage and real-time BroadcastChannel
   useEffect(() => {
@@ -268,11 +307,24 @@ export default function App() {
     }, setNetworkSyncStatus);
   }, []);
 
+  const initialResources = useMemo(
+    () => missionResourcesToResourceStates(currentMission.resources ?? []),
+    [currentMission.resources]
+  );
+  const resources = useMemo(
+    () => mergeMissionRuntimeResources(initialResources, state.resources),
+    [initialResources, state.resources]
+  );
+  const stateWithMissionResources = useMemo(
+    () => ({ ...state, resources }),
+    [state, resources]
+  );
+
   // Sync Audio Engine values dynamically matching active route configuration
-  const currentConfig = deriveConfigFromState(state);
+  const currentConfig = deriveConfigFromState(stateWithMissionResources, currentMission.audio);
   // For control route, never allow a full-screen black override to block the MJ UI.
   const visualConfig = route === 'control' ? { ...currentConfig, screenBlack: false } : currentConfig;
-  const activeLocation = getLocationById(state.activeLocation);
+  const activeLocation = getMissionLocationById(missionLocations, state.activeLocation);
   const isAudioBooted = (route === 'display' && displayBooted) || (route === 'control' && controlBooted);
   const activeVisual = resolveLocationVisual(activeLocation, visualConfig, state.displayOptions);
   const initialTacticalTokens = useMemo(
@@ -294,6 +346,7 @@ export default function App() {
       moodId: currentConfig.environmentFilter,
       sceneId: state.activeDirectorSceneId,
       isStormActive: currentConfig.emStormActive === true,
+      missionAudio: currentMission.audio,
     });
     const resolvedLocationEffects = getLocationEffectProfile(currentConfig.activeLocation, currentConfig);
 
@@ -323,6 +376,7 @@ export default function App() {
     currentConfig.audioStormVolume,
     currentConfig.audioRadioVolume,
     currentConfig.audioHumVolume,
+    currentMission.audio,
   ]);
 
   useEffect(() => {
@@ -342,7 +396,8 @@ export default function App() {
         currentConfig.activeLocation,
         currentConfig.environmentFilter,
         state.activeDirectorSceneId,
-        currentConfig.emStormActive === true
+        currentConfig.emStormActive === true,
+        currentMission.audio
       );
     } else {
       audioEngineRef.current.setMute(true);
@@ -359,7 +414,8 @@ export default function App() {
     currentConfig.activeLocation,
     currentConfig.environmentFilter,
     state.activeDirectorSceneId,
-    currentConfig.emStormActive
+    currentConfig.emStormActive,
+    currentMission.audio
   ]);
 
   useEffect(() => {
@@ -441,7 +497,7 @@ export default function App() {
   // Handle local state modifiers using the serializable state patterns
   const handleUpdateConfig = (newConfig: CinemagraphConfig) => {
     const payload: MissionControlState = { 
-      ...state, 
+      ...stateWithMissionResources,
       activeSceneMode: newConfig.environmentFilter,
       activeLocation: newConfig.activeLocation || state.activeLocation || 'delta6',
       audio: {
@@ -473,7 +529,7 @@ export default function App() {
     };
     const signal = newResources.find((resource) => resource.id === 'signal');
     const visibility = newResources.find((resource) => resource.id === 'visibility');
-    const previousDataIndex = state.resources.find((resource) => resource.id === 'data')?.index;
+    const previousDataIndex = resources.find((resource) => resource.id === 'data')?.index;
     const nextDataIndex = newResources.find((resource) => resource.id === 'data')?.index;
     const dataStatusByResourceIndex: DataPackageStatus[] = ['non_secure', 'partial', 'corrupted', 'lost'];
     const dataPackageChanged = typeof nextDataIndex === 'number' && nextDataIndex !== previousDataIndex;
@@ -499,18 +555,18 @@ export default function App() {
   };
 
   const handleSetDataPackageStatus = (status: DataPackageStatus) => {
-    const payload = setDataPackageStatus(state, status);
+    const payload = setDataPackageStatus(stateWithMissionResources, status);
     commitLocalState(payload);
   };
 
   const handleToggleDataPackageVisibility = () => {
-    const payload = setDataPackageVisible(state, !(state.dataPackage?.visible ?? false));
+    const payload = setDataPackageVisible(stateWithMissionResources, !(state.dataPackage?.visible ?? false));
     commitLocalState(payload);
   };
 
   const handleUpdatePresetId = (id: string) => {
     const now = Date.now();
-    const baseState = id === 'calme' ? exitEmStorm(state) : state;
+    const baseState = id === 'calme' ? exitEmStorm(stateWithMissionResources) : stateWithMissionResources;
     let payload = applyPreset(baseState, id);
 
     if (id === 'calme') {
@@ -539,7 +595,7 @@ export default function App() {
 
   const handleActivateEmStorm = () => {
     const payload = {
-      ...activateEmStorm(state, state.emStorm?.severity ?? 'critical'),
+      ...activateEmStorm(stateWithMissionResources, state.emStorm?.severity ?? 'critical'),
       aletheiaTerminal: {
         ...state.aletheiaTerminal,
         glitchUntil: Date.now() + 60 * 60 * 1000
@@ -549,17 +605,17 @@ export default function App() {
   };
 
   const handleSetEmStormSeverity = (severity: EmStormSeverity) => {
-    const payload = setEmStormSeverity(state, severity);
+    const payload = setEmStormSeverity(stateWithMissionResources, severity);
     commitLocalState(payload);
   };
 
   const handleExitEmStorm = () => {
-    const payload = exitEmStorm(state);
+    const payload = exitEmStorm(stateWithMissionResources);
     commitLocalState(payload);
   };
 
   const handleUpdateLocation = (location: LocationId) => {
-    const payload = { ...state, activeLocation: location };
+    const payload = { ...stateWithMissionResources, activeLocation: location };
     commitLocalState(payload);
   };
 
@@ -1017,6 +1073,7 @@ export default function App() {
         introStartedAt: null,
         introCompletedAt: null
       },
+      resources: initialResources.map((resource) => ({ ...resource })),
       audio: { ...INITIAL_MISSION_STATE.audio, enabled: state.audio.enabled, radioSilence: false },
       displayOptions: {
         ...INITIAL_MISSION_STATE.displayOptions,
@@ -1282,7 +1339,7 @@ export default function App() {
 
   }, [route, state.activeLocation, state.displayOptions?.newCarthagePhaseStartedAt, state.displayOptions?.newCarthageAutoStep, state.displayOptions?.newCarthageLastManualLoopAt, state.displayOptions?.screenBlack, loopEpochKey]);
 
-  const triggerQuickEffect = (type: QuickEffectType, baseState: MissionControlState = state): MissionControlState => ({
+  const triggerQuickEffect = (type: QuickEffectType, baseState: MissionControlState = stateWithMissionResources): MissionControlState => ({
     ...baseState,
     quickEffect: {
       type,
@@ -1294,7 +1351,7 @@ export default function App() {
   const handleQuickAction = (actionId: string) => {
     if (actionId === 'reset_calme') {
       const payload: MissionControlState = {
-        ...state,
+        ...stateWithMissionResources,
         activeSceneMode: 'normal',
         effects: {
           ...state.effects,
@@ -1508,10 +1565,12 @@ export default function App() {
   };
 
   const handleSceneShortcut = (sceneId: string) => {
-    const beat = getStoryBeat(sceneId);
-    if (!beat) return;
+    const missionScene = getMissionSceneFromManifest(currentMission.scenes ?? [], sceneId);
+    const canonicalSceneId = missionScene?.id ?? getMissionSceneById(sceneId)?.id ?? sceneId;
+    const beat = getStoryBeatForMissionScene(sceneId);
+    if (!beat && !missionScene) return;
 
-    if (beat.requiresConfirmation && !window.confirm('CONFIRMER LANCEMENT DE LA SCÈNE FINALE ?')) {
+    if ((beat?.requiresConfirmation || canonicalSceneId === 'finale-terminal') && !window.confirm('CONFIRMER LANCEMENT DE LA SCÈNE FINALE ?')) {
       return;
     }
 
@@ -1523,19 +1582,21 @@ export default function App() {
       extraction: 'extraction'
     };
 
+    const fallbackLocationId = toRuntimeLocationId(missionScene?.locationId ?? state.activeLocation, state.activeLocation);
     const shortcutLocation =
-      beat.id === 'tempete_em'
+      canonicalSceneId === 'tempete-em'
         ? (state.activeLocation === 'red_plains' || state.activeLocation === 'delta6' ? state.activeLocation : 'delta6')
-        : beat.location;
+        : beat?.location ?? fallbackLocationId;
+    const presetId = beat ? ambiencePresetMap[beat.ambience] : getPresetIdForMissionScene(missionScene);
 
     // Base payload with preset
     let payload: MissionControlState = applyPreset(
-      { ...state, activeLocation: shortcutLocation },
-      ambiencePresetMap[beat.ambience]
+      { ...stateWithMissionResources, activeLocation: shortcutLocation },
+      presetId
     );
 
     // Special handling for Red Plains scenes: control visual variant and transition timers
-    if (beat.id === 'traversee') {
+    if (canonicalSceneId === 'traversee-plaines-rouges') {
       payload = {
         ...payload,
         activeLocation: 'red_plains',
@@ -1547,7 +1608,7 @@ export default function App() {
       };
     }
     // Scenes that should force POV on Red Plains
-    if (['anomalie_radio', 'extraction'].includes(beat.id) || (beat.id === 'tempete_em' && payload.activeLocation === 'red_plains')) {
+    if (['anomalie-radio', 'extraction'].includes(canonicalSceneId) || (canonicalSceneId === 'tempete-em' && payload.activeLocation === 'red_plains')) {
       payload = {
         ...payload,
         activeLocation: 'red_plains',
@@ -1559,21 +1620,22 @@ export default function App() {
       };
     }
 
-    if (beat.id === 'tempete_em') {
+    if (canonicalSceneId === 'tempete-em') {
       payload = activateEmStorm(payload, 'critical');
     }
 
-    if (beat.quickAction === 'glitch_radio' || beat.quickAction === 'flash_em') {
+    if (beat?.quickAction === 'glitch_radio' || beat?.quickAction === 'flash_em') {
       payload = triggerQuickEffect(beat.quickAction, payload);
-    } else if (beat.quickAction === 'HOUND') {
+    } else if (beat?.quickAction === 'HOUND') {
       payload = triggerQuickEffect('ombre_hound', payload);
     }
 
-    const sceneTransmission = createScenePopupTransmission(beat.id);
+    const legacySceneId = beat?.id ?? canonicalSceneId;
+    const sceneTransmission = createScenePopupTransmission(legacySceneId);
     const aletheiaSceneMessage =
       sceneTransmission?.profileId === 'aletheia'
         ? sceneTransmission.message
-        : beat.speaker === 'aletheia'
+        : beat?.speaker === 'aletheia'
           ? beat.message
           : null;
 
@@ -1587,13 +1649,13 @@ export default function App() {
         aletheiaTerminal: {
           active: true,
           noSignal: false,
-          glitchUntil: beat.quickAction === 'glitch_radio'
+          glitchUntil: beat?.quickAction === 'glitch_radio'
             ? now + 60 * 1000
             : payload.aletheiaTerminal.glitchUntil,
           messages: [
             ...payload.aletheiaTerminal.messages,
             {
-              id: `aletheia-scene-${beat.id}-${now}`,
+              id: `aletheia-scene-${canonicalSceneId}-${now}`,
               text: aletheiaSceneMessage,
               createdAt: now,
               source: 'system'
@@ -1603,7 +1665,7 @@ export default function App() {
       };
     }
 
-    if (beat.id === 'finale_terminal') {
+    if (canonicalSceneId === 'finale-terminal') {
       payload = {
         ...payload,
         houndAlert: null,
@@ -1629,13 +1691,13 @@ export default function App() {
     }
 
 	    // Update director guide active scene id for control-facing panel
-	    payload.activeDirectorSceneId = beat.id as string;
+	    payload.activeDirectorSceneId = canonicalSceneId;
     payload.tacticalTokens = applyTokenSceneVisibility(
       payload.tacticalTokens ?? tacticalTokens,
-      beat.id,
+      canonicalSceneId,
       payload.squad?.selectedIds ?? []
     );
-	    setGmReaderSceneId(getGmScriptSceneIdForStoryBeat(beat.id));
+	    setGmReaderSceneId(getGmScriptSceneIdForStoryBeat(canonicalSceneId));
 	    commitLocalState(payload);
 	  };
 
@@ -1694,8 +1756,8 @@ export default function App() {
   };
 
   // Extract current dynamic tags for display HUD overlay (derived from shared state resources)
-  const signalResource = state.resources.find(r => r.id === 'signal');
-  const visibilityResource = state.resources.find(r => r.id === 'visibility');
+  const signalResource = resources.find(r => r.id === 'signal');
+  const visibilityResource = resources.find(r => r.id === 'visibility');
 
   const signalLabel = state.missionTelemetry?.signalRadio ?? (signalResource ? signalResource.states[signalResource.index].toUpperCase() : 'INCONNU');
   const visibilityLabel = state.missionTelemetry?.visibility ?? (visibilityResource ? visibilityResource.states[visibilityResource.index].toUpperCase() : 'INCONNU');
@@ -1749,7 +1811,7 @@ export default function App() {
     (
       state.activeLocation === 'delta6' ||
       state.activeSceneMode === 'scanner' ||
-      ['arrivee_delta6', 'scanner_actif', 'finale_terminal'].includes(state.activeDirectorSceneId ?? '')
+      ['arrivee_delta6', 'arrivee-delta6', 'scanner_actif', 'scanner-actif', 'finale_terminal', 'finale-terminal'].includes(state.activeDirectorSceneId ?? '')
     )
   );
 
@@ -2105,7 +2167,7 @@ export default function App() {
                   config={currentConfig} 
                   onChangeConfig={handleUpdateConfig} 
                   onRefreshLoop={handleResetLoopEpoch}
-                  resources={state.resources}
+                  resources={resources}
                   onChangeResources={handleUpdateResources}
                   activePresetId={state.displayOptions.activePresetId}
                   onChangePresetId={handleUpdatePresetId}
@@ -2118,6 +2180,7 @@ export default function App() {
                   onSetDataPackageStatus={handleSetDataPackageStatus}
                   onToggleDataPackageVisibility={handleToggleDataPackageVisibility}
                   activeLocation={state.activeLocation || 'delta6'}
+                  locations={missionLocations}
                   onChangeLocation={handleUpdateLocation}
                   networkSyncStatus={networkSyncStatus}
                   onHoundAction={handleHoundAction}

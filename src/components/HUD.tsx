@@ -1,7 +1,7 @@
 /**
  * HUD (MJ control) — simplified and reordered for Mission 01 workflow
  */
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { VolumeX, Power } from 'lucide-react';
 import { CinemagraphConfig } from '../types';
 import {
@@ -16,8 +16,9 @@ import {
   type HoundAlertState,
   type MissionTelemetryState
 } from '../utils/syncState';
-import { LOCATIONS, type LocationId } from '../utils/locations';
-import { STORY_BEATS } from '../utils/storyBeats';
+import type { LocationId, LocationInfo } from '../utils/locations';
+import { missionScenes as fallbackMissionScenes } from '../data/missionScenes';
+import { useMission } from '../context/MissionProvider';
 import DirectorGuidePanel from './DirectorGuidePanel';
 import AletheiaTerminalControl from './control/AletheiaTerminalControl';
 import PlayerIntelControlPanel from './control/PlayerIntelControlPanel';
@@ -47,6 +48,7 @@ interface HUDProps {
   onSetDataPackageStatus?: (status: DataPackageStatus) => void;
   onToggleDataPackageVisibility?: () => void;
   activeLocation: LocationId;
+  locations: LocationInfo[];
   onChangeLocation: (location: LocationId) => void;
   networkSyncStatus: string;
   onHoundAction?: (actionId: HoundActionId) => void;
@@ -86,6 +88,7 @@ export default function HUD({
   onSetDataPackageStatus,
   onToggleDataPackageVisibility,
   activeLocation,
+  locations,
   onChangeLocation,
   networkSyncStatus,
   onHoundAction,
@@ -107,12 +110,25 @@ export default function HUD({
   onGlitchAletheiaSignal,
   onToggleAletheiaNoSignal
 }: HUDProps) {
+  const { currentMission } = useMission();
   const [locStatus, setLocStatus] = useState<Record<string,'loading'|'loaded'|'error'>>({});
   const stormActive = emStorm?.active === true;
   const stormSeverity = emStorm?.severity ?? 'critical';
   const dataPackageMeta = getDataPackageMeta(dataPackage?.status);
   const dataPackageVisible = dataPackage?.visible === true;
   const activeHoundAlert = houndAlert && Date.now() - houndAlert.createdAt < houndAlert.durationMs ? houndAlert.id : null;
+  const controlScenes = useMemo(() => {
+    if (currentMission.scenes.length > 0) {
+      return [...currentMission.scenes].sort((first, second) => (first.order ?? 0) - (second.order ?? 0));
+    }
+
+    return fallbackMissionScenes.map((scene, index) => ({
+      id: scene.id,
+      label: scene.label,
+      shortLabel: scene.shortLabel,
+      order: index + 1
+    }));
+  }, [currentMission.scenes]);
 
   const getShortResourceName = (id: string) => {
     switch (id) {
@@ -139,7 +155,7 @@ export default function HUD({
       <div className="bg-stone-900 border border-stone-850 p-3 rounded flex items-center justify-between gap-3 mb-4">
         <div>
           <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-emerald-400"/> <strong className="uppercase text-white tracking-wider">MISSION 01 // SOL ROUGE</strong></div>
-          <div className="text-xs text-stone-400 mt-1">Site: <strong className="text-orange-400">{LOCATIONS.find(l=>l.id===activeLocation)?.label}</strong> • Sync: <strong className="font-bold">{networkSyncStatus}</strong></div>
+          <div className="text-xs text-stone-400 mt-1">Site: <strong className="text-orange-400">{locations.find(l=>l.id===activeLocation)?.label}</strong> • Sync: <strong className="font-bold">{networkSyncStatus}</strong></div>
         </div>
         <div className="flex gap-2">
           <button onClick={() => onResetMission && onResetMission()} className="px-3 py-1 border rounded text-sm">RESET SESSION</button>
@@ -152,7 +168,7 @@ export default function HUD({
       <div className="space-y-2 mb-4">
         <div className="text-xs uppercase tracking-wider text-stone-500">Lieux Mission 01</div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {LOCATIONS.map((loc) => {
+          {locations.map((loc) => {
             const active = loc.id === activeLocation;
             return (
               <button key={loc.id} onClick={() => onChangeLocation(loc.id)} className={`p-2 text-left border rounded ${active? 'border-orange-500 bg-orange-950/10':''}`}>
@@ -288,8 +304,8 @@ export default function HUD({
       <div className="space-y-2 mb-4">
         <div className="text-xs uppercase tracking-wider text-stone-500">Scènes M01</div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {STORY_BEATS.filter((beat) => beat.id !== 'contact_hound').map((beat) => (
-            <button key={beat.id} onClick={() => onSceneShortcut(beat.id)} className="px-2 py-1 border rounded text-sm">{beat.label}</button>
+          {controlScenes.map((scene) => (
+            <button key={scene.id} onClick={() => onSceneShortcut(scene.id)} className="px-2 py-1 border rounded text-sm">{scene.label}</button>
           ))}
         </div>
       </div>
